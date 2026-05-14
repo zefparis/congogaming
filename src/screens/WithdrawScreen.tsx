@@ -1,0 +1,118 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, CheckCircle2, Loader2, Wallet, XCircle } from 'lucide-react';
+import NumPad from '../components/NumPad';
+import ProviderCard, { PROVIDERS } from '../components/ProviderCard';
+import { getSession, refreshBalance } from '../lib/auth';
+import { api } from '../lib/api';
+
+type State = 'idle' | 'pending' | 'success' | 'error';
+
+export default function WithdrawScreen() {
+  const nav = useNavigate();
+  const session = getSession();
+  const [amount, setAmount] = useState('');
+  const [providerId, setProviderId] = useState<number>(9);
+  const [phone, setPhone] = useState(session?.phone || '');
+  const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0);
+  const [state, setState] = useState<State>('idle');
+  const [msg, setMsg] = useState<string>('');
+
+  useEffect(() => {
+    if (session) refreshBalance(session.id).then(setBalance).catch(() => {});
+  }, []);
+
+  const onDigit = (d: string) => {
+    if (amount.length >= 9) return;
+    const next = (amount + d).replace(/^0+/, '');
+    setAmount(next);
+  };
+
+  const submit = async () => {
+    if (!session) return;
+    const amt = Number(amount);
+    if (!amt || amt < 500) { setState('error'); setMsg('Minimum 500 CDF'); return; }
+    if (amt > balance) { setState('error'); setMsg('Solde insuffisant'); return; }
+    if (!/^0[89]\d{8}$/.test(phone)) { setState('error'); setMsg('Numéro invalide'); return; }
+    setState('pending'); setMsg('Retrait en cours…');
+    try {
+      await api.withdraw({ user_id: session.id, amount: amt, provider_id: providerId, phone });
+      setState('success'); setMsg('Demande de retrait envoyée');
+      const b = await refreshBalance(session.id); setBalance(b);
+    } catch (e: any) {
+      setState('error'); setMsg(e.message || 'Erreur');
+    }
+  };
+
+  return (
+    <div className="min-h-screen p-4 pb-28">
+      <header className="flex items-center gap-3 py-2">
+        <button onClick={() => nav('/')} className="w-11 h-11 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-gold">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="font-display text-3xl text-gold tracking-wider">RETRAIT</h1>
+      </header>
+
+      <div className="mt-3 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-gold/20 p-4 flex items-center gap-3">
+        <Wallet className="w-7 h-7 text-gold" />
+        <div className="flex-1">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">Solde disponible</div>
+          <div className="font-display text-3xl text-gold">{balance.toLocaleString('fr-FR')} <span className="text-xs text-zinc-400">CDF</span></div>
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
+        <div className="text-xs text-zinc-500 uppercase tracking-widest">Montant (CDF) — min 500</div>
+        <div className="font-display text-5xl text-white mt-1">
+          {amount ? Number(amount).toLocaleString('fr-FR') : <span className="text-zinc-700">0</span>}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <div className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Opérateur</div>
+        <div className="grid grid-cols-2 gap-3">
+          {PROVIDERS.map((p) => (
+            <ProviderCard key={p.id} provider={p} selected={providerId === p.id} onClick={() => setProviderId(p.id)} />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
+        <div className="text-xs text-zinc-500 uppercase tracking-widest">Numéro de réception</div>
+        <input
+          inputMode="numeric"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          className="bg-transparent w-full font-display text-2xl tracking-widest outline-none mt-1"
+        />
+      </div>
+
+      <div className="mt-4">
+        <NumPad onDigit={onDigit} onDelete={() => setAmount(amount.slice(0, -1))} variant="amount" />
+      </div>
+
+      {state !== 'idle' && (
+        <div className={`mt-4 p-3 rounded-xl border flex items-start gap-2 ${
+          state === 'pending' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300' :
+          state === 'success' ? 'bg-congogreen/10 border-congogreen/30 text-congogreen' :
+          'bg-red-500/10 border-red-500/30 text-red-400'
+        }`}>
+          {state === 'pending' && <Loader2 className="w-5 h-5 animate-spin shrink-0" />}
+          {state === 'success' && <CheckCircle2 className="w-5 h-5 shrink-0" />}
+          {state === 'error' && <XCircle className="w-5 h-5 shrink-0" />}
+          <span className="text-sm">{msg}</span>
+        </div>
+      )}
+
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        onClick={submit}
+        disabled={state === 'pending'}
+        className="mt-4 w-full h-16 rounded-2xl bg-gold text-black font-display text-3xl tracking-widest disabled:opacity-60"
+      >
+        CONFIRMER
+      </motion.button>
+    </div>
+  );
+}
