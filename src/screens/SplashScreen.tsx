@@ -7,7 +7,7 @@ export default function SplashScreen() {
     <div className="h-screen flex flex-col items-center justify-between bg-bg px-6 pt-4 pb-10 overflow-hidden">
       <div className="flex flex-col items-center w-full mt-8">
         <motion.img
-          src="/images/okapi.png"
+          src="/images/okapi.jpg"
           alt="Congo Gaming"
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
