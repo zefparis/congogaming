@@ -16,9 +16,9 @@ export default function SplashScreen() {
         />
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: '60%' }}
+          animate={{ width: '12rem' }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="h-1 bg-gradient-to-r from-congogreen via-gold to-congored mt-6 rounded-full"
+          className="h-1 bg-gradient-to-r from-congogreen via-gold to-congored mx-auto rounded-full"
         />
         <motion.p
           initial={{ opacity: 0 }}
