@@ -8,6 +8,7 @@ import GameScreen from './screens/GameScreen';
 import DepositScreen from './screens/DepositScreen';
 import WithdrawScreen from './screens/WithdrawScreen';
 import AccountScreen from './screens/AccountScreen';
+import LotoScreen from './screens/LotoScreen';
 import BottomNav from './components/BottomNav';
 import { getSession } from './lib/auth';
 
@@ -33,7 +34,7 @@ function Protected({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const location = useLocation();
-  const showNav = ['/', '/depot', '/retrait', '/compte'].includes(location.pathname);
+  const showNav = ['/', '/loto', '/depot', '/retrait', '/compte'].includes(location.pathname);
   return (
     <>
       <AnimatePresence mode="wait">
@@ -46,6 +47,7 @@ function AppRoutes() {
           <Route path="/depot" element={<Protected><PageWrap><DepositScreen /></PageWrap></Protected>} />
           <Route path="/retrait" element={<Protected><PageWrap><WithdrawScreen /></PageWrap></Protected>} />
           <Route path="/compte" element={<Protected><PageWrap><AccountScreen /></PageWrap></Protected>} />
+          <Route path="/loto" element={<Protected><PageWrap><LotoScreen /></PageWrap></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>

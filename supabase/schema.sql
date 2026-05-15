@@ -67,3 +67,33 @@ create policy "users_select_by_phone" on public.users
   using (true);
 
 -- Transactions are read/write only via service key (server). No anon policy.
+
+-- LOTO TIRAGES
+create table if not exists public.loto_tirages (
+  id uuid primary key default gen_random_uuid(),
+  numeros integer[] not null,           -- 6 numéros tirés [1-49]
+  complementaire integer not null,       -- 1 numéro complémentaire
+  jackpot decimal(15,2) not null default 0,
+  hash_pre text not null,               -- SHA-256 publié AVANT le tirage
+  drawn_at timestamptz not null default now()
+);
+
+-- LOTO TICKETS
+create table if not exists public.loto_tickets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  tirage_id uuid references public.loto_tirages(id) on delete set null,
+  numeros integer[] not null,           -- 6 numéros choisis par le joueur
+  prix_cdf decimal(15,2) not null default 500,
+  gains_cdf decimal(15,2) not null default 0,
+  nb_bons integer not null default 0,   -- nombre de numéros corrects
+  status text not null default 'pending', -- pending | gagnant | perdant
+  created_at timestamptz not null default now()
+);
+
+create index if not exists loto_tickets_user_idx on public.loto_tickets(user_id, created_at desc);
+create index if not exists loto_tickets_tirage_idx on public.loto_tickets(tirage_id);
+
+-- RLS : lecture/écriture via service key uniquement
+alter table public.loto_tirages enable row level security;
+alter table public.loto_tickets enable row level security;

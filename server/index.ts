@@ -6,6 +6,7 @@ import withdrawRoutes from './routes/withdraw.js';
 import callbackRoutes from './routes/callback.js';
 import statusRoutes from './routes/status.js';
 import transactionsRoutes from './routes/transactions.js';
+import lotoRoutes from './routes/loto.js';
 
 const app = Fastify({ logger: true });
 
@@ -18,6 +19,7 @@ await app.register(withdrawRoutes);
 await app.register(callbackRoutes);
 await app.register(statusRoutes);
 await app.register(transactionsRoutes);
+await app.register(lotoRoutes);
 
 const port = Number(process.env.PORT || 3001);
 const host = process.env.HOST || '0.0.0.0';

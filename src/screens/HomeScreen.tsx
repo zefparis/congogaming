@@ -80,6 +80,25 @@ export default function HomeScreen() {
           </motion.button>
         </div>
 
+        <motion.div
+          whileTap={{ scale: 0.98 }}
+          onClick={() => nav('/loto')}
+          className="cursor-pointer rounded-2xl bg-zinc-900 border border-gold/30 p-4 flex items-center gap-4"
+        >
+          <div className="text-4xl">🎱</div>
+          <div className="flex-1">
+            <div className="font-display text-2xl text-gold tracking-wider">LOTO CONGO</div>
+            <div className="text-xs text-zinc-400">Jackpot 5 000 000 CDF</div>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={(e) => { e.stopPropagation(); nav('/loto'); }}
+            className="h-10 px-4 rounded-xl bg-gold text-black font-display tracking-wider"
+          >
+            JOUER
+          </motion.button>
+        </motion.div>
+
         <div className="rounded-2xl bg-zinc-900/60 border border-zinc-800 p-4">
           <div className="text-xs uppercase tracking-widest text-zinc-500">Astuce</div>
           <div className="text-sm mt-1">Jouez de manière responsable. 18+ uniquement.</div>

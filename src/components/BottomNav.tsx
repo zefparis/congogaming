@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Home, ArrowDownToLine, ArrowUpFromLine, User } from 'lucide-react';
+import { Home, ArrowDownToLine, ArrowUpFromLine, User, Ticket } from 'lucide-react';
 
 const items = [
   { to: '/', icon: Home, label: 'Accueil' },
   { to: '/depot', icon: ArrowDownToLine, label: 'Dépôt' },
+  { to: '/loto', icon: Ticket, label: 'Loto' },
   { to: '/retrait', icon: ArrowUpFromLine, label: 'Retrait' },
   { to: '/compte', icon: User, label: 'Compte' },
 ];
@@ -11,7 +12,7 @@ const items = [
 export default function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app bg-bg/95 backdrop-blur border-t border-zinc-900 z-30">
-      <ul className="grid grid-cols-4 pb-[env(safe-area-inset-bottom)]">
+      <ul className="grid grid-cols-5 pb-[env(safe-area-inset-bottom)]">
         {items.map(({ to, icon: Icon, label }) => (
           <li key={to}>
             <NavLink

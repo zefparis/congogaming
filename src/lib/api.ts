@@ -31,4 +31,31 @@ export const api = {
       status: number;
       created_at: string;
     }> }>(`/api/transactions/${user_id}`),
+  lotoTicket: (user_id: string, numeros: number[]) =>
+    req<{ ticket_id: string; new_balance: number }>('/api/loto/ticket', {
+      method: 'POST',
+      body: JSON.stringify({ user_id, numeros }),
+    }),
+  lotoLatest: () =>
+    req<{ tirage: null | {
+      id: string;
+      numeros: number[];
+      complementaire: number;
+      jackpot: number;
+      hash_pre: string;
+      drawn_at: string;
+    } }>('/api/loto/tirage/latest'),
+  lotoMesTickets: (user_id: string) =>
+    req<{ tickets: Array<{
+      id: string;
+      numeros: number[];
+      prix_cdf: number;
+      gains_cdf: number;
+      nb_bons: number;
+      status: 'pending' | 'gagnant' | 'perdant';
+      tirage_id: string | null;
+      created_at: string;
+    }> }>('/api/loto/mes-tickets', {
+      headers: { Authorization: `Bearer ${user_id}` },
+    }),
 };
