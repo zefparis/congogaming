@@ -19,14 +19,17 @@ export default function RegisterScreen() {
   const op = detectOperator(phone);
 
   const onPhoneDigit = (d: string) => {
-    if (phone.length >= 10) return;
-    setPhone(phone + d);
+    setPhone((prev) => (prev.length < 10 ? prev + d : prev));
     setErr(null);
   };
+  const onPhoneDelete = () => setPhone((prev) => prev.slice(0, -1));
+  const onPinDelete = () => setPin((prev) => prev.slice(0, -1));
   const onPinDigit = async (d: string) => {
-    if (pin.length >= 4) return;
-    const next = pin + d;
-    setPin(next);
+    let next = '';
+    setPin((prev) => {
+      next = prev.length < 4 ? prev + d : prev;
+      return next;
+    });
     if (next.length === 4) {
       try {
         setLoading(true);
@@ -62,9 +65,15 @@ export default function RegisterScreen() {
             <Phone className="w-6 h-6 text-gold" />
             <div className="flex-1">
               <div className="text-xs text-zinc-500">Numéro de téléphone</div>
-              <div className="font-display text-3xl tracking-widest">
-                {phone || <span className="text-zinc-700">09XXXXXXXX</span>}
-              </div>
+              <input
+                type="text"
+                value={phone}
+                readOnly
+                inputMode="none"
+                placeholder="09XXXXXXXX"
+                aria-label="Numéro de téléphone"
+                className="w-full bg-transparent border-0 outline-none font-display text-3xl tracking-widest text-white placeholder:text-zinc-700 caret-transparent select-none"
+              />
             </div>
             {op && <span className="text-xs px-2 py-1 rounded bg-gold/20 text-gold font-bold">{op}</span>}
           </div>
@@ -82,7 +91,7 @@ export default function RegisterScreen() {
           {err && <div className="mt-3 text-red-400 text-sm">{err}</div>}
 
           <div className="mt-5">
-            <NumPad onDigit={onPhoneDigit} onDelete={() => setPhone(phone.slice(0, -1))} variant="amount" />
+            <NumPad onDigit={onPhoneDigit} onDelete={onPhoneDelete} variant="amount" />
           </div>
 
           <motion.button
@@ -118,7 +127,7 @@ export default function RegisterScreen() {
           {loading && <div className="mt-3 text-gold text-sm">Création du compte…</div>}
 
           <div className="mt-5">
-            <NumPad onDigit={onPinDigit} onDelete={() => setPin(pin.slice(0, -1))} />
+            <NumPad onDigit={onPinDigit} onDelete={onPinDelete} />
           </div>
 
           <button onClick={() => setStep('phone')} className="mt-4 text-zinc-400 text-sm">
