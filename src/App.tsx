@@ -35,7 +35,7 @@ function Protected({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const location = useLocation();
-  const showNav = ['/', '/loto', '/flash', '/depot', '/retrait', '/compte'].includes(location.pathname);
+  const showNav = ['/', '/loto', '/flash', '/compte'].includes(location.pathname);
   return (
     <>
       <AnimatePresence mode="wait">
