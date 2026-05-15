@@ -28,6 +28,14 @@ export default function SplashScreen() {
         >
           Pariez. Gagnez. Encaissez.
         </motion.p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="text-center text-gray-400 text-sm px-8 mt-8"
+        >
+          ⚠️ Jeu réservé aux personnes de 18 ans et plus. Le jeu peut créer une dépendance.
+        </motion.p>
       </div>
 
       <motion.div
