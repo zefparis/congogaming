@@ -51,11 +51,8 @@ export default function LoginScreen() {
   return (
     <div className="min-h-screen flex flex-col p-6 pt-12">
       <div className="flex items-center gap-3 mb-6">
-        <img src="/lion.svg" className="w-12 h-12" alt="" />
-        <div>
-          <div className="font-display text-3xl shine-text leading-none">CONGO GAMING</div>
-          <div className="text-zinc-500 text-xs uppercase tracking-widest">Connexion</div>
-        </div>
+        <img src="/images/okapi.png" alt="Congo Gaming" className="h-10 w-auto object-contain" />
+        <div className="text-zinc-500 text-xs uppercase tracking-widest">Connexion</div>
       </div>
 
       {step === 'phone' ? (
