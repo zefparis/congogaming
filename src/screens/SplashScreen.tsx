@@ -4,15 +4,15 @@ import { useNavigate } from 'react-router-dom';
 export default function SplashScreen() {
   const nav = useNavigate();
   return (
-    <div className="h-screen flex flex-col items-center justify-between bg-bg px-6 py-10 overflow-hidden">
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
+    <div className="h-screen flex flex-col items-center justify-between bg-bg px-6 pt-4 pb-10 overflow-hidden">
+      <div className="flex flex-col items-center w-full mt-8">
         <motion.img
           src="/images/okapi.png"
           alt="Congo Gaming"
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="h-32 w-auto object-contain mx-auto drop-shadow-[0_0_40px_rgba(255,215,0,0.35)]"
+          className="h-56 w-auto object-contain mx-auto drop-shadow-[0_0_40px_rgba(255,215,0,0.35)]"
         />
         <motion.div
           initial={{ width: 0 }}
