@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './screens/SplashScreen';
@@ -28,7 +27,7 @@ function PageWrap({ children }: { children: React.ReactNode }) {
 
 function Protected({ children }: { children: React.ReactNode }) {
   const session = getSession();
-  if (!session) return <Navigate to="/login" replace />;
+  if (!session) return <Navigate to="/splash" replace />;
   return <>{children}</>;
 }
 
@@ -56,15 +55,9 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const [booted, setBooted] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setBooted(true), 1200);
-    return () => clearTimeout(t);
-  }, []);
-
   return (
     <div className="mx-auto w-full max-w-app min-h-screen bg-bg relative pb-20">
-      {!booted ? <SplashScreen /> : <AppRoutes />}
+      <AppRoutes />
     </div>
   );
 }
