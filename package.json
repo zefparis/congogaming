@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "server": "tsx watch server/index.ts",
     "server:start": "tsx server/index.ts",
+    "build:server": "tsc --project tsconfig.server.json",
+    "start:server": "node dist/server/index.js",
     "dev:all": "concurrently -n web,api -c green,cyan \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
