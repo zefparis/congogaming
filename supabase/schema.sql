@@ -122,3 +122,52 @@ end;
 $$;
 
 alter table public.loto_jackpot enable row level security;
+
+-- FLASH TIRAGES
+create table if not exists public.flash_tirages (
+  id uuid primary key default gen_random_uuid(),
+  numeros integer[] not null,
+  hash_pre text not null,
+  jackpot_paye boolean not null default false,
+  drawn_at timestamptz not null default now()
+);
+
+-- FLASH TICKETS
+create table if not exists public.flash_tickets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  tirage_id uuid references public.flash_tirages(id) on delete set null,
+  numeros integer[] not null,
+  prix_cdf decimal(15,2) not null default 500,
+  gains_cdf decimal(15,2) not null default 0,
+  nb_bons integer not null default 0,
+  status text not null default 'pending',
+  jackpot_en_attente boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists flash_tickets_user_idx on public.flash_tickets(user_id, created_at desc);
+create index if not exists flash_tickets_tirage_idx on public.flash_tickets(tirage_id);
+
+-- POT JACKPOT FLASH (singleton)
+create table if not exists public.flash_jackpot (
+  id int primary key default 1,
+  pot_cdf decimal(15,2) not null default 0,
+  updated_at timestamptz not null default now()
+);
+insert into public.flash_jackpot (id, pot_cdf) values (1, 0)
+  on conflict (id) do nothing;
+
+-- RPC increment_flash_jackpot
+create or replace function public.increment_flash_jackpot(delta numeric)
+returns void language plpgsql as $$
+begin
+  update public.flash_jackpot
+  set pot_cdf = pot_cdf + delta, updated_at = now()
+  where id = 1;
+end;
+$$;
+
+alter table public.flash_tirages enable row level security;
+alter table public.flash_tickets enable row level security;
+alter table public.flash_jackpot enable row level security;

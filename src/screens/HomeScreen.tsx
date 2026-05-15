@@ -10,10 +10,12 @@ export default function HomeScreen() {
   const session = getSession();
   const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0);
   const [lotoPot, setLotoPot] = useState<number>(0);
+  const [flashPot, setFlashPot] = useState<number>(0);
 
   useEffect(() => {
     if (session) refreshBalance(session.id).then(setBalance).catch(() => {});
     api.lotoLatest().then((r) => setLotoPot(Number(r.pot_cdf || 0))).catch(() => {});
+    api.flashLatest().then((r) => setFlashPot(Number(r.pot_cdf || 0))).catch(() => {});
   }, []);
 
   return (
@@ -83,32 +85,61 @@ export default function HomeScreen() {
           </motion.button>
         </div>
 
-        <motion.div
-          whileTap={{ scale: 0.98 }}
-          onClick={() => nav('/loto')}
-          className="cursor-pointer rounded-2xl bg-zinc-900 border border-gold/30 p-4 flex items-center gap-4"
-        >
-          <div className="text-4xl">🎱</div>
-          <div className="flex-1">
-            <div className="font-display text-2xl text-gold tracking-wider">LOTO CONGO</div>
+        <div className="grid grid-cols-2 gap-3">
+          <motion.div
+            whileTap={{ scale: 0.97 }}
+            onClick={() => nav('/loto')}
+            className="cursor-pointer rounded-2xl bg-zinc-900 border border-gold/30 p-3 flex flex-col gap-2"
+          >
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">🎱</div>
+              <div className="font-display text-lg text-gold tracking-wider">LOTO CONGO</div>
+            </div>
             {lotoPot >= 5_000_000 ? (
-              <div className="text-xs text-gold font-semibold animate-flicker">
+              <div className="text-[11px] text-gold font-semibold animate-flicker">
                 🔥 JACKPOT DISPO !
               </div>
             ) : (
-              <div className="text-xs text-zinc-400">
+              <div className="text-[11px] text-zinc-400">
                 Pot : {lotoPot.toLocaleString('fr-FR')} CDF
               </div>
             )}
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => { e.stopPropagation(); nav('/loto'); }}
-            className="h-10 px-4 rounded-xl bg-gold text-black font-display tracking-wider"
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => { e.stopPropagation(); nav('/loto'); }}
+              className="mt-1 h-9 rounded-xl bg-gold text-black font-display text-sm tracking-wider"
+            >
+              JOUER
+            </motion.button>
+          </motion.div>
+
+          <motion.div
+            whileTap={{ scale: 0.97 }}
+            onClick={() => nav('/flash')}
+            className="cursor-pointer rounded-2xl bg-zinc-900 border border-congogreen/40 p-3 flex flex-col gap-2"
           >
-            JOUER
-          </motion.button>
-        </motion.div>
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">⚡</div>
+              <div className="font-display text-lg text-gold tracking-wider">LOTO FLASH</div>
+            </div>
+            {flashPot >= 250_000 ? (
+              <div className="text-[11px] text-gold font-semibold animate-flicker">
+                ⚡ JACKPOT DISPO !
+              </div>
+            ) : (
+              <div className="text-[11px] text-zinc-400">
+                Tirage /30 min — 500 CDF
+              </div>
+            )}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => { e.stopPropagation(); nav('/flash'); }}
+              className="mt-1 h-9 rounded-xl bg-congogreen text-white font-display text-sm tracking-wider"
+            >
+              JOUER
+            </motion.button>
+          </motion.div>
+        </div>
 
         <div className="rounded-2xl bg-zinc-900/60 border border-zinc-800 p-4">
           <div className="text-xs uppercase tracking-widest text-zinc-500">Astuce</div>

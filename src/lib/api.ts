@@ -62,4 +62,34 @@ export const api = {
     }> }>('/api/loto/mes-tickets', {
       headers: { Authorization: `Bearer ${user_id}` },
     }),
+  flashTicket: (user_id: string, numeros: number[]) =>
+    req<{ ticket_id: string; new_balance: number }>('/api/flash/ticket', {
+      method: 'POST',
+      body: JSON.stringify({ user_id, numeros }),
+    }),
+  flashLatest: () =>
+    req<{
+      tirage: null | {
+        id: string;
+        numeros: number[];
+        hash_pre: string;
+        jackpot_paye: boolean;
+        drawn_at: string;
+      };
+      pot_cdf: number;
+    }>('/api/flash/tirage/latest'),
+  flashMesTickets: (user_id: string) =>
+    req<{ tickets: Array<{
+      id: string;
+      numeros: number[];
+      prix_cdf: number;
+      gains_cdf: number;
+      nb_bons: number;
+      status: 'pending' | 'gagnant' | 'perdant' | 'jackpot_attente';
+      jackpot_en_attente: boolean;
+      tirage_id: string | null;
+      created_at: string;
+    }> }>('/api/flash/mes-tickets', {
+      headers: { Authorization: `Bearer ${user_id}` },
+    }),
 };
