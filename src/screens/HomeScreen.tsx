@@ -16,7 +16,7 @@ export default function HomeScreen() {
   return (
     <div className="min-h-screen pb-24">
       <header className="flex items-center justify-between p-4 border-b border-zinc-900">
-        <img src="/images/okapi.jpg" alt="Congo Gaming" className="h-10 w-auto object-contain" />
+        <img src="/images/okapi.PNG" alt="Congo Gaming" className="h-10 w-auto object-contain" />
         <div className="text-right">
           <div className="text-[10px] text-zinc-500 uppercase tracking-widest">Solde</div>
           <div className="font-display text-2xl text-gold flex items-center gap-1 justify-end">
