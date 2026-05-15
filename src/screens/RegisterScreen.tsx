@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Phone, Lock, Check } from 'lucide-react';
 import NumPad from '../components/NumPad';
-import { detectOperator, registerUser, validateCongoPhone } from '../lib/auth';
+import { detectOperator, registerUser, validateCongoPhone, getSession } from '../lib/auth';
 
 type Step = 'phone' | 'pin';
 
@@ -51,7 +51,18 @@ export default function RegisterScreen() {
 
   return (
     <div className="min-h-screen flex flex-col p-6 pt-10">
-      <Link to="/login" className="text-zinc-400 text-sm mb-4">← Retour</Link>
+      <div className="flex items-center gap-3 mb-4">
+        <Link to="/login" className="text-zinc-400 text-sm">← Retour</Link>
+        <img
+          src="/images/okapi.PNG"
+          alt="Congo Gaming"
+          className="h-10 w-auto object-contain cursor-pointer ml-auto"
+          onClick={() => {
+            const user = getSession();
+            user ? nav('/home') : nav('/');
+          }}
+        />
+      </div>
       <h1 className="font-display text-4xl text-gold tracking-wide">CRÉER UN COMPTE</h1>
       <p className="text-zinc-400 text-sm mt-1 mb-6">
         {step === 'phone' ? 'Entrez votre numéro' : 'Choisissez votre code PIN'}

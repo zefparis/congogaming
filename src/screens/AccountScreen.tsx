@@ -27,7 +27,18 @@ export default function AccountScreen() {
 
   return (
     <div className="min-h-screen p-4 pb-28">
-      <h1 className="font-display text-3xl text-gold tracking-wider">MON COMPTE</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="font-display text-3xl text-gold tracking-wider">MON COMPTE</h1>
+        <img
+          src="/images/okapi.PNG"
+          alt="Congo Gaming"
+          className="h-10 w-auto object-contain cursor-pointer"
+          onClick={() => {
+            const user = getSession();
+            user ? nav('/home') : nav('/');
+          }}
+        />
+      </div>
 
       <div className="mt-4 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-gold/20 p-4 flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-gold/20 border-2 border-gold flex items-center justify-center font-display text-3xl text-gold">

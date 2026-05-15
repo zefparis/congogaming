@@ -17,11 +17,15 @@ export default function GameScreen() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-1 text-gold">
-          <Wallet className="w-4 h-4" />
-          <span className="font-display text-xl">{(session?.balance_cdf ?? 0).toLocaleString('fr-FR')}</span>
-          <span className="text-[10px] text-zinc-400">CDF</span>
-        </div>
+        <img
+          src="/images/okapi.PNG"
+          alt="Congo Gaming"
+          className="h-10 w-auto object-contain cursor-pointer"
+          onClick={() => {
+            const user = getSession();
+            user ? nav('/home') : nav('/');
+          }}
+        />
       </header>
       <iframe
         src={url}

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Phone, Lock } from 'lucide-react';
 import NumPad from '../components/NumPad';
-import { detectOperator, loginUser, validateCongoPhone } from '../lib/auth';
+import { detectOperator, loginUser, validateCongoPhone, getSession } from '../lib/auth';
 
 export default function LoginScreen() {
   const nav = useNavigate();
@@ -49,7 +49,15 @@ export default function LoginScreen() {
   return (
     <div className="min-h-screen flex flex-col p-6 pt-12">
       <div className="flex items-center gap-3 mb-6">
-        <img src="/images/okapi.PNG" alt="Congo Gaming" className="h-10 w-auto object-contain" />
+        <img
+          src="/images/okapi.PNG"
+          alt="Congo Gaming"
+          className="h-10 w-auto object-contain cursor-pointer"
+          onClick={() => {
+            const user = getSession();
+            user ? nav('/home') : nav('/');
+          }}
+        />
         <div className="text-zinc-500 text-xs uppercase tracking-widest">Connexion</div>
       </div>
 

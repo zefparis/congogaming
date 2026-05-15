@@ -60,7 +60,15 @@ export default function DepositScreen() {
         <button onClick={() => nav('/')} className="w-11 h-11 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-gold">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="font-display text-3xl text-gold tracking-wider">AJOUTER DES FONDS</h1>
+        <img
+          src="/images/okapi.PNG"
+          alt="Congo Gaming"
+          className="h-10 w-auto object-contain cursor-pointer"
+          onClick={() => {
+            const user = getSession();
+            user ? nav('/home') : nav('/');
+          }}
+        />
       </header>
 
       <div className="mt-3 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
