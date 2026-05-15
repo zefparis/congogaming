@@ -28,23 +28,21 @@ export default function LoginScreen() {
   };
 
   const onPinDelete = () => setPin((prev) => prev.slice(0, -1));
-  const onPinDigit = async (d: string) => {
-    let next = '';
-    setPin((prev) => {
-      next = prev.length < 4 ? prev + d : prev;
-      return next;
-    });
-    if (next.length === 4) {
-      try {
-        setLoading(true);
-        await loginUser(phone, next);
-        nav('/', { replace: true });
-      } catch (e: any) {
-        setErr(e.message || 'Erreur');
-        setPin('');
-      } finally {
-        setLoading(false);
-      }
+  const onPinDigit = (d: string) => {
+    setPin((prev) => (prev.length < 4 ? prev + d : prev));
+    setErr(null);
+  };
+  const handleLogin = async () => {
+    if (pin.length !== 4 || loading) return;
+    try {
+      setLoading(true);
+      await loginUser(phone, pin);
+      nav('/', { replace: true });
+    } catch (e: any) {
+      setErr(e.message || 'Erreur');
+      setPin('');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,6 +112,16 @@ export default function LoginScreen() {
           <div className="mt-5">
             <NumPad onDigit={onPinDigit} onDelete={onPinDelete} />
           </div>
+          {pin.length === 4 && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full mt-6 py-5 bg-amber-600 text-white font-black text-xl rounded-2xl tracking-widest disabled:opacity-60"
+            >
+              VALIDER
+            </motion.button>
+          )}
           <button onClick={() => { setStep('phone'); setPin(''); }} className="mt-4 text-zinc-400 text-sm">
             ← Modifier le numéro
           </button>
