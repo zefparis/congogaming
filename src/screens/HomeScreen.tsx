@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Flame, Trophy, Wallet } from 'lucide-react';
 import { getSession, refreshBalance } from '../lib/auth';
+import { api } from '../lib/api';
 
 export default function HomeScreen() {
   const nav = useNavigate();
   const session = getSession();
   const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0);
+  const [lotoPot, setLotoPot] = useState<number>(0);
 
   useEffect(() => {
     if (session) refreshBalance(session.id).then(setBalance).catch(() => {});
+    api.lotoLatest().then((r) => setLotoPot(Number(r.pot_cdf || 0))).catch(() => {});
   }, []);
 
   return (
@@ -88,7 +91,15 @@ export default function HomeScreen() {
           <div className="text-4xl">🎱</div>
           <div className="flex-1">
             <div className="font-display text-2xl text-gold tracking-wider">LOTO CONGO</div>
-            <div className="text-xs text-zinc-400">Jackpot 5 000 000 CDF</div>
+            {lotoPot >= 5_000_000 ? (
+              <div className="text-xs text-gold font-semibold animate-flicker">
+                🔥 JACKPOT DISPO !
+              </div>
+            ) : (
+              <div className="text-xs text-zinc-400">
+                Pot : {lotoPot.toLocaleString('fr-FR')} CDF
+              </div>
+            )}
           </div>
           <motion.button
             whileTap={{ scale: 0.95 }}

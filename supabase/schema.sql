@@ -97,3 +97,28 @@ create index if not exists loto_tickets_tirage_idx on public.loto_tickets(tirage
 -- RLS : lecture/écriture via service key uniquement
 alter table public.loto_tirages enable row level security;
 alter table public.loto_tickets enable row level security;
+
+-- Pot jackpot singleton
+create table if not exists public.loto_jackpot (
+  id int primary key default 1,
+  pot_cdf decimal(15,2) not null default 0,
+  updated_at timestamptz not null default now()
+);
+insert into public.loto_jackpot (id, pot_cdf) values (1, 0)
+  on conflict (id) do nothing;
+
+-- Colonne jackpot_en_attente sur loto_tickets
+alter table public.loto_tickets
+  add column if not exists jackpot_en_attente boolean not null default false;
+
+-- Fonction RPC increment_jackpot
+create or replace function public.increment_jackpot(delta numeric)
+returns void language plpgsql as $$
+begin
+  update public.loto_jackpot
+  set pot_cdf = pot_cdf + delta, updated_at = now()
+  where id = 1;
+end;
+$$;
+
+alter table public.loto_jackpot enable row level security;

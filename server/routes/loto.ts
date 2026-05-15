@@ -2,7 +2,8 @@ import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastif
 import crypto from 'node:crypto';
 import { supabaseAdmin } from '../lib/supabase.js';
 
-const TICKET_PRICE_CDF = 500;
+const TICKET_PRICE_CDF = 2000;
+const JACKPOT_CONTRIB_CDF = 1000;
 const DEFAULT_JACKPOT_CDF = 5_000_000;
 
 const PRIZE_TABLE: Record<number, number> = {
@@ -52,7 +53,15 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
       .limit(1)
       .maybeSingle();
     if (error) return reply.code(500).send({ error: error.message });
-    return reply.send({ tirage: data || null });
+    const { data: jackpotRow } = await supabaseAdmin
+      .from('loto_jackpot')
+      .select('pot_cdf')
+      .eq('id', 1)
+      .single();
+    return reply.send({
+      tirage: data || null,
+      pot_cdf: Number(jackpotRow?.pot_cdf ?? 0),
+    });
   });
 
   // GET my tickets (auth via Bearer <user_id>)
@@ -111,6 +120,9 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
       return reply.code(500).send({ error: insErr?.message || 'Insert failed' });
     }
 
+    // Feed jackpot pool
+    await supabaseAdmin.rpc('increment_jackpot', { delta: JACKPOT_CONTRIB_CDF });
+
     return reply.send({
       ticket_id: ticket.id,
       new_balance: Number(user.balance_cdf) - TICKET_PRICE_CDF,
@@ -143,6 +155,26 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
       .single();
     if (tirErr || !tirage) return reply.code(500).send({ error: tirErr?.message || 'Tirage insert failed' });
 
+    // Lire pot jackpot
+    const { data: jackpotRow } = await supabaseAdmin
+      .from('loto_jackpot')
+      .select('pot_cdf')
+      .eq('id', 1)
+      .single();
+    const potActuel = Number(jackpotRow?.pot_cdf ?? 0);
+    const SEUIL = Number(process.env.LOTO_JACKPOT_CDF ?? DEFAULT_JACKPOT_CDF);
+    const jackpotDispo = potActuel >= SEUIL;
+    let jackpotPaye = false;
+
+    function calculGains(nbBons: number, jackpotDisponible: boolean): number {
+      if (nbBons === 6) return jackpotDisponible ? SEUIL : 0;
+      if (nbBons === 5) return 500_000;
+      if (nbBons === 4) return 50_000;
+      if (nbBons === 3) return 5_000;
+      if (nbBons === 2) return 1_000;
+      return 0;
+    }
+
     // Process pending tickets
     const { data: pending, error: pendErr } = await supabaseAdmin
       .from('loto_tickets')
@@ -156,11 +188,25 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     for (const t of pending || []) {
       const tNums: number[] = Array.isArray(t.numeros) ? t.numeros : [];
       const nb_bons = tNums.reduce((acc, n) => acc + (winSet.has(n) ? 1 : 0), 0);
-      const gains_cdf = nb_bons === 6 ? Number(tirage.jackpot ?? jackpot) : (PRIZE_TABLE[nb_bons] ?? 0);
-      const status = gains_cdf > 0 ? 'gagnant' : 'perdant';
+      const isSix = nb_bons === 6;
+      const gains_cdf = calculGains(nb_bons, jackpotDispo);
+      const jackpot_en_attente = isSix && !jackpotDispo;
 
-      if (gains_cdf > 0) {
+      let status: 'gagnant' | 'perdant' | 'jackpot_attente';
+      if (jackpot_en_attente) {
+        status = 'jackpot_attente';
+      } else if (gains_cdf > 0) {
+        status = 'gagnant';
+      } else {
+        status = 'perdant';
+      }
+
+      if (gains_cdf > 0 && !jackpot_en_attente) {
         await supabaseAdmin.rpc('adjust_balance', { p_user_id: t.user_id, p_delta: gains_cdf });
+        if (isSix) {
+          jackpotPaye = true;
+          await supabaseAdmin.rpc('increment_jackpot', { delta: -SEUIL });
+        }
       }
 
       await supabaseAdmin
@@ -169,6 +215,7 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
           status,
           nb_bons,
           gains_cdf,
+          jackpot_en_attente,
           tirage_id: tirage.id,
         })
         .eq('id', t.id);
@@ -176,7 +223,12 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
       processed++;
     }
 
-    return reply.send({ tirage_id: tirage.id, tickets_traites: processed });
+    return reply.send({
+      tirage_id: tirage.id,
+      tickets_traites: processed,
+      pot_jackpot: potActuel,
+      jackpot_declenche: jackpotPaye,
+    });
   });
 };
 

@@ -37,14 +37,17 @@ export const api = {
       body: JSON.stringify({ user_id, numeros }),
     }),
   lotoLatest: () =>
-    req<{ tirage: null | {
-      id: string;
-      numeros: number[];
-      complementaire: number;
-      jackpot: number;
-      hash_pre: string;
-      drawn_at: string;
-    } }>('/api/loto/tirage/latest'),
+    req<{
+      tirage: null | {
+        id: string;
+        numeros: number[];
+        complementaire: number;
+        jackpot: number;
+        hash_pre: string;
+        drawn_at: string;
+      };
+      pot_cdf: number;
+    }>('/api/loto/tirage/latest'),
   lotoMesTickets: (user_id: string) =>
     req<{ tickets: Array<{
       id: string;
@@ -52,7 +55,8 @@ export const api = {
       prix_cdf: number;
       gains_cdf: number;
       nb_bons: number;
-      status: 'pending' | 'gagnant' | 'perdant';
+      status: 'pending' | 'gagnant' | 'perdant' | 'jackpot_attente';
+      jackpot_en_attente: boolean;
       tirage_id: string | null;
       created_at: string;
     }> }>('/api/loto/mes-tickets', {
