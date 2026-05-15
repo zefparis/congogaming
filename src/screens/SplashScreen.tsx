@@ -4,7 +4,15 @@ import { useNavigate } from 'react-router-dom';
 export default function SplashScreen() {
   const nav = useNavigate();
   return (
-    <div className="h-screen flex flex-col items-center justify-between bg-bg px-6 pt-4 pb-10 overflow-hidden">
+    <div
+      style={{
+        backgroundImage: 'url(/images/background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        minHeight: '100vh'
+      }}
+    >
+      <div className="h-screen flex flex-col items-center justify-between px-6 pt-4 pb-10 overflow-hidden">
       <div className="flex flex-col items-center w-full mt-8">
         <motion.img
           src="/images/okapi.PNG"
@@ -60,6 +68,7 @@ export default function SplashScreen() {
         </motion.button>
         <p className="text-center text-zinc-600 text-xs uppercase tracking-widest mt-2">RDC • 2026</p>
       </motion.div>
+    </div>
     </div>
   );
 }
