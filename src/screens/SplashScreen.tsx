@@ -14,9 +14,10 @@ export default function SplashScreen() {
     >
       <div className="h-screen flex flex-col items-center justify-between pb-10">
       <div style={{ 
-        width: '100%', 
+        width: '100%',
+        height: '350px',
         overflow: 'hidden',
-        height: '320px'
+        position: 'relative'
       }}>
         <video
           autoPlay
@@ -24,10 +25,12 @@ export default function SplashScreen() {
           muted
           playsInline
           style={{
-            width: '160%',
-            marginLeft: '-30%',
-            marginTop: '-40px',
-            display: 'block',
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 20%',
+            transform: 'scale(1.6)',
             mixBlendMode: 'screen',
           }}
         >
