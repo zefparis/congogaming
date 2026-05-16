@@ -104,7 +104,7 @@ function LicenceCard({ l }: { l: Licence }) {
       <div className="mt-3">
         <InfoRow label="Autorité" value={l.autorite} />
         <InfoRow label="Type" value={l.type} />
-        <InfoRow label="Référence" value={<span className="font-mono text-[12px]">{l.reference}</span>} />
+        <InfoRow label="Référence" value={<span className="font-mono text-xs break-all text-white">{l.reference}</span>} />
         <InfoRow label="Date" value={l.date} />
       </div>
     </motion.div>
