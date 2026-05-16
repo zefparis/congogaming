@@ -20,7 +20,7 @@ export default function SplashScreen() {
           muted
           playsInline
           style={{
-            width: '90vw',
+            width: '100vw',
             margin: '0 auto',
             display: 'block',
             mixBlendMode: 'screen',
