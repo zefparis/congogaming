@@ -16,6 +16,12 @@ await app.register(cors, { origin: true });
 
 app.get('/health', async () => ({ ok: true, service: 'congo-gaming-api' }));
 
+app.get('/api/myip', async (req, reply) => {
+  const res = await fetch('https://api.ipify.org?format=json');
+  const data = await res.json();
+  return { ip: data.ip };
+});
+
 await app.register(depositRoutes);
 await app.register(withdrawRoutes);
 await app.register(callbackRoutes);
