@@ -19,7 +19,6 @@ type Licence = {
   type: string;
   reference: string;
   date: string;
-  signataire: string;
   status?: 'agree' | 'en_cours';
 };
 
@@ -30,7 +29,6 @@ const LICENCES: Licence[] = [
     type: "Autorisation d'exploitation des Jeux de Hasard Permanent",
     reference: 'Arrêté Ministériel N°047/CAB/MIN/JSL/2016',
     date: '09 décembre 2016',
-    signataire: 'Denis KAMBAYI CIMBUMBU',
     status: 'agree',
   },
   {
@@ -39,7 +37,6 @@ const LICENCES: Licence[] = [
     type: 'Homologation du Règlement de Jeux de Hasard Permanent',
     reference: 'Procès-verbal N°005/2017',
     date: '27 avril 2017',
-    signataire: 'Matthieu KITOKO MALOWO',
     status: 'agree',
   },
   {
@@ -48,7 +45,6 @@ const LICENCES: Licence[] = [
     type: 'Agrégateur et Intégrateur des applications (SMS & USSD)',
     reference: 'ASVA-ARPTC n°0573/008/Mars/2023',
     date: '22 mai 2023',
-    signataire: 'Christian KATENDE, Président ARPTC',
     status: 'agree',
   },
   {
@@ -57,7 +53,6 @@ const LICENCES: Licence[] = [
     type: 'Service de Contenus (SMS & USSD)',
     reference: 'ASVA-ARPTC n°0574/009/Mars/2023',
     date: '22 mai 2023',
-    signataire: 'Christian KATENDE, Président ARPTC',
     status: 'agree',
   },
   {
@@ -66,7 +61,6 @@ const LICENCES: Licence[] = [
     type: "Agrément jeux d'argent en RDC — Avis favorable",
     reference: 'N°1024/CAB/MIN/FINANCES/JUR/LKL/2023',
     date: '29 juin 2023',
-    signataire: '—',
     status: 'en_cours',
   },
 ];
@@ -112,7 +106,6 @@ function LicenceCard({ l }: { l: Licence }) {
         <InfoRow label="Type" value={l.type} />
         <InfoRow label="Référence" value={<span className="font-mono text-[12px]">{l.reference}</span>} />
         <InfoRow label="Date" value={l.date} />
-        <InfoRow label="Signataire" value={l.signataire} />
       </div>
     </motion.div>
   );
