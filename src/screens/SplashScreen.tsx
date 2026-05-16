@@ -29,8 +29,8 @@ export default function SplashScreen() {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center 45%',
-            transform: 'scale(1.1)',
+            objectPosition: 'center 55%',
+            transform: 'scale(1.0)',
             mixBlendMode: 'screen',
           }}
         >
