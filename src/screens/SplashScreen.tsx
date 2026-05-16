@@ -14,19 +14,13 @@ export default function SplashScreen() {
     >
       <div className="h-screen flex flex-col items-center justify-between px-6 pt-4 pb-10 overflow-hidden">
       <div className="flex flex-col items-center w-full mt-8">
-        <motion.img
-          src="/images/okapi.PNG"
-          alt="Congo Gaming"
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="h-56 w-auto object-contain mx-auto drop-shadow-[0_0_40px_rgba(255,215,0,0.35)]"
-        />
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: '12rem' }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="h-1 bg-gradient-to-r from-congogreen via-gold to-congored mx-auto rounded-full"
+        <video
+          src="/videos/okapibet.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{ width: '100%', maxWidth: 280, margin: '0 auto', display: 'block' }}
         />
         <motion.p
           initial={{ opacity: 0 }}
