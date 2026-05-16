@@ -14,8 +14,8 @@ export default function SplashScreen() {
     >
       <div className="h-screen flex flex-col items-center justify-between pb-10">
       <div style={{ 
-        width: '100%',
-        height: '420px',
+        width: '90%',
+        height: '410px',
         overflow: 'hidden',
         position: 'relative'
       }}>
@@ -26,18 +26,18 @@ export default function SplashScreen() {
           playsInline
           style={{
             position: 'absolute',
-            width: '110%',
-            height: '80%',
+            width: '120%',
+            height: '70%',
             objectFit: 'cover',
             objectPosition: 'center 60%',
-            transform: 'scale(1.0)',
+            transform: 'scale(1.1)',
             mixBlendMode: 'screen',
           }}
         >
           <source src="/videos/okapibet.mp4" type="video/mp4" />
         </video>
       </div>
-      <div style={{ marginTop: 8 }}>
+      <div style={{ marginTop: 0}}>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
