@@ -13,15 +13,20 @@ export default function SplashScreen() {
       }}
     >
       <div className="h-screen flex flex-col items-center justify-between pb-10">
-      <div style={{ width: '100%', margin: '0 auto' }}>
+      <div style={{ 
+        width: '100%', 
+        overflow: 'hidden',
+        height: '320px'
+      }}>
         <video
           autoPlay
           loop
           muted
           playsInline
           style={{
-            width: '100%',
-            height: 'auto',
+            width: '160%',
+            marginLeft: '-30%',
+            marginTop: '-40px',
             display: 'block',
             mixBlendMode: 'screen',
           }}
