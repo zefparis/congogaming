@@ -2,15 +2,15 @@ import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastif
 import crypto from 'node:crypto';
 import { supabaseAdmin } from '../lib/supabase.js';
 
-const PRIX_FLASH = 500;
-const JACKPOT_CONTRIBUTION = 250; // 50% du ticket
+const PRIX_FLASH = 1000;
+const JACKPOT_CONTRIBUTION = 500; // 50% du ticket
 const FLASH_SEUIL = Number(process.env.FLASH_JACKPOT_CDF ?? 250_000);
 
 function calculGainsFlash(nbBons: number, jackpotDispo: boolean): number {
   if (nbBons === 5) return jackpotDispo ? FLASH_SEUIL : 0;
-  if (nbBons === 4) return 25_000;
-  if (nbBons === 3) return 2_500;
-  if (nbBons === 2) return 500;
+  if (nbBons === 4) return 50_000;
+  if (nbBons === 3) return 5_000;
+  if (nbBons === 2) return 1_000;
   return 0;
 }
 

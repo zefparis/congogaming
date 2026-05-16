@@ -156,7 +156,7 @@ export default function HomeScreen() {
               </div>
             ) : (
               <div className="text-[11px] text-zinc-400">
-                Tirage /30 min — 500 CDF
+                Tirage /30 min — 1 000 CDF
               </div>
             )}
             <motion.button

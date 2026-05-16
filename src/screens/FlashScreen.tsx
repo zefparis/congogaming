@@ -37,7 +37,7 @@ type Ticket = {
   created_at: string;
 };
 
-const TICKET_PRICE = 500;
+const TICKET_PRICE = 1000;
 const FLASH_SEUIL = 250_000;
 
 function msToNextSlot(now = new Date()) {
