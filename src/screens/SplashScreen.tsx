@@ -12,17 +12,16 @@ export default function SplashScreen() {
         minHeight: '100vh'
       }}
     >
-      <div className="h-screen flex flex-col items-center justify-between px-6 pt-4 pb-10 overflow-visible">
-      <div className="flex flex-col items-center w-full mt-8" style={{ width: '100%', overflow: 'visible' }}>
+      <div className="h-screen flex flex-col items-center justify-between pb-10">
+      <div style={{ width: '100%', margin: '0 auto' }}>
         <video
           autoPlay
           loop
           muted
           playsInline
           style={{
-            width: '110%',
-            marginLeft: '-5%',
-            margin: '0 auto',
+            width: '100%',
+            height: 'auto',
             display: 'block',
             mixBlendMode: 'screen',
           }}
