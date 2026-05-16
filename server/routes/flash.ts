@@ -77,8 +77,43 @@ export async function executerTirageFlash(): Promise<ExecuterTirageFlashResult> 
     .eq('id', 1)
     .single();
   const potActuel = Number(jackpotRow?.pot_cdf ?? 0);
-  const jackpotDispo = potActuel >= FLASH_SEUIL;
+  let jackpotDispo = potActuel >= FLASH_SEUIL;
   let jackpotPaye = false;
+
+  // Résoudre les jackpots en attente si le pot est maintenant suffisant
+  if (jackpotDispo) {
+    const { data: enAttente } = await supabaseAdmin
+      .from('flash_tickets')
+      .select('*')
+      .eq('status', 'jackpot_attente')
+      .eq('jackpot_en_attente', true);
+
+    for (const ticket of enAttente ?? []) {
+      await supabaseAdmin.rpc('adjust_balance', {
+        p_user_id: ticket.user_id,
+        p_delta: FLASH_SEUIL,
+      });
+      await supabaseAdmin.rpc('increment_flash_jackpot', { delta: -FLASH_SEUIL });
+      await supabaseAdmin
+        .from('flash_tickets')
+        .update({
+          status: 'gagnant',
+          gains_cdf: FLASH_SEUIL,
+          jackpot_en_attente: false,
+        })
+        .eq('id', ticket.id);
+      jackpotPaye = true;
+
+      // Le pot redescend : recalcule pour les suivants
+      const { data: potRow } = await supabaseAdmin
+        .from('flash_jackpot')
+        .select('pot_cdf')
+        .eq('id', 1)
+        .single();
+      jackpotDispo = Number(potRow?.pot_cdf ?? 0) >= FLASH_SEUIL;
+      if (!jackpotDispo) break;
+    }
+  }
 
   const { data: pending, error: pendErr } = await supabaseAdmin
     .from('flash_tickets')
@@ -183,6 +218,19 @@ const flashRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     if (!user_id) return reply.code(400).send({ error: 'user_id requis' });
     if (!isValidFlashNumbers(numeros)) {
       return reply.code(400).send({ error: 'numeros invalides : 5 entiers distincts entre 1 et 20' });
+    }
+
+    // Sécurité lancement : seuil minimum de tickets cumulés
+    const MIN = Number(process.env.FLASH_MIN_TICKETS ?? 0);
+    if (MIN > 0) {
+      const { count } = await supabaseAdmin
+        .from('flash_tickets')
+        .select('*', { count: 'exact', head: true });
+      if ((count ?? 0) < MIN) {
+        return reply
+          .code(503)
+          .send({ error: 'Lancement en cours', message: 'Le loto Flash ouvre bientôt, revenez dans quelques jours !' });
+      }
     }
 
     const { data: user, error: userErr } = await supabaseAdmin

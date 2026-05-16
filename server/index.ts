@@ -8,7 +8,7 @@ import statusRoutes from './routes/status.js';
 import transactionsRoutes from './routes/transactions.js';
 import lotoRoutes from './routes/loto.js';
 import flashRoutes from './routes/flash.js';
-import { startFlashCron } from './cron.js';
+import { startCrons } from './cron.js';
 
 const app = Fastify({ logger: true });
 
@@ -29,7 +29,7 @@ const host = process.env.HOST || '0.0.0.0';
 
 app.listen({ port, host }).then(() => {
   app.log.info(`API listening on http://${host}:${port}`);
-  startFlashCron();
+  startCrons();
 }).catch((err) => {
   app.log.error(err);
   process.exit(1);

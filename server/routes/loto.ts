@@ -43,6 +43,150 @@ function drawSevenUniqueNumbers(): number[] {
   return Array.from(picked);
 }
 
+export type ExecuterTirageLotoResult = {
+  tirage_id: string;
+  tickets_traites: number;
+  pot_jackpot: number;
+  jackpot_declenche: boolean;
+};
+
+/**
+ * Logique partagée du tirage Loto :
+ * - utilisée par la route POST /api/loto/tirage (admin)
+ * - et par le cron quotidien à 20h00 DRC
+ */
+export async function executerTirageLoto(): Promise<ExecuterTirageLotoResult> {
+  const all = drawSevenUniqueNumbers();
+  const numeros = all.slice(0, 6).sort((a, b) => a - b);
+  const complementaire = all[6];
+  const ts = Date.now();
+  const hash_pre = crypto
+    .createHash('sha256')
+    .update(JSON.stringify({ numeros, complementaire, ts }))
+    .digest('hex');
+
+  const jackpot = Number(process.env.LOTO_JACKPOT_CDF || DEFAULT_JACKPOT_CDF);
+
+  const { data: tirage, error: tirErr } = await supabaseAdmin
+    .from('loto_tirages')
+    .insert({ numeros, complementaire, jackpot, hash_pre })
+    .select('*')
+    .single();
+  if (tirErr || !tirage) {
+    throw new Error(tirErr?.message || 'Tirage insert failed');
+  }
+
+  // Lire pot jackpot
+  const { data: jackpotRow } = await supabaseAdmin
+    .from('loto_jackpot')
+    .select('pot_cdf')
+    .eq('id', 1)
+    .single();
+  const potActuel = Number(jackpotRow?.pot_cdf ?? 0);
+  const SEUIL = Number(process.env.LOTO_JACKPOT_CDF ?? DEFAULT_JACKPOT_CDF);
+  let jackpotDispo = potActuel >= SEUIL;
+  let jackpotPaye = false;
+
+  function calculGains(nbBons: number, jackpotDisponible: boolean): number {
+    if (nbBons === 6) return jackpotDisponible ? SEUIL : 0;
+    if (nbBons === 5) return 500_000;
+    if (nbBons === 4) return 50_000;
+    if (nbBons === 3) return 5_000;
+    if (nbBons === 2) return 1_000;
+    return 0;
+  }
+
+  // Résoudre les jackpots en attente si le pot est maintenant suffisant
+  if (jackpotDispo) {
+    const { data: enAttente } = await supabaseAdmin
+      .from('loto_tickets')
+      .select('*')
+      .eq('status', 'jackpot_attente')
+      .eq('jackpot_en_attente', true);
+
+    for (const ticket of enAttente ?? []) {
+      await supabaseAdmin.rpc('adjust_balance', {
+        p_user_id: ticket.user_id,
+        p_delta: SEUIL,
+      });
+      await supabaseAdmin.rpc('increment_jackpot', { delta: -SEUIL });
+      await supabaseAdmin
+        .from('loto_tickets')
+        .update({
+          status: 'gagnant',
+          gains_cdf: SEUIL,
+          jackpot_en_attente: false,
+        })
+        .eq('id', ticket.id);
+      jackpotPaye = true;
+
+      // Le pot redescend : recalcule pour les suivants
+      const { data: potRow } = await supabaseAdmin
+        .from('loto_jackpot')
+        .select('pot_cdf')
+        .eq('id', 1)
+        .single();
+      jackpotDispo = Number(potRow?.pot_cdf ?? 0) >= SEUIL;
+      if (!jackpotDispo) break;
+    }
+  }
+
+  // Process pending tickets
+  const { data: pending, error: pendErr } = await supabaseAdmin
+    .from('loto_tickets')
+    .select('id, user_id, numeros')
+    .eq('status', 'pending');
+  if (pendErr) throw new Error(pendErr.message);
+
+  const winSet = new Set<number>(numeros);
+  let processed = 0;
+
+  for (const t of pending || []) {
+    const tNums: number[] = Array.isArray(t.numeros) ? t.numeros : [];
+    const nb_bons = tNums.reduce((acc, n) => acc + (winSet.has(n) ? 1 : 0), 0);
+    const isSix = nb_bons === 6;
+    const gains_cdf = calculGains(nb_bons, jackpotDispo);
+    const jackpot_en_attente = isSix && !jackpotDispo;
+
+    let status: 'gagnant' | 'perdant' | 'jackpot_attente';
+    if (jackpot_en_attente) {
+      status = 'jackpot_attente';
+    } else if (gains_cdf > 0) {
+      status = 'gagnant';
+    } else {
+      status = 'perdant';
+    }
+
+    if (gains_cdf > 0 && !jackpot_en_attente) {
+      await supabaseAdmin.rpc('adjust_balance', { p_user_id: t.user_id, p_delta: gains_cdf });
+      if (isSix) {
+        jackpotPaye = true;
+        await supabaseAdmin.rpc('increment_jackpot', { delta: -SEUIL });
+      }
+    }
+
+    await supabaseAdmin
+      .from('loto_tickets')
+      .update({
+        status,
+        nb_bons,
+        gains_cdf,
+        jackpot_en_attente,
+        tirage_id: tirage.id,
+      })
+      .eq('id', t.id);
+
+    processed++;
+  }
+
+  return {
+    tirage_id: tirage.id,
+    tickets_traites: processed,
+    pot_jackpot: potActuel,
+    jackpot_declenche: jackpotPaye,
+  };
+}
+
 const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
   // GET latest tirage
   app.get('/api/loto/tirage/latest', async (_req, reply) => {
@@ -84,6 +228,19 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     if (!user_id) return reply.code(400).send({ error: 'user_id requis' });
     if (!isValidLotoNumbers(numeros)) {
       return reply.code(400).send({ error: 'numeros invalides : 6 entiers distincts entre 1 et 49' });
+    }
+
+    // Sécurité lancement : seuil minimum de tickets cumulés
+    const MIN = Number(process.env.LOTO_MIN_TICKETS ?? 0);
+    if (MIN > 0) {
+      const { count } = await supabaseAdmin
+        .from('loto_tickets')
+        .select('*', { count: 'exact', head: true });
+      if ((count ?? 0) < MIN) {
+        return reply
+          .code(503)
+          .send({ error: 'Lancement en cours', message: 'Le loto ouvre bientôt, revenez dans quelques jours !' });
+      }
     }
 
     const { data: user, error: userErr } = await supabaseAdmin
@@ -136,99 +293,12 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     if (!adminSecret || provided !== adminSecret) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
-
-    const all = drawSevenUniqueNumbers();
-    const numeros = all.slice(0, 6).sort((a, b) => a - b);
-    const complementaire = all[6];
-    const ts = Date.now();
-    const hash_pre = crypto
-      .createHash('sha256')
-      .update(JSON.stringify({ numeros, complementaire, ts }))
-      .digest('hex');
-
-    const jackpot = Number(process.env.LOTO_JACKPOT_CDF || DEFAULT_JACKPOT_CDF);
-
-    const { data: tirage, error: tirErr } = await supabaseAdmin
-      .from('loto_tirages')
-      .insert({ numeros, complementaire, jackpot, hash_pre })
-      .select('*')
-      .single();
-    if (tirErr || !tirage) return reply.code(500).send({ error: tirErr?.message || 'Tirage insert failed' });
-
-    // Lire pot jackpot
-    const { data: jackpotRow } = await supabaseAdmin
-      .from('loto_jackpot')
-      .select('pot_cdf')
-      .eq('id', 1)
-      .single();
-    const potActuel = Number(jackpotRow?.pot_cdf ?? 0);
-    const SEUIL = Number(process.env.LOTO_JACKPOT_CDF ?? DEFAULT_JACKPOT_CDF);
-    const jackpotDispo = potActuel >= SEUIL;
-    let jackpotPaye = false;
-
-    function calculGains(nbBons: number, jackpotDisponible: boolean): number {
-      if (nbBons === 6) return jackpotDisponible ? SEUIL : 0;
-      if (nbBons === 5) return 500_000;
-      if (nbBons === 4) return 50_000;
-      if (nbBons === 3) return 5_000;
-      if (nbBons === 2) return 1_000;
-      return 0;
+    try {
+      const result = await executerTirageLoto();
+      return reply.send(result);
+    } catch (e: any) {
+      return reply.code(500).send({ error: e?.message || 'Tirage failed' });
     }
-
-    // Process pending tickets
-    const { data: pending, error: pendErr } = await supabaseAdmin
-      .from('loto_tickets')
-      .select('id, user_id, numeros')
-      .eq('status', 'pending');
-    if (pendErr) return reply.code(500).send({ error: pendErr.message });
-
-    const winSet = new Set<number>(numeros);
-    let processed = 0;
-
-    for (const t of pending || []) {
-      const tNums: number[] = Array.isArray(t.numeros) ? t.numeros : [];
-      const nb_bons = tNums.reduce((acc, n) => acc + (winSet.has(n) ? 1 : 0), 0);
-      const isSix = nb_bons === 6;
-      const gains_cdf = calculGains(nb_bons, jackpotDispo);
-      const jackpot_en_attente = isSix && !jackpotDispo;
-
-      let status: 'gagnant' | 'perdant' | 'jackpot_attente';
-      if (jackpot_en_attente) {
-        status = 'jackpot_attente';
-      } else if (gains_cdf > 0) {
-        status = 'gagnant';
-      } else {
-        status = 'perdant';
-      }
-
-      if (gains_cdf > 0 && !jackpot_en_attente) {
-        await supabaseAdmin.rpc('adjust_balance', { p_user_id: t.user_id, p_delta: gains_cdf });
-        if (isSix) {
-          jackpotPaye = true;
-          await supabaseAdmin.rpc('increment_jackpot', { delta: -SEUIL });
-        }
-      }
-
-      await supabaseAdmin
-        .from('loto_tickets')
-        .update({
-          status,
-          nb_bons,
-          gains_cdf,
-          jackpot_en_attente,
-          tirage_id: tirage.id,
-        })
-        .eq('id', t.id);
-
-      processed++;
-    }
-
-    return reply.send({
-      tirage_id: tirage.id,
-      tickets_traites: processed,
-      pot_jackpot: potActuel,
-      jackpot_declenche: jackpotPaye,
-    });
   });
 };
 
