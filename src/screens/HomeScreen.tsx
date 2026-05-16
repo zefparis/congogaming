@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Trophy, Wallet } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
 
@@ -33,38 +33,66 @@ export default function HomeScreen() {
       </header>
 
       <div className="p-4 space-y-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative overflow-hidden rounded-3xl border border-gold/30"
-          style={{
-            background:
-              'linear-gradient(135deg, #0A0A0A 0%, #1a1a1a 50%, #2a1f00 100%)',
-          }}
-        >
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-gold/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-congogreen/20 rounded-full blur-3xl" />
-          <div className="relative p-5">
-            <div className="flex items-center gap-2 text-gold text-xs font-bold uppercase tracking-widest">
-              <Flame className="w-4 h-4 animate-flicker" /> Événement
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, minHeight: 220 }}>
+          {/* Background image */}
+          <img
+            src="/images/worldcup2026.jpg"
+            alt="FIFA World Cup 2026"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center top',
+              opacity: 0.55,
+            }}
+          />
+
+          {/* Dark gradient overlay bottom to top */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%)',
+            }}
+          />
+
+          {/* Content on top */}
+          <div style={{ position: 'relative', padding: '20px 16px' }}>
+            <div style={{ fontSize: 10, color: '#FFD700', letterSpacing: 3, marginBottom: 4 }}>
+              🏆 ÉVÉNEMENT OFFICIEL
             </div>
-            <h2 className="font-display text-4xl mt-2 leading-none">
-              <span className="shine-text">FIFA WORLD CUP</span>
-              <br />
-              <span className="text-white">2026™</span>
-            </h2>
-            <div className="flex items-center gap-2 mt-3 text-sm text-zinc-300">
-              <Trophy className="w-4 h-4 text-gold" /> Gagnez gros
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: 38, color: 'white', lineHeight: 1 }}>
+              FIFA WORLD CUP
             </div>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: 56, color: '#FFD700', lineHeight: 1 }}>
+              2026
+            </div>
+            <div style={{ fontSize: 13, color: '#00A86B', marginTop: 4, marginBottom: 16 }}>
+              ⚽ Gagnez gros — Paris & Prédictions
+            </div>
+            <button
               onClick={() => nav('/jouer')}
-              className="mt-5 w-full h-16 rounded-2xl bg-gradient-to-r from-gold via-yellow-300 to-gold text-black font-display text-3xl tracking-widest shadow-[0_8px_30px_rgba(255,215,0,0.45)]"
+              style={{
+                width: '100%',
+                padding: '13px 0',
+                background: 'linear-gradient(90deg, #FFD700, #F59E0B)',
+                color: 'black',
+                fontWeight: 900,
+                fontSize: 16,
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'Bebas Neue',
+                letterSpacing: 2,
+              }}
             >
-              JOUER MAINTENANT
-            </motion.button>
+              JOUER MAINTENANT →
+            </button>
           </div>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <motion.button
