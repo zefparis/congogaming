@@ -40,6 +40,19 @@ type Ticket = {
 const TICKET_PRICE = 2000;
 const JACKPOT_SEUIL = 5_000_000;
 
+function getCountdownToKinshasa20h(): string {
+  const now = new Date();
+  const kinshasa = new Date(now.toLocaleString('en-US', { timeZone: 'Africa/Kinshasa' }));
+  const target = new Date(kinshasa);
+  target.setHours(20, 0, 0, 0);
+  if (kinshasa >= target) target.setDate(target.getDate() + 1);
+  const diff = target.getTime() - kinshasa.getTime();
+  const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+  const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+  const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
 export default function LotoScreen() {
   const nav = useNavigate();
   const session = getSession();
@@ -53,6 +66,12 @@ export default function LotoScreen() {
   const [potCdf, setPotCdf] = useState(0);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [showTickets, setShowTickets] = useState(false);
+  const [countdown, setCountdown] = useState<string>(() => getCountdownToKinshasa20h());
+
+  useEffect(() => {
+    const id = setInterval(() => setCountdown(getCountdownToKinshasa20h()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     api.lotoLatest()
@@ -155,9 +174,15 @@ export default function LotoScreen() {
             <span className="text-zinc-600 mx-1">+</span>
             <Ball n={tirage.complementaire} variant="green" />
           </div>
-        ) : (
-          <div className="mt-2 text-sm text-zinc-400">Prochain tirage bientôt</div>
-        )}
+        ) : null}
+        <div className="mt-3">
+          <div className="text-sm text-white">
+            Prochain tirage dans <span className="font-mono font-semibold">{countdown}</span>
+          </div>
+          <div className="text-[10px] text-zinc-500 mt-0.5">
+            Tous les jours à 20h00 (Kinshasa)
+          </div>
+        </div>
         <div className="mt-4">
           {potCdf < JACKPOT_SEUIL ? (
             <div>
