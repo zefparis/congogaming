@@ -33,7 +33,7 @@ export default function HomeScreen() {
       </header>
 
       <div className="p-4 space-y-4">
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, minHeight: 220 }}>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, minHeight: 280 }}>
           {/* Background image */}
           <img
             src="/images/worldcup2026.jpg"
@@ -44,7 +44,7 @@ export default function HomeScreen() {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center top',
+              objectPosition: 'center center',
               opacity: 0.75,
             }}
           />
