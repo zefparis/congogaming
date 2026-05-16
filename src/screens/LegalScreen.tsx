@@ -58,10 +58,10 @@ const LICENCES: Licence[] = [
   {
     num: 5,
     autorite: 'Ministère des Finances — Cabinet du Ministre',
-    type: "Agrément jeux d'argent en RDC — Avis favorable",
+    type: "Agrément d'exploitation des jeux d'argent en RDC",
     reference: 'N°1024/CAB/MIN/FINANCES/JUR/LKL/2023',
-    date: '29 juin 2023',
-    status: 'en_cours',
+    date: '12 février 2023',
+    status: 'agree',
   },
 ];
 
