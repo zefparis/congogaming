@@ -145,6 +145,13 @@ export default function HomeScreen() {
           <div className="text-xs uppercase tracking-widest text-zinc-500">Astuce</div>
           <div className="text-sm mt-1">Jouez de manière responsable. 18+ uniquement.</div>
         </div>
+
+        <button
+          onClick={() => nav('/legal')}
+          className="block w-full text-center text-xs text-gray-600 hover:text-gray-400 pt-2 pb-1"
+        >
+          © Congo Gaming Limited SARL — Agréé MJS N°047/2016 — ARPTC N°0573-0574/2023
+        </button>
       </div>
     </div>
   );

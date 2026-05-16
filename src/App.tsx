@@ -10,6 +10,7 @@ import WithdrawScreen from './screens/WithdrawScreen';
 import AccountScreen from './screens/AccountScreen';
 import LotoScreen from './screens/LotoScreen';
 import FlashScreen from './screens/FlashScreen';
+import LegalScreen from './screens/LegalScreen';
 import BottomNav from './components/BottomNav';
 import { getSession } from './lib/auth';
 
@@ -50,6 +51,7 @@ function AppRoutes() {
           <Route path="/compte" element={<Protected><PageWrap><AccountScreen /></PageWrap></Protected>} />
           <Route path="/loto" element={<Protected><PageWrap><LotoScreen /></PageWrap></Protected>} />
           <Route path="/flash" element={<Protected><PageWrap><FlashScreen /></PageWrap></Protected>} />
+          <Route path="/legal" element={<Protected><PageWrap><LegalScreen /></PageWrap></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>

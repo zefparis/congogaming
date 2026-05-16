@@ -81,6 +81,15 @@ export default function AccountScreen() {
       >
         <LogOut className="w-5 h-5" /> DÉCONNEXION
       </motion.button>
+
+      <div className="mt-6 text-center">
+        <button
+          onClick={() => nav('/legal')}
+          className="text-xs text-gray-500 underline"
+        >
+          Mentions légales
+        </button>
+      </div>
     </div>
   );
 }
