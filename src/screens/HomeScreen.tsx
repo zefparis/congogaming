@@ -45,7 +45,7 @@ export default function HomeScreen() {
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center top',
-              opacity: 0.55,
+              opacity: 0.75,
             }}
           />
 
@@ -55,7 +55,7 @@ export default function HomeScreen() {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%)',
+                'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.05) 100%)',
             }}
           />
 
@@ -79,7 +79,7 @@ export default function HomeScreen() {
                 width: '100%',
                 padding: '13px 0',
                 background: 'linear-gradient(90deg, #FFD700, #F59E0B)',
-                color: 'black',
+                color: '#000000',
                 fontWeight: 900,
                 fontSize: 16,
                 borderRadius: 8,
