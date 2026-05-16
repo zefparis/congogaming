@@ -16,7 +16,6 @@ export default function SplashScreen() {
       <div className="flex flex-col items-center w-full mt-8">
         <div style={{ background: 'transparent', isolation: 'isolate' }}>
           <video
-            src="/videos/okapibet.mp4"
             autoPlay
             loop
             muted
@@ -27,9 +26,11 @@ export default function SplashScreen() {
               margin: '0 auto',
               display: 'block',
               background: 'transparent',
-              mixBlendMode: 'screen',
             }}
-          />
+          >
+            <source src="/videos/okapibet.webm" type="video/webm" />
+            <source src="/videos/okapibet.mp4" type="video/mp4" />
+          </video>
         </div>
         <motion.p
           initial={{ opacity: 0 }}
