@@ -15,7 +15,7 @@ export default function SplashScreen() {
       <div className="h-screen flex flex-col items-center justify-between pb-10">
       <div style={{ 
         width: '100%',
-        height: '350px',
+        height: '380px',
         overflow: 'hidden',
         position: 'relative'
       }}>
@@ -29,7 +29,7 @@ export default function SplashScreen() {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center 35%',
+            objectPosition: 'center 45%',
             transform: 'scale(1.1)',
             mixBlendMode: 'screen',
           }}
