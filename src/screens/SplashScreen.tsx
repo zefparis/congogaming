@@ -21,8 +21,8 @@ export default function SplashScreen() {
           playsInline
           style={{
             width: '100%',
-            maxWidth: 280,
-            margin: '0 auto',
+            maxWidth: 340,
+            margin: '-20px auto -10px',
             display: 'block',
             mixBlendMode: 'screen',
           }}
@@ -33,7 +33,7 @@ export default function SplashScreen() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.5 }}
-          className="mt-6 font-display text-2xl tracking-wider text-gold text-center"
+          className="mt-2 font-display text-2xl tracking-wider text-gold text-center"
         >
           Pariez. Gagnez. Encaissez.
         </motion.p>
@@ -41,7 +41,7 @@ export default function SplashScreen() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.5 }}
-          className="text-center text-gray-400 text-sm px-8 mt-8"
+          className="text-center text-gray-400 text-xs px-8 mt-8"
         >
           ⚠️ Jeu réservé aux personnes de 18 ans et plus. Le jeu peut créer une dépendance.
         </motion.p>
