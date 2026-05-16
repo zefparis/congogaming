@@ -26,8 +26,8 @@ export default function SplashScreen() {
           playsInline
           style={{
             position: 'absolute',
-            width: '100%',
-            height: '100%',
+            width: '110%',
+            height: '80%',
             objectFit: 'cover',
             objectPosition: 'center 60%',
             transform: 'scale(1.0)',
