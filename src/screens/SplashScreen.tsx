@@ -37,7 +37,7 @@ export default function SplashScreen() {
           <source src="/videos/okapibet.mp4" type="video/mp4" />
         </video>
       </div>
-      <div style={{ marginTop: 0}}>
+      <div style={{ marginTop: 45}}>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
