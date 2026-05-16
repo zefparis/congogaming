@@ -14,14 +14,23 @@ export default function SplashScreen() {
     >
       <div className="h-screen flex flex-col items-center justify-between px-6 pt-4 pb-10 overflow-hidden">
       <div className="flex flex-col items-center w-full mt-8">
-        <video
-          src="/videos/okapibet.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{ width: '100%', maxWidth: 280, margin: '0 auto', display: 'block' }}
-        />
+        <div style={{ background: 'transparent', isolation: 'isolate' }}>
+          <video
+            src="/videos/okapibet.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              width: '100%',
+              maxWidth: 280,
+              margin: '0 auto',
+              display: 'block',
+              background: 'transparent',
+              mixBlendMode: 'screen',
+            }}
+          />
+        </div>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
