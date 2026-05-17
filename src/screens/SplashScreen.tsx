@@ -60,7 +60,7 @@ export default function SplashScreen() {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="font-display text-3xl text-gold tracking-wider leading-tight"
         >
-          L'app de jeux<br/>du Congo
+          Mbongo eza awa.
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
@@ -68,7 +68,7 @@ export default function SplashScreen() {
           transition={{ delay: 0.8, duration: 0.5 }}
           className="text-zinc-400 text-sm mt-3"
         >
-          Licence ARPTC · Paiement Mobile Money
+           Paiement Mobile Money
         </motion.p>
       </div>
 
