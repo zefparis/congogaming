@@ -81,7 +81,7 @@ export default function SplashScreen() {
           transition={{ delay: 0.5, duration: 0.5 }}
           className="text-zinc-400 text-xs mt-1.5 tracking-wide"
         >
-          Licence ARPTC · Mobile Money
+          Mobile Money
         </motion.p>
       </div>
 
