@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // 8 cards : card1.png → card8.png dans /public/images/
 const GAMES = [
@@ -18,15 +18,7 @@ const CATEGORIES = ['Tout', 'En direct', 'Casino', 'Slots', 'Crash'];
 
 export default function SplashScreen() {
   const nav = useNavigate();
-  const [liveCount, setLiveCount] = useState(247);
   const [activeCategory, setActiveCategory] = useState('Tout');
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setLiveCount(c => Math.max(180, c + Math.floor(Math.random() * 7) - 3));
-    }, 3500);
-    return () => clearInterval(id);
-  }, []);
 
   const filtered =
     activeCategory === 'Tout'      ? GAMES
@@ -38,18 +30,9 @@ export default function SplashScreen() {
       className="min-h-screen bg-cover bg-center flex flex-col"
       style={{ backgroundImage: 'url(/images/background.png)' }}
     >
-      {/* Strip live */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-2 text-xs">
-        <div className="flex items-center gap-2 text-emerald-400">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-          </span>
-          <span className="tracking-wide tabular-nums">
-            {liveCount.toLocaleString()} joueurs en ligne
-          </span>
-        </div>
-        <span className="text-zinc-500 tracking-widest">OKAPIBET · RDC</span>
+      {/* Brand strip */}
+      <div className="flex justify-end px-5 pt-4 pb-2 text-xs">
+        <span className="text-gold tracking-widest">OKAPIBET · RDC</span>
       </div>
 
       {/* Okapi — peut être plus prominent maintenant qu'on a un carrousel */}
