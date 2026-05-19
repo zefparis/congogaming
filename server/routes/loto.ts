@@ -2,6 +2,32 @@ import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastif
 import crypto from 'node:crypto';
 import { supabaseAdmin } from '../lib/supabase.js';
 
+// provider_id sentinel used for internal (non-Unipesa) loto transactions
+const LOTO_PROVIDER_ID = 0;
+
+async function recordLotoTransaction(opts: {
+  user_id: string;
+  type: 'loto_ticket' | 'loto_payout';
+  amount: number;
+  reference?: string;
+}) {
+  const order_id = `loto-${opts.type}-${crypto.randomUUID()}`;
+  const { error } = await supabaseAdmin.from('transactions').insert({
+    user_id: opts.user_id,
+    order_id,
+    type: opts.type,
+    amount: opts.amount,
+    currency: 'CDF',
+    provider_id: LOTO_PROVIDER_ID,
+    status: 2, // success
+    transaction_id: opts.reference ?? null,
+  });
+  if (error) {
+    // Non-blocking: log but do not fail the gameplay flow
+    console.error('[loto] transaction insert failed', error.message);
+  }
+}
+
 const TICKET_PRICE_CDF = 2000;
 const JACKPOT_CONTRIB_CDF = 1000;
 const DEFAULT_JACKPOT_CDF = 5_000_000;
@@ -118,6 +144,12 @@ export async function executerTirageLoto(): Promise<ExecuterTirageLotoResult> {
           jackpot_en_attente: false,
         })
         .eq('id', ticket.id);
+      await recordLotoTransaction({
+        user_id: ticket.user_id,
+        type: 'loto_payout',
+        amount: SEUIL,
+        reference: ticket.id,
+      });
       jackpotPaye = true;
 
       // Le pot redescend : recalcule pour les suivants
@@ -159,6 +191,12 @@ export async function executerTirageLoto(): Promise<ExecuterTirageLotoResult> {
 
     if (gains_cdf > 0 && !jackpot_en_attente) {
       await supabaseAdmin.rpc('adjust_balance', { p_user_id: t.user_id, p_delta: gains_cdf });
+      await recordLotoTransaction({
+        user_id: t.user_id,
+        type: 'loto_payout',
+        amount: gains_cdf,
+        reference: t.id,
+      });
       if (isSix) {
         jackpotPaye = true;
         await supabaseAdmin.rpc('increment_jackpot', { delta: -SEUIL });
@@ -279,6 +317,14 @@ const lotoRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
 
     // Feed jackpot pool
     await supabaseAdmin.rpc('increment_jackpot', { delta: JACKPOT_CONTRIB_CDF });
+
+    // Record purchase in transactions history
+    await recordLotoTransaction({
+      user_id,
+      type: 'loto_ticket',
+      amount: TICKET_PRICE_CDF,
+      reference: ticket.id,
+    });
 
     return reply.send({
       ticket_id: ticket.id,

@@ -6,7 +6,7 @@ create extension if not exists "pgcrypto";
 -- ENUM type for transaction direction
 do $$ begin
   if not exists (select 1 from pg_type where typname = 'transaction_type') then
-    create type transaction_type as enum ('deposit', 'withdrawal');
+    create type transaction_type as enum ('deposit', 'withdrawal', 'loto_ticket', 'loto_payout');
   end if;
 end $$;
 

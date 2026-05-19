@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogOut, Phone, Wallet } from 'lucide-react';
-import TransactionItem from '../components/TransactionItem';
+import TransactionItem, { type TransactionType } from '../components/TransactionItem';
 import { clearSession, getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
 
@@ -10,7 +10,7 @@ export default function AccountScreen() {
   const nav = useNavigate();
   const session = getSession();
   const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0);
-  const [tx, setTx] = useState<Array<{ id: string; type: 'deposit' | 'withdrawal'; amount: number; status: number; created_at: string }>>([]);
+  const [tx, setTx] = useState<Array<{ id: string; type: TransactionType; amount: number; status: number; created_at: string }>>([]);
 
   useEffect(() => {
     if (!session) return;
