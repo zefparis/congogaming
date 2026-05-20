@@ -38,12 +38,6 @@ export default function ProviderCard({ provider, selected, onClick }: Props) {
         alt={provider.name}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      <span
-        className="absolute bottom-2 left-0 right-0 text-center text-white font-bold"
-        style={{ fontSize: '12px', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
-      >
-        {provider.name}
-      </span>
       {selected && (
         <span className="absolute top-2 right-2 bg-congogreen text-white rounded-full w-6 h-6 text-xs flex items-center justify-center font-black shadow">✓</span>
       )}
