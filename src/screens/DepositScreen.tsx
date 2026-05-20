@@ -13,7 +13,7 @@ export default function DepositScreen() {
   const nav = useNavigate();
   const session = getSession();
   const [amount, setAmount] = useState('');
-  const [providerId, setProviderId] = useState<number>(9);
+  const [providerId, setProviderId] = useState<number>(10);
   const [phone, setPhone] = useState(session?.phone || '');
   const [state, setState] = useState<State>('idle');
   const [msg, setMsg] = useState<string>('');

@@ -9,7 +9,6 @@ export type Provider = {
 };
 
 export const PROVIDERS: Provider[] = [
-  { id: 9, name: 'Vodacom', short: 'M-Pesa', color: 'bg-purple-600', ring: 'ring-purple-400' },
   { id: 10, name: 'Orange', short: 'Money', color: 'bg-orange-500', ring: 'ring-orange-300' },
   { id: 17, name: 'Airtel', short: 'Money', color: 'bg-red-600', ring: 'ring-red-400' },
   { id: 19, name: 'Africell', short: 'Money', color: 'bg-blue-600', ring: 'ring-blue-400' },
