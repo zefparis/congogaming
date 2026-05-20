@@ -82,7 +82,7 @@ export default function WithdrawScreen() {
 
       <div className="mt-4">
         <div className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Opérateur</div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {PROVIDERS.map((p) => (
             <ProviderCard key={p.id} provider={p} selected={providerId === p.id} onClick={() => setProviderId(p.id)} />
           ))}
