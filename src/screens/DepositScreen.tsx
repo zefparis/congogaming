@@ -72,6 +72,25 @@ export default function DepositScreen() {
       </header>
 
       <div className="mt-3 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
+        <div className="text-xs text-zinc-500 uppercase tracking-widest">Numéro</div>
+        <input
+          inputMode="numeric"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          className="bg-transparent w-full font-display text-2xl tracking-widest outline-none mt-1"
+        />
+      </div>
+
+      <div className="mt-4">
+        <div className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Opérateur</div>
+        <div className="grid grid-cols-2 gap-3">
+          {PROVIDERS.map((p) => (
+            <ProviderCard key={p.id} provider={p} selected={providerId === p.id} onClick={() => setProviderId(p.id)} />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
         <div className="text-xs text-zinc-500 uppercase tracking-widest">Montant (CDF)</div>
         <div className="font-display text-5xl text-white mt-1">
           {amount ? Number(amount).toLocaleString('fr-FR') : <span className="text-zinc-700">0</span>}
@@ -87,25 +106,6 @@ export default function DepositScreen() {
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="mt-4">
-        <div className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Opérateur</div>
-        <div className="grid grid-cols-2 gap-3">
-          {PROVIDERS.map((p) => (
-            <ProviderCard key={p.id} provider={p} selected={providerId === p.id} onClick={() => setProviderId(p.id)} />
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
-        <div className="text-xs text-zinc-500 uppercase tracking-widest">Numéro</div>
-        <input
-          inputMode="numeric"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-          className="bg-transparent w-full font-display text-2xl tracking-widest outline-none mt-1"
-        />
       </div>
 
       <div className="mt-4">
