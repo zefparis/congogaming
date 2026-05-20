@@ -71,10 +71,13 @@ export default function WithdrawScreen() {
       </div>
 
       <div className="mt-3 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
-        <div className="text-xs text-zinc-500 uppercase tracking-widest">Montant (CDF) — min 500</div>
-        <div className="font-display text-5xl text-white mt-1">
-          {amount ? Number(amount).toLocaleString('fr-FR') : <span className="text-zinc-700">0</span>}
-        </div>
+        <div className="text-xs text-zinc-500 uppercase tracking-widest">Numéro de réception</div>
+        <input
+          inputMode="numeric"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          className="bg-transparent w-full font-display text-2xl tracking-widest outline-none mt-1"
+        />
       </div>
 
       <div className="mt-4">
@@ -87,13 +90,10 @@ export default function WithdrawScreen() {
       </div>
 
       <div className="mt-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
-        <div className="text-xs text-zinc-500 uppercase tracking-widest">Numéro de réception</div>
-        <input
-          inputMode="numeric"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-          className="bg-transparent w-full font-display text-2xl tracking-widest outline-none mt-1"
-        />
+        <div className="text-xs text-zinc-500 uppercase tracking-widest">Montant (CDF) — min 500</div>
+        <div className="font-display text-5xl text-white mt-1">
+          {amount ? Number(amount).toLocaleString('fr-FR') : <span className="text-zinc-700">0</span>}
+        </div>
       </div>
 
       <div className="mt-4">
