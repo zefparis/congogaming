@@ -11,6 +11,7 @@ import AccountScreen from './screens/AccountScreen';
 import LotoScreen from './screens/LotoScreen';
 import FlashScreen from './screens/FlashScreen';
 import LegalScreen from './screens/LegalScreen';
+import OkapiGame from './screens/okapi/OkapiGame';
 import BottomNav from './components/BottomNav';
 import { getSession } from './lib/auth';
 
@@ -36,7 +37,7 @@ function Protected({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const location = useLocation();
-  const showNav = ['/', '/loto', '/flash', '/compte'].includes(location.pathname);
+  const showNav = ['/', '/loto', '/flash', '/climb', '/compte'].includes(location.pathname);
   return (
     <>
       <AnimatePresence mode="wait">
@@ -51,6 +52,7 @@ function AppRoutes() {
           <Route path="/compte" element={<Protected><PageWrap><AccountScreen /></PageWrap></Protected>} />
           <Route path="/loto" element={<Protected><PageWrap><LotoScreen /></PageWrap></Protected>} />
           <Route path="/flash" element={<Protected><PageWrap><FlashScreen /></PageWrap></Protected>} />
+          <Route path="/climb" element={<Protected><PageWrap><OkapiGame /></PageWrap></Protected>} />
           <Route path="/legal" element={<Protected><PageWrap><LegalScreen /></PageWrap></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -94,6 +94,70 @@ export default function HomeScreen() {
           </div>
         </div>
 
+        {/* OKAPI CLIMB card */}
+        <div
+          onClick={() => nav('/climb')}
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 16,
+            minHeight: 200,
+            cursor: 'pointer',
+          }}
+        >
+          <img
+            src="/images/okapi/okapi-climb.png"
+            alt="Okapi Climb"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 35%',
+              opacity: 0.85,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.05) 100%)',
+            }}
+          />
+          <div style={{ position: 'relative', padding: '20px 16px' }}>
+            <div style={{ fontSize: 10, color: '#FFD700', letterSpacing: 3, marginBottom: 4 }}>
+              🏔️ CRASH GAME
+            </div>
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: 44, color: '#FFD700', lineHeight: 1 }}>
+              OKAPI CLIMB
+            </div>
+            <div style={{ fontSize: 13, color: 'white', marginTop: 4, marginBottom: 16, opacity: 0.85 }}>
+              Pariez, encaissez avant le crash. Jusqu'à ×50
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={(e) => { e.stopPropagation(); nav('/climb'); }}
+              style={{
+                width: '100%',
+                padding: '12px 0',
+                background: 'linear-gradient(90deg, #FFD700, #F59E0B)',
+                color: '#000000',
+                fontWeight: 900,
+                fontSize: 16,
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'Bebas Neue',
+                letterSpacing: 2,
+              }}
+            >
+              GRIMPER MAINTENANT →
+            </motion.button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <motion.button
             whileTap={{ scale: 0.96 }}
