@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import depositRoutes from './routes/deposit.js';
 import withdrawRoutes from './routes/withdraw.js';
 import callbackRoutes from './routes/callback.js';
@@ -12,15 +13,19 @@ import { startCrons } from './cron.js';
 
 const app = Fastify({ logger: true });
 
-await app.register(cors, { origin: true });
+await app.register(cors, { origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'https://congogaming-seven.vercel.app'] });
+
+await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
 
 app.get('/health', async () => ({ ok: true, service: 'congo-gaming-api' }));
 
-app.get('/api/myip', async (req, reply) => {
-  const res = await fetch('https://api.ipify.org?format=json');
-  const data = await res.json();
-  return { ip: data.ip };
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/myip', async (req, reply) => {
+    const res = await fetch('https://api.ipify.org?format=json');
+    const data = await res.json();
+    return { ip: data.ip };
+  });
+}
 
 await app.register(depositRoutes);
 await app.register(withdrawRoutes);

@@ -37,6 +37,7 @@ async function call(path: string, payload: Record<string, any>): Promise<Unipesa
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(30000),
   });
   const text = await res.text();
   let json: any = {};
