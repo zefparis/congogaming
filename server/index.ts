@@ -13,7 +13,7 @@ import { startCrons } from './cron.js';
 
 const app = Fastify({ logger: true });
 
-await app.register(cors, { origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'https://congogaming-seven.vercel.app'] });
+await app.register(cors, { origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://congogaming.com', 'https://www.congogaming.com', 'http://localhost:5173'] });
 
 await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
 
