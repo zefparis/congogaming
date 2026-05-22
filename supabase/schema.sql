@@ -40,6 +40,8 @@ create index if not exists transactions_order_idx on public.transactions(order_i
 
 -- Atomic balance adjustment (used by withdraw, deposit, okapi)
 -- Returns the new balance. Raises if user not found or balance would go negative.
+-- DROP first because the return type changed from void to numeric.
+drop function if exists public.adjust_balance(uuid, numeric);
 create or replace function public.adjust_balance(
   p_user_id uuid,
   p_delta numeric
