@@ -21,19 +21,20 @@ export function getSupabase(): SupabaseClient | null {
 }
 
 /**
- * Adjusts a user's balance by calling the `adjust_balance` Postgres RPC.
- * Returns the new balance, or null if Supabase is not configured.
+ * Adjusts a user's balance atomically via the `adjust_balance` Postgres RPC.
+ * The RPC enforces balance_cdf + p_delta >= 0 and returns the new balance.
+ * Throws if the user is not found or balance would go negative.
  */
 export async function adjustBalance(
   userId: string,
   delta: number,
-): Promise<number | null> {
+): Promise<number> {
   const sb = getSupabase();
-  if (!sb) return null;
+  if (!sb) return 0;
   const { data, error } = await sb.rpc('adjust_balance', {
     p_user_id: userId,
     p_delta: delta,
   });
   if (error) throw new Error(error.message);
-  return (data as unknown as number) ?? 0;
+  return (data as number) ?? 0;
 }
