@@ -1,6 +1,16 @@
 import { createHmac, randomUUID } from 'crypto';
+import { ProxyAgent, fetch as undiciFetch } from 'undici';
 
 const BASE = 'https://api.unipesa.tech';
+
+// Route outbound Unipesa traffic through Fixie so it leaves Render with a
+// static IP that Unipesa whitelists.
+const PROXY_URL = process.env.FIXIE_URL;
+const proxyAgent = PROXY_URL ? new ProxyAgent(PROXY_URL) : null;
+const fetchWithProxy: typeof fetch = proxyAgent
+  ? ((url: any, opts: any) =>
+      undiciFetch(url, { ...(opts || {}), dispatcher: proxyAgent }) as any)
+  : fetch;
 
 export function calculateSignature(data: Record<string, any>, secretKey: string): string {
   let stringForSignature = '';
@@ -33,7 +43,7 @@ export type UnipesaResponse = {
 async function call(path: string, payload: Record<string, any>): Promise<UnipesaResponse> {
   const publicId = env('UNIPESA_PUBLIC_ID');
   const url = `${BASE}/${publicId}${path}`;
-  const res = await fetch(url, {
+  const res = await fetchWithProxy(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
