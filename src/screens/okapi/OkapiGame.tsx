@@ -754,16 +754,13 @@ export default function OkapiGame() {
 
         <ClimbCurve state={state} startTime={startTime} />
 
-        <div
-          className="hidden md:block"
-          style={{ position: 'absolute', left: 16, top: 16, zIndex: 25 }}
-        >
-          <PlayersList
-            state={state}
-            multiplier={multiplier}
-            crashPoint={crashPoint}
-          />
-        </div>
+        {/* PlayersList renders its own absolute-positioned pill button +
+            slide-in drawer; no wrapper needed. */}
+        <PlayersList
+          state={state}
+          multiplier={multiplier}
+          crashPoint={crashPoint}
+        />
 
         <div
           style={{
