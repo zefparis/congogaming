@@ -87,7 +87,7 @@ export default function HomeScreen() {
             style={{
               position: 'absolute',
               right: '-5px',
-              bottom: '13%',
+              bottom: '20%',
               height: '72%',
               width: 'auto',
               objectFit: 'contain',
