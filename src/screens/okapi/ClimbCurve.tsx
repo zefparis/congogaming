@@ -84,7 +84,9 @@ export default function ClimbCurve({ state, startTime }: Props) {
     }
     if (state === 'playing') {
       pointsRef.current = []
-      startRef.current = startTime ?? performance.now()
+      // startTime is Date.now() epoch ms (server PLAYING msg or local fallback).
+      // We diff it against Date.now() below.
+      startRef.current = startTime ?? Date.now()
       fadeAlphaRef.current = 1
       crashStartRef.current = null
       crashAnchorRef.current = null
@@ -103,7 +105,7 @@ export default function ClimbCurve({ state, startTime }: Props) {
       ctx.clearRect(0, 0, w, h)
 
       if (state === 'playing' && startRef.current != null) {
-        const elapsed = (performance.now() - startRef.current) / 1000
+        const elapsed = Math.max(0, (Date.now() - startRef.current) / 1000)
         const m = multiplierAt(elapsed)
 
         // Aviator-standard direction: starts at bottom-left, climbs toward
