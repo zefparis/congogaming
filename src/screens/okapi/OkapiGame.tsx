@@ -36,6 +36,11 @@ export default function OkapiGame() {
   // until the next WAITING socket message restores a fresh round window.
   // Prevents the client from spamming /api/game/bet during PLAYING/CRASHED.
   const [betLocked, setBetLocked] = useState<boolean>(false)
+  // Reflects the real WS connection state. When false, the client is desynced
+  // from the server engine and any bet posted will race the wrong state on
+  // the backend (the local fallback engine is just a visual stub). We use
+  // this to disable MISER and surface a clear error.
+  const [wsConnected, setWsConnected] = useState<boolean>(false)
 
   const updateBalance = useCallback((n: number) => {
     const num = Number(n) || 0
@@ -126,8 +131,10 @@ export default function OkapiGame() {
   // Connect WS and load history
   useEffect(() => {
     gameSocket.connect()
+    const offStatus = gameSocket.onStatus((open) => setWsConnected(open))
     okapiApi.history().then((r) => setHistory(r.history)).catch(() => {})
     return () => {
+      offStatus()
       // keep socket alive across re-renders, but close on unmount
       gameSocket.close()
     }
@@ -459,8 +466,9 @@ export default function OkapiGame() {
       const raw = String(err?.message || '')
       // eslint-disable-next-line no-console
       console.error('[okapi auto] cashout failed:', raw)
-      // Treat as a loss: leave win=0 so the round counts as a loss in PnL.
-      autoCashedOutThisRoundRef.current = false
+      // Treat as a loss for this round (win stays 0). DO NOT reset
+      // autoCashedOutThisRoundRef to false: that would let the auto-cashout
+      // useEffect retry on the next TICK and storm the server with 409s.
       syncBalance()
     } finally {
       betIdRef.current = null
@@ -779,7 +787,7 @@ export default function OkapiGame() {
           position: 'relative',
         }}
       >
-        {betError && (
+        {(betError || !wsConnected) && (
           <div
             role="alert"
             style={{
@@ -787,7 +795,9 @@ export default function OkapiGame() {
               top: -28,
               left: 16,
               right: 16,
-              background: 'rgba(220, 38, 38, 0.95)',
+              background: !wsConnected
+                ? 'rgba(234, 88, 12, 0.95)'
+                : 'rgba(220, 38, 38, 0.95)',
               color: 'white',
               fontSize: 12,
               fontWeight: 600,
@@ -797,14 +807,16 @@ export default function OkapiGame() {
               zIndex: 40,
             }}
           >
-            {betError}
+            {!wsConnected
+              ? 'Connexion au serveur perdue — reconnexion…'
+              : betError}
           </div>
         )}
         <BetPanel
           state={state}
           multiplier={multiplier}
           hasBet={Boolean(betId)}
-          locked={betLocked || betSubmitting}
+          locked={betLocked || betSubmitting || !wsConnected}
           onPlaceBet={handlePlaceBet}
           onCashout={handleCashout}
           autoRunning={Boolean(autoSession)}

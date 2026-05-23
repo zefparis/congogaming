@@ -7,13 +7,35 @@ export type GameMessage =
   | { type: 'HISTORY'; history: number[] }
 
 export type Listener = (msg: GameMessage) => void
+export type StatusListener = (open: boolean) => void
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
+// Resolve the WS URL. Priority:
+//   1. VITE_WS_URL (explicit override)
+//   2. Derive from VITE_API_URL by swapping http(s) -> ws(s). This is the
+//      common case: same Render service serves REST + WS on /ws.
+//   3. Fallback to localhost (dev).
+function resolveWsUrl(): string {
+  const explicit = import.meta.env.VITE_WS_URL as string | undefined
+  if (explicit && explicit.length > 0) return explicit
+  const api = import.meta.env.VITE_API_URL as string | undefined
+  if (api && api.length > 0) {
+    return api.replace(/^http:/i, 'ws:').replace(/^https:/i, 'wss:')
+  }
+  return 'ws://localhost:3001'
+}
+
+const WS_URL = resolveWsUrl()
 
 export class GameSocket {
   private ws: WebSocket | null = null
   private listeners = new Set<Listener>()
+  private statusListeners = new Set<StatusListener>()
   private reconnectTimer: number | null = null
+  private _open = false
+
+  get isOpen() {
+    return this._open
+  }
 
   connect() {
     if (this.ws && this.ws.readyState <= 1) return
@@ -24,6 +46,10 @@ export class GameSocket {
       return
     }
 
+    this.ws.onopen = () => {
+      this._open = true
+      this.statusListeners.forEach((l) => l(true))
+    }
     this.ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data) as GameMessage
@@ -32,8 +58,19 @@ export class GameSocket {
         /* ignore */
       }
     }
-    this.ws.onclose = () => this.scheduleReconnect()
+    this.ws.onclose = () => {
+      this._open = false
+      this.statusListeners.forEach((l) => l(false))
+      this.scheduleReconnect()
+    }
     this.ws.onerror = () => this.ws?.close()
+  }
+
+  onStatus(listener: StatusListener) {
+    this.statusListeners.add(listener)
+    // Fire immediately with current value so subscribers don't miss it.
+    listener(this._open)
+    return () => this.statusListeners.delete(listener)
   }
 
   private scheduleReconnect() {
