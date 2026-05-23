@@ -100,13 +100,16 @@ export default async function adminRoutes(app: FastifyInstance) {
 
   app.get('/api/admin/overview', async (_req, reply) => {
     try {
-      const [usersAgg, usersCount, roundsToday] = await Promise.all([
+      const [usersAgg, usersCount, roundsToday, kycCounts] = await Promise.all([
         supabaseAdmin.from('users').select('balance_cdf'),
         supabaseAdmin.from('users').select('*', { count: 'exact', head: true }),
         supabaseAdmin
           .from('okapi_rounds')
           .select('*', { count: 'exact', head: true })
           .gte('started_at', startOfTodayIso()),
+        // Per-status user counts. We query the column directly and aggregate
+        // in JS — cheaper than 4 separate count(*) round-trips.
+        supabaseAdmin.from('users').select('kyc_status'),
       ]);
 
       const total_balance_cdf = (usersAgg.data || []).reduce(
@@ -114,10 +117,17 @@ export default async function adminRoutes(app: FastifyInstance) {
         0,
       );
 
+      const kyc = { approved: 0, pending: 0, denied: 0, verify_age: 0 };
+      for (const r of (kycCounts.data as Array<{ kyc_status?: string }>) || []) {
+        const k = (r.kyc_status || 'pending') as keyof typeof kyc;
+        if (k in kyc) kyc[k]++;
+      }
+
       return reply.send({
         total_balance_cdf,
         users_count: usersCount.count ?? 0,
         okapi_rounds_today: roundsToday.count ?? 0,
+        kyc,
       });
     } catch (e: any) {
       return reply.code(500).send({ error: e.message || 'overview failed' });
@@ -282,7 +292,7 @@ export default async function adminRoutes(app: FastifyInstance) {
 
       let q = supabaseAdmin
         .from('users')
-        .select('id, phone, balance_cdf, created_at', { count: 'exact' })
+        .select('id, phone, balance_cdf, created_at, kyc_status, blocked', { count: 'exact' })
         .order('created_at', { ascending: false });
       if (req.query.search) {
         q = q.ilike('phone', `%${req.query.search}%`);
@@ -331,6 +341,8 @@ export default async function adminRoutes(app: FastifyInstance) {
           balance_cdf: Number(u.balance_cdf || 0),
           created_at: u.created_at,
           last_activity_at: lastActivity.get(u.id) || null,
+          kyc_status: (u.kyc_status as string) || 'pending',
+          blocked: !!u.blocked,
         })),
         page,
         page_size: pageSize,
@@ -343,7 +355,7 @@ export default async function adminRoutes(app: FastifyInstance) {
     const id = req.params.id;
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('id, phone, balance_cdf, created_at')
+      .select('id, phone, balance_cdf, created_at, kyc_status, blocked')
       .eq('id', id)
       .maybeSingle();
     if (error) return reply.code(500).send({ error: error.message });
@@ -371,6 +383,14 @@ export default async function adminRoutes(app: FastifyInstance) {
       total_won += Number(b.win_amount_cdf || 0);
     }
 
+    // Last 5 KYC checks for this user (audit trail).
+    const { data: kycChecks } = await supabaseAdmin
+      .from('kyc_checks')
+      .select('id, verdict, estimated_age, age_low, age_high, is_minor, confidence, scan_id, created_at')
+      .eq('user_id', id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
     return reply.send({
       user,
       transactions: tx.data || [],
@@ -380,6 +400,7 @@ export default async function adminRoutes(app: FastifyInstance) {
         total_won_cdf: total_won,
         pnl_cdf: total_won - total_wagered,
       },
+      kyc_checks: kycChecks || [],
     });
   });
 
@@ -403,10 +424,9 @@ export default async function adminRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string }; Body: { blocked?: boolean } }>(
     '/api/admin/users/:id/block',
     async (req, reply) => {
-      // The current schema has no `blocked` column. Attempt to set it; if the
-      // column doesn't exist, surface a friendly error so the admin knows to
-      // run the migration. (Add `alter table users add column blocked bool
-      // default false;` to enable.)
+      // The `blocked` column is created by the playguard-kyc migration
+      // (2026-05-23-playguard-kyc.sql). If you see a column-missing error
+      // here, run that migration.
       const id = req.params.id;
       const blocked = !!req.body?.blocked;
       const { error } = await supabaseAdmin

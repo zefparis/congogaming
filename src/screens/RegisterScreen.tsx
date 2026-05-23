@@ -32,8 +32,18 @@ export default function RegisterScreen() {
     if (pin.length !== 4 || loading) return;
     try {
       setLoading(true);
-      await registerUser(phone, pin);
-      nav('/', { replace: true });
+      const user = await registerUser(phone, pin);
+      // Mandatory KYC at registration (PredictStreet contract). New accounts
+      // are created with kyc_status='pending' (DB default), so this branch
+      // always runs — explicit check kept defensive for future flows.
+      if (user.kyc_status === 'pending') {
+        nav('/kyc', { replace: true });
+      } else if (user.blocked || user.kyc_status === 'denied') {
+        // Shouldn't happen on a fresh insert, but be safe.
+        setErr('Compte bloqué.');
+      } else {
+        nav('/', { replace: true });
+      }
     } catch (e: any) {
       setErr(e.message || 'Erreur');
       setPin('');

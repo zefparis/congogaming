@@ -1,0 +1,60 @@
+feat(kyc): integrate PlayGuard age verification (PredictStreet compliance)
+
+Mandatory biometric age check at registration via AWS Rekognition through
+PlayGuard. Minors are auto-blocked, ambiguous cases flagged for manual
+review, and every scan is audited in Supabase.
+
+Database (supabase/migrations/2026-05-23-playguard-kyc.sql):
+- New table public.kyc_checks (verdict, age_low/high, estimated_age,
+  is_minor, confidence, scan_id, FK to users, RLS service-role-only).
+- public.users.kyc_status text default 'pending' with CHECK constraint
+  (pending|approved|denied|verify_age).
+- public.users.blocked boolean default false (also fixes the dangling
+  reference in /api/admin/users/:id/block).
+
+Backend (server/routes/kyc.ts, registered in server/index.ts):
+- POST /api/kyc/scan { user_id, selfie_b64 } → forwards to the PlayGuard
+  Vercel Edge proxy with PG_API_KEY (server-side env, never bundled).
+- Maps verdicts:
+    APPROVED        → users.kyc_status='approved'
+    DENIED / minor  → users.kyc_status='denied' + users.blocked=true
+    VERIFY_AGE      → users.kyc_status='verify_age'
+- Inserts the audit row into kyc_checks unconditionally (logged on error
+  but does not fail the user-facing call).
+- 403 if the supplied user_id is already blocked.
+- 502 with friendly error if PlayGuard upstream is unreachable.
+- New env vars: PG_API_KEY (required), PG_PROXY_URL (defaults to
+  https://playguard.vercel.app/api/proxy).
+
+Admin API (server/routes/admin.ts):
+- /api/admin/overview now returns kyc { approved, pending, denied,
+  verify_age } counts.
+- /api/admin/users list exposes kyc_status & blocked per row.
+- /api/admin/users/:id includes the last 5 kyc_checks for the audit
+  trail.
+
+Frontend:
+- src/screens/KycScreen.tsx — 4-stage flow (capture → preview → loading →
+  result) using getUserMedia, square-cropped JPEG, mirrored preview.
+  APPROVED → /, DENIED → clearSession + /splash, VERIFY_AGE → / with
+  manual-review banner.
+- src/lib/auth.ts — SessionUser now carries kyc_status + blocked.
+  loginUser refuses blocked accounts. New refreshKycStatus() helper.
+- src/lib/api.ts — api.kycScan(user_id, selfie_b64).
+- src/App.tsx — /kyc route + Protected guard: blocked/denied → splash,
+  pending → /kyc, approved/verify_age → through. KycRoute itself bypasses
+  the guard to break the redirect loop.
+- src/screens/RegisterScreen.tsx & LoginScreen.tsx — route based on
+  user.kyc_status post-auth.
+
+Admin UI:
+- src/screens/admin/KycBadge.tsx — single source of truth for the pills
+  (approved=green, pending=grey, denied=red, verify_age=amber).
+- PlayersTab — KYC column in the players table, badge in the drawer
+  header, and a new "Vérifications KYC" audit table (last 5).
+- OverviewTab — "X vérifiés / Y en attente / Z à vérifier / W refusés"
+  KPI block under the existing grid.
+
+Build: npm run build && npm run build:server → 0 errors.
+
+Render env vars to set: PG_API_KEY (required, must match PlayGuard).

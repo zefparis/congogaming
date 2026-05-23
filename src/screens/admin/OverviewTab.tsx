@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
   Coins,
   Gamepad2,
+  ShieldCheck,
   Ticket,
   Users,
   Wallet,
@@ -24,6 +25,7 @@ type Overview = {
   total_balance_cdf: number;
   users_count: number;
   okapi_rounds_today: number;
+  kyc?: { approved: number; pending: number; denied: number; verify_age: number };
 };
 
 type Activity = Awaited<ReturnType<typeof adminApi.activity>>['events'][number];
@@ -138,6 +140,49 @@ export default function OverviewTab() {
           value={fmtInt(overview?.okapi_rounds_today ?? 0)}
         />
       </div>
+
+      {overview?.kyc && (
+        <div className="rounded-2xl border border-white/5 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-5 shadow-lg">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={18} className="text-gold" />
+              <h3 className="font-display text-xl tracking-wider text-gold">
+                KYC — Vérification d'âge PlayGuard
+              </h3>
+            </div>
+            <span className="text-xs text-white/40">Conformité PredictStreet</span>
+          </div>
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm text-white/80">
+            <div>
+              <span className="font-display text-2xl text-emerald-400">
+                {fmtInt(overview.kyc.approved)}
+              </span>{' '}
+              joueurs vérifiés
+            </div>
+            <span className="text-white/30">/</span>
+            <div>
+              <span className="font-display text-2xl text-white/70">
+                {fmtInt(overview.kyc.pending)}
+              </span>{' '}
+              en attente
+            </div>
+            <span className="text-white/30">/</span>
+            <div>
+              <span className="font-display text-2xl text-amber-400">
+                {fmtInt(overview.kyc.verify_age)}
+              </span>{' '}
+              à vérifier
+            </div>
+            <span className="text-white/30">/</span>
+            <div>
+              <span className="font-display text-2xl text-red-400">
+                {fmtInt(overview.kyc.denied)}
+              </span>{' '}
+              refusés
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl border border-white/5 bg-black/30 p-5">
         <div className="mb-4 flex items-center justify-between">

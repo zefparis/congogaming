@@ -2,10 +2,14 @@ import { supabase } from './supabase';
 
 const SESSION_KEY = 'congo_session';
 
+export type KycStatus = 'pending' | 'approved' | 'denied' | 'verify_age';
+
 export type SessionUser = {
   id: string;
   phone: string;
   balance_cdf: number;
+  kyc_status: KycStatus;
+  blocked: boolean;
 };
 
 export async function hashPin(pin: string): Promise<string> {
@@ -52,10 +56,16 @@ export async function registerUser(phone: string, pin: string): Promise<SessionU
   const { data, error } = await supabase
     .from('users')
     .insert({ phone, pin_hash, balance_cdf: 0 })
-    .select('id, phone, balance_cdf')
+    .select('id, phone, balance_cdf, kyc_status, blocked')
     .single();
   if (error || !data) throw new Error(error?.message || 'Erreur inscription');
-  const user: SessionUser = { id: data.id, phone: data.phone, balance_cdf: Number(data.balance_cdf) };
+  const user: SessionUser = {
+    id: data.id,
+    phone: data.phone,
+    balance_cdf: Number(data.balance_cdf),
+    kyc_status: (data.kyc_status as KycStatus) || 'pending',
+    blocked: !!data.blocked,
+  };
   saveSession(user);
   return user;
 }
@@ -65,15 +75,42 @@ export async function loginUser(phone: string, pin: string): Promise<SessionUser
   const pin_hash = await hashPin(pin);
   const { data, error } = await supabase
     .from('users')
-    .select('id, phone, balance_cdf, pin_hash')
+    .select('id, phone, balance_cdf, pin_hash, kyc_status, blocked')
     .eq('phone', phone)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error('Numéro non trouvé');
   if (data.pin_hash !== pin_hash) throw new Error('PIN incorrect');
-  const user: SessionUser = { id: data.id, phone: data.phone, balance_cdf: Number(data.balance_cdf) };
+  if (data.blocked) {
+    throw new Error('Compte bloqué. Contactez le support.');
+  }
+  const user: SessionUser = {
+    id: data.id,
+    phone: data.phone,
+    balance_cdf: Number(data.balance_cdf),
+    kyc_status: (data.kyc_status as KycStatus) || 'pending',
+    blocked: !!data.blocked,
+  };
   saveSession(user);
   return user;
+}
+
+/**
+ * Refresh the current user's KYC status from Supabase. Used by the route
+ * guard on app load and after the KYC scan completes.
+ */
+export async function refreshKycStatus(userId: string): Promise<KycStatus> {
+  if (!supabase) return 'pending';
+  const { data } = await supabase
+    .from('users')
+    .select('kyc_status, blocked')
+    .eq('id', userId)
+    .maybeSingle();
+  const kyc_status = ((data?.kyc_status as KycStatus) || 'pending') as KycStatus;
+  const blocked = !!data?.blocked;
+  const sess = getSession();
+  if (sess) saveSession({ ...sess, kyc_status, blocked });
+  return kyc_status;
 }
 
 export async function refreshBalance(userId: string): Promise<number> {

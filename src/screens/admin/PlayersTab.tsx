@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { adminApi } from '../../lib/adminApi';
 import { fmtCdf, fmtDateTime, fmtRelative, txStatusLabel } from './format';
+import KycBadge from './KycBadge';
 
 type UserRow = Awaited<ReturnType<typeof adminApi.users>>['items'][number];
 type UserDetail = Awaited<ReturnType<typeof adminApi.userDetail>>;
@@ -88,7 +89,10 @@ function Drawer({
         {data && (
           <>
             <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
-              <div className="font-mono text-lg text-white">{data.user.phone}</div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-mono text-lg text-white">{data.user.phone}</div>
+                <KycBadge status={data.user.kyc_status} />
+              </div>
               <div className="mt-1 text-xs text-white/40">
                 Inscrit {fmtDateTime(data.user.created_at)} · id {data.user.id.slice(0, 8)}…
               </div>
@@ -160,6 +164,54 @@ function Drawer({
                 </button>
               </div>
             </div>
+
+            {data.kyc_checks && data.kyc_checks.length > 0 && (
+              <div className="mt-6">
+                <h4 className="mb-2 font-display tracking-wider text-gold">
+                  Vérifications KYC
+                </h4>
+                <div className="overflow-hidden rounded-lg border border-white/5">
+                  <table className="w-full text-sm">
+                    <thead className="bg-white/[0.03] text-left text-[11px] uppercase tracking-wider text-white/50">
+                      <tr>
+                        <th className="px-3 py-2">Date</th>
+                        <th className="px-3 py-2">Verdict</th>
+                        <th className="px-3 py-2">Âge estimé</th>
+                        <th className="px-3 py-2 text-right">Confiance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.kyc_checks.map((k) => (
+                        <tr key={k.id} className="border-t border-white/5">
+                          <td className="px-3 py-2 text-white/70">{fmtDateTime(k.created_at)}</td>
+                          <td className="px-3 py-2">
+                            <span
+                              className={
+                                k.verdict === 'APPROVED'
+                                  ? 'text-emerald-400'
+                                  : k.verdict === 'DENIED'
+                                  ? 'text-red-400'
+                                  : 'text-amber-400'
+                              }
+                            >
+                              {k.verdict}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-white">
+                            {k.age_low != null && k.age_high != null
+                              ? `${k.age_low}–${k.age_high}`
+                              : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-right text-white/70">
+                            {k.confidence != null ? `${Number(k.confidence).toFixed(1)}%` : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             <div className="mt-6">
               <h4 className="mb-2 font-display tracking-wider text-gold">
@@ -252,6 +304,7 @@ export default function PlayersTab() {
           <thead className="bg-white/[0.03] text-left text-[11px] uppercase tracking-wider text-white/50">
             <tr>
               <th className="px-3 py-2">Téléphone</th>
+              <th className="px-3 py-2">KYC</th>
               <th className="px-3 py-2 text-right">Solde</th>
               <th className="px-3 py-2">Inscrit le</th>
               <th className="px-3 py-2">Dernière activité</th>
@@ -260,7 +313,7 @@ export default function PlayersTab() {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-6 text-center text-white/40">
+                <td colSpan={5} className="px-3 py-6 text-center text-white/40">
                   Aucun joueur.
                 </td>
               </tr>
@@ -272,6 +325,9 @@ export default function PlayersTab() {
                 className="cursor-pointer border-t border-white/5 hover:bg-white/[0.03]"
               >
                 <td className="px-3 py-2 font-mono text-white">{u.phone}</td>
+                <td className="px-3 py-2">
+                  <KycBadge status={u.kyc_status} />
+                </td>
                 <td className="px-3 py-2 text-right text-gold">{fmtCdf(u.balance_cdf)}</td>
                 <td className="px-3 py-2 text-white/70">{fmtDateTime(u.created_at)}</td>
                 <td className="px-3 py-2 text-white/70">

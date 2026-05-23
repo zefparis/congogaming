@@ -92,4 +92,18 @@ export const api = {
     }> }>('/api/flash/mes-tickets', {
       headers: { Authorization: `Bearer ${user_id}` },
     }),
+  kycScan: (user_id: string, selfie_b64: string) =>
+    req<{
+      verdict: 'APPROVED' | 'DENIED' | 'VERIFY_AGE';
+      kyc_status: 'approved' | 'denied' | 'verify_age';
+      estimated_age: number;
+      age_low: number;
+      age_high: number;
+      is_minor: boolean;
+      scan_id: string;
+      blocked: boolean;
+    }>('/api/kyc/scan', {
+      method: 'POST',
+      body: JSON.stringify({ user_id, selfie_b64 }),
+    }),
 };

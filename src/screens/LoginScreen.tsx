@@ -36,8 +36,14 @@ export default function LoginScreen() {
     if (pin.length !== 4 || loading) return;
     try {
       setLoading(true);
-      await loginUser(phone, pin);
-      nav('/', { replace: true });
+      const user = await loginUser(phone, pin);
+      // Route based on KYC status. Returning users with kyc_status='pending'
+      // (e.g. abandoned the flow before scan) are sent back through KYC.
+      if (user.kyc_status === 'pending') {
+        nav('/kyc', { replace: true });
+      } else {
+        nav('/', { replace: true });
+      }
     } catch (e: any) {
       setErr(e.message || 'Erreur');
       setPin('');

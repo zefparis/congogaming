@@ -13,8 +13,9 @@ import FlashScreen from './screens/FlashScreen';
 import LegalScreen from './screens/LegalScreen';
 import OkapiGame from './screens/okapi/OkapiGame';
 import AdminScreen from './screens/AdminScreen';
+import KycScreen from './screens/KycScreen';
 import BottomNav from './components/BottomNav';
-import { getSession } from './lib/auth';
+import { clearSession, getSession } from './lib/auth';
 
 function PageWrap({ children, fullscreen = false }: { children: React.ReactNode; fullscreen?: boolean }) {
   if (fullscreen) {
@@ -39,7 +40,37 @@ function PageWrap({ children, fullscreen = false }: { children: React.ReactNode;
 function Protected({ children }: { children: React.ReactNode }) {
   const session = getSession();
   if (!session) return <Navigate to="/splash" replace />;
+  // Hard-block denied accounts (PlayGuard verdict DENIED → minor or banned).
+  // We can't proceed: drop the session and return to splash.
+  if (session.blocked || session.kyc_status === 'denied') {
+    clearSession();
+    return <Navigate to="/splash" replace />;
+  }
+  // Mandatory KYC at registration (PredictStreet contract). Anyone with a
+  // 'pending' status MUST complete the KYC scan before reaching any other
+  // protected route. 'approved' and 'verify_age' may proceed normally.
+  if (session.kyc_status === 'pending') {
+    return <Navigate to="/kyc" replace />;
+  }
   return <>{children}</>;
+}
+
+/**
+ * /kyc itself is protected against anonymous access but bypasses the
+ * kyc_status check (otherwise we'd loop forever).
+ */
+function KycRoute() {
+  const session = getSession();
+  if (!session) return <Navigate to="/splash" replace />;
+  if (session.blocked) {
+    clearSession();
+    return <Navigate to="/splash" replace />;
+  }
+  // Already verified → don't re-prompt; bounce to home.
+  if (session.kyc_status === 'approved' || session.kyc_status === 'verify_age') {
+    return <Navigate to="/" replace />;
+  }
+  return <KycScreen />;
 }
 
 function AppRoutes() {
@@ -61,6 +92,7 @@ function AppRoutes() {
           <Route path="/flash" element={<Protected><PageWrap><FlashScreen /></PageWrap></Protected>} />
           <Route path="/climb" element={<Protected><PageWrap fullscreen><OkapiGame /></PageWrap></Protected>} />
           <Route path="/legal" element={<Protected><PageWrap><LegalScreen /></PageWrap></Protected>} />
+          <Route path="/kyc" element={<PageWrap><KycRoute /></PageWrap>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>

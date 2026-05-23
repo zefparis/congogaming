@@ -66,6 +66,7 @@ export const adminApi = {
       total_balance_cdf: number;
       users_count: number;
       okapi_rounds_today: number;
+      kyc?: { approved: number; pending: number; denied: number; verify_age: number };
     }>('/api/admin/overview'),
 
   avadapayBalance: () =>
@@ -100,6 +101,8 @@ export const adminApi = {
         balance_cdf: number;
         created_at: string;
         last_activity_at: string | null;
+        kyc_status: 'pending' | 'approved' | 'denied' | 'verify_age';
+        blocked: boolean;
       }>;
       page: number;
       page_size: number;
@@ -109,7 +112,14 @@ export const adminApi = {
 
   userDetail: (id: string) =>
     request<{
-      user: { id: string; phone: string; balance_cdf: number; created_at: string };
+      user: {
+        id: string;
+        phone: string;
+        balance_cdf: number;
+        created_at: string;
+        kyc_status?: 'pending' | 'approved' | 'denied' | 'verify_age';
+        blocked?: boolean;
+      };
       transactions: Array<{
         id: string;
         order_id: string;
@@ -125,6 +135,17 @@ export const adminApi = {
         total_won_cdf: number;
         pnl_cdf: number;
       };
+      kyc_checks?: Array<{
+        id: string;
+        verdict: 'APPROVED' | 'DENIED' | 'VERIFY_AGE';
+        estimated_age: number | null;
+        age_low: number | null;
+        age_high: number | null;
+        is_minor: boolean;
+        confidence: number | null;
+        scan_id: string | null;
+        created_at: string;
+      }>;
     }>(`/api/admin/users/${id}`),
 
   adjustBalance: (id: string, delta_cdf: number, reason?: string) =>
