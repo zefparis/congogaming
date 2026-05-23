@@ -164,7 +164,7 @@ export default function HomeScreen() {
               position: 'absolute',
               right: '0',
               bottom: '0',
-              height: '65%',
+              height: '35%',
               width: 'auto',
               objectFit: 'contain',
               zIndex: 2,
