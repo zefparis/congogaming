@@ -74,6 +74,9 @@ export default function OkapiGame() {
   }, [userId, updateBalance])
 
   const [state, setState] = useState<GameState>('waiting')
+  // Mirror of `state` for use inside the WS callback closure (which is
+  // installed once and would otherwise capture only the initial value).
+  const stateRef = useRef<GameState>('waiting')
   const [countdown, setCountdown] = useState<number>(5)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [crashPoint, setCrashPoint] = useState<number | null>(null)
@@ -123,6 +126,12 @@ export default function OkapiGame() {
     settleRound: async () => {},
   })
 
+  // Keep stateRef in sync with the latest state so WS callbacks (which close
+  // over an old `state` value) can read the real current value.
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
+
   // Pull authoritative balance from the backend on mount
   useEffect(() => {
     syncBalance()
@@ -145,18 +154,26 @@ export default function OkapiGame() {
     const off = gameSocket.on((msg: GameMessage) => {
       gotServerMsg.current = true
       switch (msg.type) {
-        case 'WAITING':
+        case 'WAITING': {
+          // The server emits a WAITING message every second during the
+          // countdown (5,4,3,2,1,0). We MUST only fully reset the per-round
+          // state on the *transition* into WAITING, otherwise a mid-countdown
+          // tick would wipe the bet the user just placed — forcing them to
+          // re-click MISER 3-4 times to win the race.
+          const wasWaiting = stateRef.current === 'waiting'
           setState('waiting')
           setCountdown(msg.countdown)
-          setCrashPoint(null)
-          setCashoutMultiplier(null)
-          setMultiplier(1)
-          setBetId(null)
-          betIdRef.current = null
-          hasBetRef.current = false
-          // Fresh round — release any 409-induced bet lock.
-          setBetLocked(false)
-          setBetError(null)
+          if (!wasWaiting) {
+            setCrashPoint(null)
+            setCashoutMultiplier(null)
+            setMultiplier(1)
+            setBetId(null)
+            betIdRef.current = null
+            hasBetRef.current = false
+            // Fresh round — release any 409-induced bet lock.
+            setBetLocked(false)
+            setBetError(null)
+          }
           // Cancel the CRASHED safety reset since WAITING did arrive.
           if (crashedSafetyRef.current) {
             clearTimeout(crashedSafetyRef.current)
@@ -179,6 +196,7 @@ export default function OkapiGame() {
             autoHandlersRef.current.placeBet()
           }
           break
+        }
         case 'PLAYING':
           setState('playing')
           setStartTime(msg.startTime)
