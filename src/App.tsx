@@ -15,7 +15,13 @@ import OkapiGame from './screens/okapi/OkapiGame';
 import BottomNav from './components/BottomNav';
 import { getSession } from './lib/auth';
 
-function PageWrap({ children }: { children: React.ReactNode }) {
+function PageWrap({ children, fullscreen = false }: { children: React.ReactNode; fullscreen?: boolean }) {
+  if (fullscreen) {
+    // Game screens (Okapi Climb) own their own 100dvh layout and must not be
+    // wrapped in min-h-screen + a translateY animation: that creates a tall
+    // outer scroller and the dreaded "page slides up/down" effect.
+    return <>{children}</>
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -52,7 +58,7 @@ function AppRoutes() {
           <Route path="/compte" element={<Protected><PageWrap><AccountScreen /></PageWrap></Protected>} />
           <Route path="/loto" element={<Protected><PageWrap><LotoScreen /></PageWrap></Protected>} />
           <Route path="/flash" element={<Protected><PageWrap><FlashScreen /></PageWrap></Protected>} />
-          <Route path="/climb" element={<Protected><PageWrap><OkapiGame /></PageWrap></Protected>} />
+          <Route path="/climb" element={<Protected><PageWrap fullscreen><OkapiGame /></PageWrap></Protected>} />
           <Route path="/legal" element={<Protected><PageWrap><LegalScreen /></PageWrap></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -62,10 +68,26 @@ function AppRoutes() {
   );
 }
 
-export default function App() {
+function AppShell() {
+  const location = useLocation();
+  // /climb is a fullscreen game: it manages its own 100dvh layout and the
+  // BottomNav clearance internally. The default pb-20 + min-h-screen wrapper
+  // would create an outer scroller and break the lock-to-viewport layout.
+  const isFullscreen = location.pathname === '/climb';
   return (
-    <div className="mx-auto w-full max-w-app min-h-screen bg-bg relative pb-20">
+    <div
+      className={
+        isFullscreen
+          ? 'mx-auto w-full max-w-app bg-bg relative'
+          : 'mx-auto w-full max-w-app min-h-screen bg-bg relative pb-20'
+      }
+      style={isFullscreen ? { height: '100dvh', overflow: 'hidden' } : undefined}
+    >
       <AppRoutes />
     </div>
   );
+}
+
+export default function App() {
+  return <AppShell />;
 }
