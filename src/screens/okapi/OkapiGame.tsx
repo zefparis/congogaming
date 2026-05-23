@@ -498,9 +498,18 @@ export default function OkapiGame() {
           await autoPlaceBet()
         }
       } catch (err: any) {
+        const raw = String(err?.message || 'unknown')
         // eslint-disable-next-line no-console
-        console.error('[okapi auto] start failed:', err?.message)
-        setAutoError('Impossible de démarrer la session auto')
+        console.error('[okapi auto] start failed:', raw)
+        // Surface the actual cause so the player sees why nothing happened
+        // (typical causes: backend not redeployed -> 404, missing migration
+        // -> 500 referencing okapi_auto_sessions, or RLS misconfig).
+        let label = 'Impossible de démarrer la session auto'
+        if (raw.includes('404')) label = 'Backend pas à jour (404) — redéploie l\'API'
+        else if (raw.includes('okapi_auto_sessions')) label = 'Migration Supabase manquante'
+        else if (raw.includes('500')) label = 'Erreur serveur (voir console)'
+        else if (raw.includes('Failed to fetch')) label = 'API injoignable'
+        setAutoError(label)
       }
     },
     [userId, nav, state, autoPlaceBet],

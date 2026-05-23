@@ -155,6 +155,21 @@ export default function AutoBetPanel({
         height: '100%',
       }}
     >
+      {errorMsg && (
+        <div
+          role="alert"
+          style={{
+            background: 'rgba(220, 38, 38, 0.2)',
+            color: '#fca5a5',
+            fontSize: 11,
+            padding: '4px 8px',
+            borderRadius: 6,
+            border: '1px solid rgba(220, 38, 38, 0.4)',
+          }}
+        >
+          {errorMsg}
+        </div>
+      )}
       <Row label="Mise (CDF)">
         <input
           type="number"
