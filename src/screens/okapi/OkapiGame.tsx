@@ -29,6 +29,10 @@ export default function OkapiGame() {
   // Always start at 0; the real balance is fetched from the backend on mount.
   // Never trust the value cached in localStorage to display in-game.
   const [balance, setBalance] = useState<number>(0)
+  // True once we've completed at least one wallet sync (success OR failure).
+  // Until then, do NOT use `balance` to gate UI actions — it's still the
+  // placeholder 0 and would silently block every bet.
+  const [balanceLoaded, setBalanceLoaded] = useState<boolean>(false)
   const [betError, setBetError] = useState<string | null>(null)
   const [betSubmitting, setBetSubmitting] = useState<boolean>(false)
 
@@ -43,12 +47,19 @@ export default function OkapiGame() {
   // reads public.users.balance_cdf. This is the only source of truth for the
   // in-game balance display.
   const syncBalance = useCallback(async () => {
-    if (!userId) return
+    if (!userId) {
+      setBalanceLoaded(true)
+      return
+    }
     try {
       const res = await okapiApi.getBalance(userId)
       updateBalance(res.balance)
     } catch {
       /* keep last known value */
+    } finally {
+      // Always release the gate — even if the fetch failed — so the user
+      // can still attempt to bet. The server will reject if insufficient.
+      setBalanceLoaded(true)
     }
   }, [userId, updateBalance])
 
@@ -207,7 +218,9 @@ export default function OkapiGame() {
       return
     }
     if (betSubmitting) return
-    if (amount > balance) {
+    // Only enforce the client-side insufficient-funds check once we actually
+    // know the real balance. Otherwise the server is the gate.
+    if (balanceLoaded && amount > balance) {
       setBetError('Solde insuffisant')
       return
     }
