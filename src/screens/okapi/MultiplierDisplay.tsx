@@ -11,9 +11,15 @@ interface Props {
   onTick?: (m: number) => void
 }
 
+// Hard ceiling on the displayed multiplier. Matches the server engine cap
+// (see okapi-engine.ts: max ×50). Acts as a safety net against any clock
+// desync that could otherwise display nonsensical values like ×1e16.
+const MAX_MULTIPLIER = 50
+
 function computeMultiplier(elapsedSec: number) {
-  const t = elapsedSec
-  return 1 + 0.06 * t + Math.pow(0.06 * t, 2)
+  const t = Math.max(0, elapsedSec)
+  const m = 1 + 0.06 * t + Math.pow(0.06 * t, 2)
+  return Math.min(MAX_MULTIPLIER, m)
 }
 
 export default function MultiplierDisplay({
@@ -31,8 +37,13 @@ export default function MultiplierDisplay({
     if (state !== 'playing' || !startTime) return
 
     let lastUiUpdate = 0
+    // IMPORTANT: startTime is Date.now() epoch ms (sent by the server's
+    // okapi-engine, or by the local fallback). It is NOT a performance.now()
+    // value, so we MUST diff it against Date.now(). Using performance.now()
+    // here produced negative-then-squared elapsed values, blowing the
+    // multiplier up to ~1e16.
     const tickerFn = () => {
-      const elapsed = (performance.now() - startTime) / 1000
+      const elapsed = (Date.now() - startTime) / 1000
       const m = Math.max(1, computeMultiplier(elapsed))
       currentRef.current = m
       if (ref.current) {

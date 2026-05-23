@@ -294,13 +294,17 @@ export default function OkapiGame() {
 
     function startPlaying() {
       const r = Math.random()
-      localCrash = r < 0.05 ? 1.0 : Math.max(1.0, (1 / (1 - r)) * 0.95)
-      const t0 = performance.now()
+      // Local fallback also caps at 50 to match the server engine.
+      localCrash = r < 0.05 ? 1.0 : Math.min(50, Math.max(1.0, (1 / (1 - r)) * 0.95))
+      // Use Date.now() (epoch ms) so MultiplierDisplay's tickerFn (which now
+      // diffs against Date.now()) computes the correct elapsed value.
+      const t0 = Date.now()
       setStartTime(t0)
       setState('playing')
       const loop = () => {
-        const elapsed = (performance.now() - t0) / 1000
-        const m = 1 + 0.06 * elapsed + Math.pow(0.06 * elapsed, 2)
+        const elapsed = (Date.now() - t0) / 1000
+        const raw = 1 + 0.06 * elapsed + Math.pow(0.06 * elapsed, 2)
+        const m = Math.min(50, raw)
         setMultiplier(m)
         if (m >= localCrash) {
           setCrashPoint(localCrash)
