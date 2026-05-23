@@ -190,9 +190,17 @@ export default function OkapiGame() {
             stopRequested: autoStopRequestedRef.current,
             handlersReady: !!autoHandlersRef.current.placeBet,
           })
-          if (autoSessionRef.current && !autoStopRequestedRef.current) {
+          // Only fire placeBet on the FIRST WAITING tick of a new round
+          // (transition into WAITING). Calling it on every countdown tick
+          // races the server: by countdown=0 the engine may already have
+          // transitioned to PLAYING, returning 409 "Betting closed".
+          if (
+            !wasWaiting &&
+            autoSessionRef.current &&
+            !autoStopRequestedRef.current
+          ) {
             // eslint-disable-next-line no-console
-            console.log('[okapi auto] calling placeBet via handlersRef')
+            console.log('[okapi auto] calling placeBet via handlersRef (transition)')
             autoHandlersRef.current.placeBet()
           }
           break
