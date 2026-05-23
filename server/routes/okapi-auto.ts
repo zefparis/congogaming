@@ -161,6 +161,36 @@ const okapiAutoRoutes: FastifyPluginAsync = async (app) => {
     },
   );
 
+  // GET active session for a user — used by the client on mount to restore
+  // an in-progress auto-bet session after navigation/page reload.
+  app.get<{ Querystring: { user_id?: string } }>(
+    '/api/okapi/auto/active',
+    async (req, reply) => {
+      const user_id = req.query?.user_id;
+      if (!user_id) return reply.code(400).send({ error: 'Missing user_id' });
+      const sb = getSupabase();
+      if (!sb) return reply.code(503).send({ error: 'Database not configured' });
+
+      const { data, error } = await sb
+        .from('okapi_auto_sessions')
+        .select(
+          'id,bet_amount_cdf,target_multiplier,max_rounds,stop_on_profit_cdf,stop_on_loss_cdf,rounds_played,total_pnl_cdf,status,created_at',
+        )
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        app.log.error({ err: error.message }, 'okapi auto active fetch failed');
+        return reply.code(500).send({ error: 'Fetch failed' });
+      }
+      if (!data) return reply.send({ session: null });
+      return reply.send({ session: data });
+    },
+  );
+
   app.post<{ Body: StopBody }>('/api/okapi/auto/stop', async (req, reply) => {
     const { session_id, user_id, reason } = req.body || ({} as StopBody);
     if (!session_id || !user_id) {

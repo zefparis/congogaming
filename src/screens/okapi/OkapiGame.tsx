@@ -137,6 +137,39 @@ export default function OkapiGame() {
     syncBalance()
   }, [syncBalance])
 
+  // Restore an active auto-bet session if the user navigates back to /climb
+  // mid-session. Without this, leaving the page wipes the in-memory
+  // autoSession state and the auto-loop silently dies on next mount.
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    okapiApi
+      .autoActive(userId)
+      .then((res) => {
+        if (cancelled || !res.session) return
+        const s = res.session
+        setAutoSession({
+          id: s.id,
+          cfg: {
+            amount: s.bet_amount_cdf,
+            targetMultiplier: s.target_multiplier,
+            maxRounds: s.max_rounds,
+            stopOnProfit: s.stop_on_profit_cdf ?? 0,
+            stopOnLoss: s.stop_on_loss_cdf ?? 0,
+          },
+        })
+        setAutoRoundsPlayed(s.rounds_played ?? 0)
+        setAutoTotalPnl(s.total_pnl_cdf ?? 0)
+        autoStopRequestedRef.current = false
+      })
+      .catch(() => {
+        /* best effort; silently ignore */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
   // Connect WS and load history
   useEffect(() => {
     gameSocket.connect()

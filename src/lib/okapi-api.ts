@@ -41,6 +41,23 @@ export interface AutoProgressResponse {
   finished: boolean
 }
 
+export interface AutoActiveSession {
+  id: string
+  bet_amount_cdf: number
+  target_multiplier: number
+  max_rounds: number | null
+  stop_on_profit_cdf: number | null
+  stop_on_loss_cdf: number | null
+  rounds_played: number
+  total_pnl_cdf: number
+  status: 'active'
+  created_at: string
+}
+
+export interface AutoActiveResponse {
+  session: AutoActiveSession | null
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -96,6 +113,10 @@ export const okapiApi = {
       method: 'POST',
       body: JSON.stringify({ session_id, user_id, delta_cdf }),
     }),
+  autoActive: (user_id: string) =>
+    request<AutoActiveResponse>(
+      `/api/okapi/auto/active?user_id=${encodeURIComponent(user_id)}`,
+    ),
   autoStop: (
     session_id: string,
     user_id: string,
