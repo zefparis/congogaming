@@ -12,6 +12,7 @@ import LotoScreen from './screens/LotoScreen';
 import FlashScreen from './screens/FlashScreen';
 import LegalScreen from './screens/LegalScreen';
 import OkapiGame from './screens/okapi/OkapiGame';
+import AdminScreen from './screens/AdminScreen';
 import BottomNav from './components/BottomNav';
 import { getSession } from './lib/auth';
 
@@ -74,6 +75,16 @@ function AppShell() {
   // BottomNav clearance internally. The default pb-20 + min-h-screen wrapper
   // would create an outer scroller and break the lock-to-viewport layout.
   const isFullscreen = location.pathname === '/climb';
+  // /admin is a desktop-oriented dashboard: it must not be constrained to
+  // the 430px mobile shell, and must not show the player BottomNav.
+  const isAdmin = location.pathname.startsWith('/admin');
+  if (isAdmin) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminScreen />} />
+      </Routes>
+    );
+  }
   return (
     <div
       className={

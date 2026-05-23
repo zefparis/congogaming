@@ -1,0 +1,237 @@
+// Client-side helper for /api/admin/* endpoints.
+//
+// Token is stored under `cg_admin_token` and sent as `Authorization: Bearer`
+// on every request. On 401 the token is cleared so the UI falls back to the
+// PIN prompt automatically.
+
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const TOKEN_KEY = 'cg_admin_token';
+
+export function getAdminToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAdminToken(token: string | null) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+export class AdminAuthError extends Error {
+  constructor(message = 'Unauthorized') {
+    super(message);
+    this.name = 'AdminAuthError';
+  }
+}
+
+async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const token = getAdminToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((opts.headers as Record<string, string>) || {}),
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${BASE}${path}`, { ...opts, headers });
+  if (res.status === 401) {
+    setAdminToken(null);
+    throw new AdminAuthError();
+  }
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((json as any)?.error || `HTTP ${res.status}`);
+    return json as T;
+  }
+  // Non-JSON (e.g. CSV export)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.text()) as any;
+}
+
+export const adminApi = {
+  authenticate: (secret: string) =>
+    request<{ token: string; expires_at: number }>('/api/admin/auth', {
+      method: 'POST',
+      body: JSON.stringify({ secret }),
+    }),
+
+  overview: () =>
+    request<{
+      total_balance_cdf: number;
+      users_count: number;
+      okapi_rounds_today: number;
+    }>('/api/admin/overview'),
+
+  avadapayBalance: () =>
+    request<{ balance_cdf: number | null; raw?: any; error?: string }>(
+      '/api/admin/avadapay-balance',
+    ).catch((e) => ({ balance_cdf: null as number | null, error: e.message })),
+
+  revenue: (days = 7) =>
+    request<{ series: Array<{ day: string; profit_cdf: number }> }>(
+      `/api/admin/revenue?days=${days}`,
+    ),
+
+  activity: (limit = 10) =>
+    request<{
+      events: Array<{
+        id: string;
+        type: 'deposit' | 'withdrawal' | 'okapi_bet' | 'loto_ticket' | 'flash_ticket';
+        amount_cdf: number;
+        phone: string;
+        status?: string | number;
+        created_at: string;
+      }>;
+    }>(`/api/admin/activity?limit=${limit}`),
+
+  users: (search = '', page = 1) => {
+    const qs = new URLSearchParams({ page: String(page) });
+    if (search) qs.set('search', search);
+    return request<{
+      items: Array<{
+        id: string;
+        phone: string;
+        balance_cdf: number;
+        created_at: string;
+        last_activity_at: string | null;
+      }>;
+      page: number;
+      page_size: number;
+      total: number | null;
+    }>(`/api/admin/users?${qs.toString()}`);
+  },
+
+  userDetail: (id: string) =>
+    request<{
+      user: { id: string; phone: string; balance_cdf: number; created_at: string };
+      transactions: Array<{
+        id: string;
+        order_id: string;
+        type: string;
+        amount: number;
+        provider_id: number;
+        status: number;
+        created_at: string;
+      }>;
+      okapi: {
+        rounds_played: number;
+        total_wagered_cdf: number;
+        total_won_cdf: number;
+        pnl_cdf: number;
+      };
+    }>(`/api/admin/users/${id}`),
+
+  adjustBalance: (id: string, delta_cdf: number, reason?: string) =>
+    request<{ new_balance_cdf: number }>(`/api/admin/users/${id}/balance`, {
+      method: 'POST',
+      body: JSON.stringify({ delta_cdf, reason }),
+    }),
+
+  blockUser: (id: string, blocked: boolean) =>
+    request<{ ok: boolean; blocked: boolean }>(`/api/admin/users/${id}/block`, {
+      method: 'POST',
+      body: JSON.stringify({ blocked }),
+    }),
+
+  okapiRounds: (page = 1) =>
+    request<{
+      items: Array<{
+        id: string;
+        crash_point: number;
+        started_at: string;
+        ended_at: string | null;
+        total_bets: number;
+        total_cashouts: number;
+        house_profit: number;
+      }>;
+      page: number;
+      page_size: number;
+      total: number | null;
+    }>(`/api/admin/okapi/rounds?page=${page}`),
+
+  lotoTirages: (page = 1, type: 'all' | 'congo' | 'flash' = 'all') =>
+    request<{
+      items: Array<{
+        id: string;
+        type: 'congo' | 'flash';
+        drawn_at: string;
+        numeros: number[];
+        jackpot_cdf: number | null;
+        winners_count: number;
+      }>;
+      page: number;
+      page_size: number;
+    }>(`/api/admin/loto/tirages?page=${page}&type=${type}`),
+
+  transactions: (params: {
+    page?: number;
+    status?: string;
+    provider?: string;
+    type?: string;
+    from?: string;
+    to?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v != null && v !== '') qs.set(k, String(v));
+    }
+    return request<{
+      items: Array<{
+        id: string;
+        order_id: string;
+        phone: string | null;
+        phone_masked: string;
+        type: string;
+        amount_cdf: number;
+        currency: string;
+        provider_id: number;
+        status: number;
+        transaction_id: string | null;
+        created_at: string;
+      }>;
+      page: number;
+      page_size: number;
+      total: number | null;
+    }>(`/api/admin/transactions?${qs.toString()}`);
+  },
+
+  exportTransactionsUrl: (params: Record<string, string | undefined>) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v != null && v !== '') qs.set(k, String(v));
+    }
+    return `${BASE}/api/admin/transactions/export?${qs.toString()}`;
+  },
+};
+
+/**
+ * Convenience helper: triggers a CSV download honoring the bearer token.
+ * (We can't put auth headers on a plain anchor href, so we fetch + Blob.)
+ */
+export async function downloadTransactionsCsv(params: Record<string, string | undefined>) {
+  const token = getAdminToken();
+  const url = adminApi.exportTransactionsUrl(params);
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (res.status === 401) {
+    setAdminToken(null);
+    throw new AdminAuthError();
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  const objUrl = URL.createObjectURL(blob);
+  a.href = objUrl;
+  a.download = `transactions-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(objUrl);
+}

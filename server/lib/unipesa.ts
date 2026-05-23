@@ -118,6 +118,28 @@ export async function paymentStatus(order_id: string): Promise<UnipesaResponse> 
   return call('/status', payload);
 }
 
+/**
+ * Fetch the AvadaPay / Unipesa merchant wallet balance.
+ * Calls POST {BASE}/{publicId}/balance with a signed { merchant_id } body
+ * via the Fixie static-IP proxy so the request leaves Render with the IP
+ * whitelisted by Unipesa.
+ *
+ * Returns the balance in CDF (number), or throws on transport / auth errors.
+ * The exact response shape varies across Unipesa deployments; this helper
+ * normalises the most common keys ('balance', 'balance_cdf', 'amount').
+ */
+export async function getMerchantBalance(): Promise<{ balance_cdf: number; raw: UnipesaResponse }> {
+  const merchant_id = env('UNIPESA_MERCHANT_ID');
+  const secret = env('UNIPESA_SECRET_KEY');
+  const payload: Record<string, any> = { merchant_id };
+  payload.signature = calculateSignature(payload, secret);
+  const raw = await call('/balance', payload);
+  const candidates = [raw?.balance_cdf, raw?.balance, raw?.amount, raw?.data?.balance, raw?.data?.balance_cdf];
+  const found = candidates.find((v) => v !== undefined && v !== null);
+  const balance_cdf = Number(found ?? 0);
+  return { balance_cdf: Number.isFinite(balance_cdf) ? balance_cdf : 0, raw };
+}
+
 export function verifyCallbackSignature(body: Record<string, any>): boolean {
   const secret = env('UNIPESA_SECRET_KEY');
   const provided = String(body?.signature || '');
