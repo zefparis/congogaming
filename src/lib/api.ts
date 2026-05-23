@@ -6,7 +6,15 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((json as any)?.error || `HTTP ${res.status}`);
+  if (!res.ok) {
+    // When the backend ships a `detail` field (e.g. KYC upstream error
+    // bodies), surface it so the user can see what went wrong instead of an
+    // opaque "HTTP 502". Cap the message length defensively.
+    const j = json as { error?: string; detail?: string };
+    const base = j?.error || `HTTP ${res.status}`;
+    const detail = j?.detail ? ` — ${String(j.detail).slice(0, 300)}` : '';
+    throw new Error(base + detail);
+  }
   return json as T;
 }
 

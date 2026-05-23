@@ -104,9 +104,10 @@ export default async function kycRoutes(app: FastifyInstance) {
         return reply.code(500).send({ error: 'KYC service not configured' });
       }
 
+      const upstreamUrl = `${PG_PROXY_URL}/playguard/scan`;
       let pgRes: Response;
       try {
-        pgRes = await fetch(`${PG_PROXY_URL}/playguard/scan`, {
+        pgRes = await fetch(upstreamUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -119,23 +120,33 @@ export default async function kycRoutes(app: FastifyInstance) {
           body: JSON.stringify({
             // The PlayGuard backend accepts either snake_case (selfie_b64)
             // or camelCase (image) — we send selfie_b64 to match the SPA.
+            // playerId is the field actually persisted in the audit trail.
             selfie_b64: selfie,
+            playerId: userId,
             externalId: userId,
             platform: 'congo-gaming',
           }),
           signal: AbortSignal.timeout(PG_PROXY_TIMEOUT_MS),
         });
       } catch (e: any) {
-        req.log.error({ err: e }, 'PlayGuard upstream unreachable');
-        return reply.code(502).send({ error: 'PlayGuard unreachable' });
+        req.log.error({ err: e, upstreamUrl }, 'PlayGuard upstream unreachable');
+        return reply.code(502).send({
+          error: 'PlayGuard unreachable',
+          detail: e?.message || String(e),
+          upstream: upstreamUrl,
+        });
       }
 
       if (!pgRes.ok) {
         const text = await pgRes.text().catch(() => '');
-        req.log.warn({ status: pgRes.status, body: text }, 'PlayGuard error');
-        return reply
-          .code(502)
-          .send({ error: `PlayGuard scan failed (${pgRes.status})` });
+        req.log.warn({ status: pgRes.status, body: text, upstreamUrl }, 'PlayGuard error');
+        return reply.code(502).send({
+          error: `PlayGuard scan failed (${pgRes.status})`,
+          // Surface the upstream body so we can debug in the SPA console.
+          // Capped at 500 chars to avoid leaking large stack traces.
+          detail: text.slice(0, 500),
+          upstream: upstreamUrl,
+        });
       }
 
       const pgJson = (await pgRes.json().catch(() => null)) as
