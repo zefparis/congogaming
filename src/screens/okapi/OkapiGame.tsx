@@ -31,6 +31,10 @@ export default function OkapiGame() {
   const [balance, setBalance] = useState<number>(0)
   const [betError, setBetError] = useState<string | null>(null)
   const [betSubmitting, setBetSubmitting] = useState<boolean>(false)
+  // Locks the MISER button after a 409 from the server (e.g. betting closed)
+  // until the next WAITING socket message restores a fresh round window.
+  // Prevents the client from spamming /api/game/bet during PLAYING/CRASHED.
+  const [betLocked, setBetLocked] = useState<boolean>(false)
 
   const updateBalance = useCallback((n: number) => {
     const num = Number(n) || 0
@@ -105,6 +109,9 @@ export default function OkapiGame() {
           setBetId(null)
           betIdRef.current = null
           hasBetRef.current = false
+          // Fresh round — release any 409-induced bet lock.
+          setBetLocked(false)
+          setBetError(null)
           // New round: re-sync wallet so any settled bet from the previous
           // round (lost or won) is reflected on screen.
           syncBalance()
@@ -241,9 +248,16 @@ export default function OkapiGame() {
       // No optimistic update happened, so nothing to roll back. Surface error.
       const raw = String(err?.message || '')
       let label = 'Mise refusée'
+      // 409 = round not in WAITING phase. Lock the bet button until the next
+      // WAITING socket event so the user can't spam the server.
+      const isConflict =
+        raw.includes('409') ||
+        raw.includes('Betting closed') ||
+        raw.includes('Game not running')
       if (raw.includes('Insufficient')) label = 'Solde insuffisant'
-      else if (raw.includes('Betting closed')) label = 'Tour en cours, patientez'
+      else if (isConflict) label = 'Tour en cours, patientez'
       else if (raw.includes('Invalid bet')) label = 'Montant invalide'
+      if (isConflict) setBetLocked(true)
       // eslint-disable-next-line no-console
       console.error('[okapi] placeBet failed:', raw)
       setBetError(label)
@@ -257,7 +271,9 @@ export default function OkapiGame() {
   const handleCashout = async () => {
     if (!hasBetRef.current) return
     const currentBetId = betIdRef.current
-    if (!currentBetId) return
+    // Defensive: never POST a stale/empty bet_id which the engine has already
+    // cleared. This would just produce a server-side 404 "Bet not found".
+    if (!currentBetId || currentBetId.startsWith('local-')) return
     const localM = multiplier
     setState('cashedout')
     setCashoutMultiplier(localM)
@@ -482,6 +498,7 @@ export default function OkapiGame() {
           state={state}
           multiplier={multiplier}
           hasBet={Boolean(betId)}
+          locked={betLocked || betSubmitting}
           onPlaceBet={handlePlaceBet}
           onCashout={handleCashout}
         />

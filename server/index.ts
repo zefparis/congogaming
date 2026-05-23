@@ -48,6 +48,10 @@ const host = process.env.HOST || '0.0.0.0';
 
 app.listen({ port, host }).then(() => {
   app.log.info(`API listening on http://${host}:${port}`);
+  // Dump the route table on boot so deploys (Render etc.) make it obvious
+  // which paths are actually registered. If /api/game/cashout is missing
+  // here, the deploy is stale.
+  app.log.info('Registered routes:\n' + app.printRoutes());
   startCrons();
   engine.start();
   app.log.info('Okapi Climb engine started');

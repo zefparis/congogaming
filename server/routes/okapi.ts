@@ -125,6 +125,10 @@ const okapiRoutes: FastifyPluginAsync = async (app) => {
 
     const bet = engine.getBet(bet_id)
     if (!bet || bet.user_id !== user_id) {
+      app.log.warn(
+        { bet_id, user_id, engineState: engine.state, hasBet: !!bet },
+        'cashout: bet not found or user mismatch',
+      )
       return reply.code(404).send({ error: 'Bet not found' })
     }
     if (bet.cashed_out) {

@@ -6,6 +6,8 @@ interface Props {
   state: GameState
   multiplier: number
   hasBet: boolean
+  /** When true, the MISER button is disabled regardless of round phase. */
+  locked?: boolean
   onPlaceBet: (amount: number) => void
   onCashout: () => void
 }
@@ -18,12 +20,13 @@ export default function BetPanel({
   state,
   multiplier,
   hasBet,
+  locked = false,
   onPlaceBet,
   onCashout,
 }: Props) {
   const [amount, setAmount] = useState<number>(1000)
 
-  const canBet = state === 'waiting' && !hasBet
+  const canBet = state === 'waiting' && !hasBet && !locked
   const canCashout = state === 'playing' && hasBet
 
   const clamp = (n: number) =>
