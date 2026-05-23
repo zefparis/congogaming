@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { gameSocket } from '../../lib/okapi-socket'
 import type { GameMessage } from '../../lib/okapi-socket'
 import { okapiApi } from '../../lib/okapi-api'
-import { getSession, saveSession } from '../../lib/auth'
+import { getSession, refreshBalance, saveSession } from '../../lib/auth'
 import MultiplierDisplay from './MultiplierDisplay'
 import CrashHistory from './CrashHistory'
 import PlayersList from './PlayersList'
@@ -51,15 +51,26 @@ export default function OkapiGame() {
       setBalanceLoaded(true)
       return
     }
+    // Try the backend wallet endpoint first.
     try {
       const res = await okapiApi.getBalance(userId)
       updateBalance(res.balance)
-    } catch {
-      /* keep last known value */
-    } finally {
-      // Always release the gate — even if the fetch failed — so the user
-      // can still attempt to bet. The server will reject if insufficient.
       setBalanceLoaded(true)
+      return
+    } catch {
+      /* fallthrough to direct-Supabase fallback below */
+    }
+    // Fallback: hit Supabase directly with the anon key. This keeps the
+    // in-game balance correct even if api.congogaming.com hasn't been
+    // redeployed with the new /api/wallet/balance route yet.
+    try {
+      const bal = await refreshBalance(userId)
+      updateBalance(bal)
+      setBalanceLoaded(true)
+    } catch {
+      // Don't flip balanceLoaded on failure — leaving it false keeps the
+      // client-side `amount > balance` pre-check disabled so the user can
+      // still attempt to bet; the server remains the authoritative gate.
     }
   }, [userId, updateBalance])
 
@@ -241,9 +252,14 @@ export default function OkapiGame() {
       }
     } catch (err: any) {
       // No optimistic update happened, so nothing to roll back. Surface error.
-      setBetError(err?.message?.includes('Insufficient')
-        ? 'Solde insuffisant'
-        : 'Mise refusée')
+      const raw = String(err?.message || '')
+      let label = 'Mise refusée'
+      if (raw.includes('Insufficient')) label = 'Solde insuffisant'
+      else if (raw.includes('Betting closed')) label = 'Tour en cours, patientez'
+      else if (raw.includes('Invalid bet')) label = 'Montant invalide'
+      // eslint-disable-next-line no-console
+      console.error('[okapi] placeBet failed:', raw)
+      setBetError(label)
       // Re-sync just in case.
       syncBalance()
     } finally {
