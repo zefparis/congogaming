@@ -173,6 +173,12 @@ export default function OkapiGame() {
             // Fresh round — release any 409-induced bet lock.
             setBetLocked(false)
             setBetError(null)
+          } else {
+            // Safety net: force-reset bet state even if we were already in WAITING
+            // (e.g. after a successful cashout that didn't clear state properly)
+            setBetId(null)
+            betIdRef.current = null
+            hasBetRef.current = false
           }
           // Cancel the CRASHED safety reset since WAITING did arrive.
           if (crashedSafetyRef.current) {
@@ -625,7 +631,10 @@ export default function OkapiGame() {
       // Cashout failed (e.g. race with crash). Re-sync to reflect the loss.
       syncBalance()
     } finally {
+      // Reset bet state after cashout (mirror CRASHED path)
+      setBetId(null)
       betIdRef.current = null
+      hasBetRef.current = false
     }
   }
 
