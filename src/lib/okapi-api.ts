@@ -17,6 +17,10 @@ export interface HistoryResponse {
   history: number[]
 }
 
+export interface BalanceResponse {
+  balance: number
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -44,4 +48,6 @@ export const okapiApi = {
       body: JSON.stringify({ user_id, bet_id }),
     }),
   history: () => request<HistoryResponse>('/api/game/history'),
+  getBalance: (user_id: string) =>
+    request<BalanceResponse>(`/api/wallet/balance?user_id=${encodeURIComponent(user_id)}`),
 }

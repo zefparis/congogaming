@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { gameSocket } from '../../lib/okapi-socket'
 import type { GameMessage } from '../../lib/okapi-socket'
 import { okapiApi } from '../../lib/okapi-api'
-import { getSession, refreshBalance, saveSession } from '../../lib/auth'
+import { getSession, saveSession } from '../../lib/auth'
 import MultiplierDisplay from './MultiplierDisplay'
 import CrashHistory from './CrashHistory'
 import PlayersList from './PlayersList'
@@ -26,7 +26,11 @@ export default function OkapiGame() {
   const nav = useNavigate()
   const session = getSession()
   const userId = session?.id ?? ''
-  const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0)
+  // Always start at 0; the real balance is fetched from the backend on mount.
+  // Never trust the value cached in localStorage to display in-game.
+  const [balance, setBalance] = useState<number>(0)
+  const [betError, setBetError] = useState<string | null>(null)
+  const [betSubmitting, setBetSubmitting] = useState<boolean>(false)
 
   const updateBalance = useCallback((n: number) => {
     const num = Number(n) || 0
@@ -34,6 +38,19 @@ export default function OkapiGame() {
     const s = getSession()
     if (s) saveSession({ ...s, balance_cdf: num })
   }, [])
+
+  // Canonical balance fetch: hits api.congogaming.com/api/wallet/balance which
+  // reads public.users.balance_cdf. This is the only source of truth for the
+  // in-game balance display.
+  const syncBalance = useCallback(async () => {
+    if (!userId) return
+    try {
+      const res = await okapiApi.getBalance(userId)
+      updateBalance(res.balance)
+    } catch {
+      /* keep last known value */
+    }
+  }, [userId, updateBalance])
 
   const [state, setState] = useState<GameState>('waiting')
   const [countdown, setCountdown] = useState<number>(5)
@@ -48,10 +65,10 @@ export default function OkapiGame() {
   const betIdRef = useRef<string | null>(null)
   const gotServerMsg = useRef(false)
 
-  // Refresh balance on mount
+  // Pull authoritative balance from the backend on mount
   useEffect(() => {
-    if (userId) refreshBalance(userId).then(setBalance).catch(() => {})
-  }, [userId])
+    syncBalance()
+  }, [syncBalance])
 
   // Connect WS and load history
   useEffect(() => {
@@ -77,6 +94,9 @@ export default function OkapiGame() {
           setBetId(null)
           betIdRef.current = null
           hasBetRef.current = false
+          // New round: re-sync wallet so any settled bet from the previous
+          // round (lost or won) is reflected on screen.
+          syncBalance()
           break
         case 'PLAYING':
           setState('playing')
@@ -90,6 +110,9 @@ export default function OkapiGame() {
           setCrashPoint(msg.crashPoint)
           setHistory((h) => [msg.crashPoint, ...h].slice(0, 20))
           betIdRef.current = null
+          // Bet was already deducted at placement; nothing else to charge.
+          // Still re-sync to be safe (covers reconnect / missed events).
+          syncBalance()
           break
         case 'CASHOUT_CONFIRM':
           // eslint-disable-next-line no-console
@@ -103,7 +126,7 @@ export default function OkapiGame() {
     return () => {
       off()
     }
-  }, [])
+  }, [syncBalance])
 
   // Local fallback state machine if no server is connected
   useEffect(() => {
@@ -183,22 +206,35 @@ export default function OkapiGame() {
       nav('/login')
       return
     }
-    updateBalance(balance - amount)
-    hasBetRef.current = true
+    if (betSubmitting) return
+    if (amount > balance) {
+      setBetError('Solde insuffisant')
+      return
+    }
+    setBetError(null)
+    setBetSubmitting(true)
     try {
       const res = await okapiApi.placeBet(userId, amount)
+      // Only commit the bet client-side after the server has actually
+      // debited the wallet via adjust_balance.
       setBetId(res.bet_id)
       betIdRef.current = res.bet_id
+      hasBetRef.current = true
       if (res.balance !== null && res.balance !== undefined) {
         updateBalance(res.balance)
-      } else if (userId) {
+      } else {
         // Server up but Supabase not configured: pull authoritative value.
-        refreshBalance(userId).then(updateBalance).catch(() => {})
+        await syncBalance()
       }
-    } catch {
-      const localId = `local-${Date.now()}`
-      setBetId(localId)
-      betIdRef.current = localId
+    } catch (err: any) {
+      // No optimistic update happened, so nothing to roll back. Surface error.
+      setBetError(err?.message?.includes('Insufficient')
+        ? 'Solde insuffisant'
+        : 'Mise refusée')
+      // Re-sync just in case.
+      syncBalance()
+    } finally {
+      setBetSubmitting(false)
     }
   }
 
@@ -210,19 +246,17 @@ export default function OkapiGame() {
     setState('cashedout')
     setCashoutMultiplier(localM)
     try {
-      if (!currentBetId.startsWith('local-')) {
-        const res = await okapiApi.cashout(userId, currentBetId)
-        setCashoutMultiplier(res.multiplier)
-        if (res.balance !== null && res.balance !== undefined) {
-          updateBalance(res.balance)
-        }
-        // Re-fetch from DB as source of truth, mirroring deposit/withdraw flows.
-        if (userId) {
-          refreshBalance(userId).then(updateBalance).catch(() => {})
-        }
+      const res = await okapiApi.cashout(userId, currentBetId)
+      setCashoutMultiplier(res.multiplier)
+      if (res.balance !== null && res.balance !== undefined) {
+        updateBalance(res.balance)
+      } else {
+        // Pull authoritative value from the backend.
+        await syncBalance()
       }
     } catch {
-      /* ignore */
+      // Cashout failed (e.g. race with crash). Re-sync to reflect the loss.
+      syncBalance()
     } finally {
       betIdRef.current = null
     }
@@ -407,6 +441,27 @@ export default function OkapiGame() {
           zIndex: 30,
         }}
       >
+        {betError && (
+          <div
+            role="alert"
+            style={{
+              position: 'absolute',
+              top: -28,
+              left: 16,
+              right: 16,
+              background: 'rgba(220, 38, 38, 0.95)',
+              color: 'white',
+              fontSize: 12,
+              fontWeight: 600,
+              padding: '4px 10px',
+              borderRadius: 6,
+              textAlign: 'center',
+              zIndex: 40,
+            }}
+          >
+            {betError}
+          </div>
+        )}
         <BetPanel
           state={state}
           multiplier={multiplier}

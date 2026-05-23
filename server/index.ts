@@ -11,6 +11,7 @@ import transactionsRoutes from './routes/transactions.js';
 import lotoRoutes from './routes/loto.js';
 import flashRoutes from './routes/flash.js';
 import { okapiRoutes } from './routes/okapi.js';
+import walletRoutes from './routes/wallet.js';
 import { engine } from './lib/okapi-engine.js';
 import { startCrons } from './cron.js';
 
@@ -40,6 +41,7 @@ await app.register(transactionsRoutes);
 await app.register(lotoRoutes);
 await app.register(flashRoutes);
 await app.register(okapiRoutes);
+await app.register(walletRoutes);
 
 const port = Number(process.env.PORT || 3001);
 const host = process.env.HOST || '0.0.0.0';
