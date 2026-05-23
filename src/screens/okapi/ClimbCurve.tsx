@@ -2,9 +2,12 @@ import { useEffect, useRef } from 'react'
 
 type GameState = 'waiting' | 'playing' | 'crashed' | 'cashedout'
 
-// Load the okapi sprite once at module scope so it is reused across renders.
+// Load the okapi marker sprite once at module scope so it is reused across
+// renders. We use `okapi-tip.png`, a cropped + horizontally-mirrored variant
+// of the full Congo Gaming logo so the okapi visibly climbs in the
+// right-to-left direction along the curve tip (no plinth/text artefacts).
 const okapiImg = new Image()
-okapiImg.src = '/images/okapi/okapi-sprite.png'
+okapiImg.src = '/images/okapi/okapi-tip.png'
 
 interface Props {
   state: GameState
