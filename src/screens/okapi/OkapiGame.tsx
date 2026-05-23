@@ -379,14 +379,29 @@ export default function OkapiGame() {
   // Place a bet on behalf of the auto loop. Returns true on success.
   const autoPlaceBet = useCallback(async (): Promise<boolean> => {
     const sess = autoSessionRef.current
-    if (!sess || !userId) return false
-    if (hasBetRef.current || autoBetInFlightRef.current) return false
+    if (!sess || !userId) {
+      // eslint-disable-next-line no-console
+      console.warn('[okapi auto] placeBet skipped: no session or user')
+      return false
+    }
+    if (hasBetRef.current || autoBetInFlightRef.current) {
+      // eslint-disable-next-line no-console
+      console.warn('[okapi auto] placeBet skipped: already in flight or has bet', {
+        hasBet: hasBetRef.current,
+        inFlight: autoBetInFlightRef.current,
+      })
+      return false
+    }
     autoBetInFlightRef.current = true
     autoCurrentBetAmountRef.current = sess.cfg.amount
     autoCurrentWinAmountRef.current = 0
     autoCashedOutThisRoundRef.current = false
+    // eslint-disable-next-line no-console
+    console.log('[okapi auto] placing bet', { amount: sess.cfg.amount, session: sess.id })
     try {
       const res = await okapiApi.placeBet(userId, sess.cfg.amount, sess.id)
+      // eslint-disable-next-line no-console
+      console.log('[okapi auto] bet placed', res)
       setBetId(res.bet_id)
       betIdRef.current = res.bet_id
       hasBetRef.current = true
@@ -399,9 +414,15 @@ export default function OkapiGame() {
       const raw = String(err?.message || '')
       // eslint-disable-next-line no-console
       console.error('[okapi auto] placeBet failed:', raw)
-      setAutoError(raw.includes('Insufficient') ? 'Solde insuffisant' : 'Mise refusée')
-      // Skip this round but DO NOT freeze the loop. The CRASHED handler will
-      // not see a winning bet and will simply not record a round delta.
+      // Surface the actual cause to the UI so we know whether it's a
+      // timing issue (409 Betting closed), balance, or something else.
+      let label = 'Mise refusée'
+      if (raw.includes('Insufficient')) label = 'Solde insuffisant'
+      else if (raw.includes('409') || raw.includes('Betting closed'))
+        label = 'Pari en retard (409)'
+      else if (raw.includes('Invalid bet')) label = 'Montant invalide'
+      else if (raw.includes('Failed to fetch')) label = 'API injoignable'
+      setAutoError(`${label} — ${raw.slice(0, 80)}`)
       autoCurrentBetAmountRef.current = 0
       return false
     } finally {
