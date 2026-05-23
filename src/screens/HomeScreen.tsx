@@ -18,8 +18,9 @@ const ctaStyle: React.CSSProperties = {
   fontWeight: '800',
   letterSpacing: '2px',
   fontSize: '15px',
-  padding: '14px 0',
-  width: '100%',
+  padding: '14px 20px',
+  width: 'auto',
+  whiteSpace: 'nowrap',
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
   textShadow: '0 1px 4px rgba(0,0,0,0.4)',
   fontFamily: 'Bebas Neue',
@@ -157,13 +158,13 @@ export default function HomeScreen() {
 
           {/* Okapi character */}
           <img
-            src="/images/okapi/okapi-sprite.png"
+            src="/images/okapi/okapi-tip.png"
             alt="Okapi"
             style={{
               position: 'absolute',
-              right: '-8px',
+              right: '0',
               bottom: '0',
-              height: '85%',
+              height: '65%',
               width: 'auto',
               objectFit: 'contain',
               zIndex: 2,
