@@ -71,10 +71,14 @@ const okapiRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Body: BetBody }>('/api/game/bet', async (req, reply) => {
     const { user_id, amount_cdf, auto_session_id } =
       req.body || ({} as BetBody)
-    // Manual bets have a 500 CDF floor; auto-bet sessions allow 100 CDF.
-    const min = auto_session_id ? 100 : 500
-    if (!user_id || !amount_cdf || amount_cdf < min || amount_cdf > 50_000) {
+    if (!user_id || !amount_cdf) {
       return reply.code(400).send({ error: 'Invalid bet' })
+    }
+    if (amount_cdf < 100) {
+      return reply.code(400).send({ error: 'Mise minimale 100 CDF' })
+    }
+    if (amount_cdf > 50_000) {
+      return reply.code(400).send({ error: 'Mise maximale 50 000 CDF' })
     }
     // Accept bets during WAITING, plus a small grace window (800ms) after the
     // server transitions to PLAYING. This covers the round-trip latency for

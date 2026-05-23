@@ -21,8 +21,8 @@ interface Props {
   onAutoStop: () => void
 }
 
-const QUICK = [500, 1000, 5000, 10000]
-const MIN_BET = 500
+const QUICK = [100, 500, 1000, 5000]
+const MIN_BET = 100
 const MAX_BET = 50000
 
 export default function BetPanel({
@@ -196,6 +196,7 @@ function ManualBet({ amount, setAmount, canBet, onPlaceBet }: ManualBetProps) {
           type="number"
           min={MIN_BET}
           max={MAX_BET}
+          placeholder="100"
           value={amount}
           disabled={!canBet}
           onChange={(e) => setAmount(clamp(Number(e.target.value)))}

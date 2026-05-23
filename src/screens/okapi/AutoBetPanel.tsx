@@ -42,7 +42,7 @@ export default function AutoBetPanel({
   onStart,
   onStop,
 }: Props) {
-  const [amount, setAmount] = useState<number>(500)
+  const [amount, setAmount] = useState<number>(100)
   const [target, setTarget] = useState<number>(1.5)
   const [maxRounds, setMaxRounds] = useState<number | null>(10)
   const [stopProfit, setStopProfit] = useState<number>(0)

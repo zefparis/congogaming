@@ -45,7 +45,7 @@ const okapiAutoRoutes: FastifyPluginAsync = async (app) => {
 
     if (!user_id) return reply.code(400).send({ error: 'Missing user_id' });
     if (!bet_amount_cdf || bet_amount_cdf < 100) {
-      return reply.code(400).send({ error: 'bet_amount_cdf must be >= 100' });
+      return reply.code(400).send({ error: 'Mise minimale 100 CDF' });
     }
     if (!target_multiplier || target_multiplier < 1.01) {
       return reply.code(400).send({ error: 'target_multiplier must be >= 1.01' });
