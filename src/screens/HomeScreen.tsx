@@ -5,20 +5,23 @@ import { Wallet } from 'lucide-react';
 import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
 
-// Shared style for primary home CTAs (gold→orange, warm glow, black text).
+// Shared style for primary home CTAs (glassmorphism, white text).
 // Inline styles take precedence over any Tailwind utility, so this fully
 // neutralises any other color rule applied to the button.
 const ctaStyle: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #FFD700 0%, #FF6B00 100%)',
-  color: '#000000',
-  fontWeight: '800',
-  letterSpacing: '1.5px',
+  background: 'rgba(255, 255, 255, 0.15)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  border: '1px solid rgba(255, 255, 255, 0.35)',
   borderRadius: '14px',
-  border: 'none',
-  boxShadow: '0 4px 24px rgba(255, 165, 0, 0.55)',
+  color: '#FFFFFF',
+  fontWeight: '800',
+  letterSpacing: '2px',
+  fontSize: '15px',
   padding: '14px 0',
   width: '100%',
-  fontSize: '15px',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+  textShadow: '0 1px 4px rgba(0,0,0,0.4)',
   fontFamily: 'Bebas Neue',
   cursor: 'pointer',
 };
