@@ -80,8 +80,25 @@ export default function HomeScreen() {
             }}
           />
 
+          {/* World Cup trophy */}
+          <img
+            src="/images/okapi/copa.PNG"
+            alt="World Cup Trophy"
+            style={{
+              position: 'absolute',
+              right: '-10px',
+              bottom: '0',
+              height: '88%',
+              width: 'auto',
+              objectFit: 'contain',
+              zIndex: 2,
+              mixBlendMode: 'screen',
+              filter: 'drop-shadow(0 0 16px rgba(255,215,0,0.7))',
+            }}
+          />
+
           {/* Content on top */}
-          <div style={{ position: 'relative', padding: '20px 16px' }}>
+          <div style={{ position: 'relative', maxWidth: '60%', zIndex: 3, padding: '20px 16px' }}>
             <div style={{ fontSize: 10, color: '#FFD700', letterSpacing: 3, marginBottom: 4 }}>
               🏆 ÉVÉNEMENT OFFICIEL
             </div>
