@@ -123,8 +123,8 @@ export default function AutoBetPanel({
       {errorMsg && <ErrorBanner msg={errorMsg} />}
 
       {/* Row 1: Mise | ×target | ⚙ */}
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <div style={{ ...fieldShell, flex: 1.4 }}>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', width: '100%' }}>
+        <div style={{ ...fieldShell, flex: 1, minWidth: 0 }}>
           <span style={fieldLabel}>Mise</span>
           <input
             type="number"
@@ -137,7 +137,7 @@ export default function AutoBetPanel({
             style={compactInput}
           />
         </div>
-        <div style={{ ...fieldShell, flex: 1 }}>
+        <div style={{ ...fieldShell, flex: 1, minWidth: 0 }}>
           <span style={{ ...fieldLabel, color: '#FFD700' }}>×</span>
           <input
             type="number"
@@ -171,8 +171,8 @@ export default function AutoBetPanel({
         </button>
       </div>
 
-      {/* Row 2: round chips */}
-      <div style={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
+      {/* Row 2: round chips — wrap so the ∞ chip never overflows */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {ROUND_OPTIONS.map((r) => {
           const active = maxRounds === r.value
           return (
@@ -180,16 +180,17 @@ export default function AutoBetPanel({
               key={r.label}
               onClick={() => setMaxRounds(r.value)}
               style={{
-                flex: 1,
+                flex: '1 1 auto',
                 background: active ? '#FFD700' : '#222',
                 color: active ? '#000' : '#FFD700',
                 fontSize: 12,
                 fontWeight: 800,
                 borderRadius: 999,
-                padding: '4px 0',
+                padding: '0 10px',
                 border: active ? 'none' : '1px solid #333',
                 cursor: 'pointer',
-                height: 26,
+                height: 28,
+                minWidth: 36,
               }}
             >
               {r.label}
@@ -211,7 +212,6 @@ export default function AutoBetPanel({
           height: 44,
           cursor: 'pointer',
           letterSpacing: '0.08em',
-          marginTop: 'auto',
           boxShadow: '0 4px 12px rgba(255, 215, 0, 0.25)',
         }}
       >
@@ -234,12 +234,14 @@ export default function AutoBetPanel({
 
 // ---------------- Helpers ----------------
 
+// Height is content-driven on purpose. Setting height:100% caused the panel
+// to stretch to the (taller) CASH OUT button on the right and produce a big
+// empty gap below START AUTO.
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 8,
   width: '100%',
-  height: '100%',
 }
 
 const fieldShell: React.CSSProperties = {

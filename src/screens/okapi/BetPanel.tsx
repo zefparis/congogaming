@@ -62,11 +62,19 @@ export default function BetPanel({
         gridTemplateColumns: '1fr 1fr',
         gap: 12,
         width: '100%',
-        height: '100%',
       }}
     >
-      {/* Left: MISE or AUTO */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Left: MISE or AUTO. alignSelf:start makes this column content-sized
+          (otherwise the grid would stretch it to match CASH OUT and add a
+          large empty gap below START AUTO / MISER). */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+          alignSelf: 'start',
+        }}
+      >
         {/* Mode tabs */}
         <div
           style={{
