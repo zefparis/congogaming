@@ -37,12 +37,12 @@ button {
 
 /* --- Okapi Climb animations --- */
 .okapi-neon-gold {
-  color: #FFD700;
+  color: #FFEC5C;
   text-shadow:
-    0 0 5px rgba(255, 215, 0, 0.8),
-    0 0 10px rgba(255, 215, 0, 0.6),
-    0 0 20px rgba(255, 165, 0, 0.5),
-    0 0 40px rgba(255, 140, 0, 0.4);
+    0 0 6px rgba(255, 245, 130, 1),
+    0 0 14px rgba(255, 215, 0, 0.95),
+    0 0 28px rgba(255, 180, 30, 0.8),
+    0 0 60px rgba(255, 140, 0, 0.55);
 }
 
 @keyframes okapi-climbing {

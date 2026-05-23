@@ -847,6 +847,37 @@ export default function OkapiGame() {
           crashPoint={crashPoint}
         />
 
+        {/* PROCHAIN TOUR badge — top-center, out of the way of the okapi
+            sprite but still highly visible. Pill-shaped with a soft glass
+            background so it reads on any aurora frame. */}
+        {state === 'waiting' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 26,
+              pointerEvents: 'none',
+              padding: '8px 18px',
+              borderRadius: 999,
+              background: 'rgba(0,0,0,0.55)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,215,0,0.35)',
+              boxShadow: '0 4px 18px rgba(0,0,0,0.4)',
+              fontFamily: 'Bebas Neue',
+              fontSize: 18,
+              letterSpacing: '0.18em',
+              color: '#FFE38A',
+              textShadow: '0 0 8px rgba(255,215,0,0.55)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            PROCHAIN TOUR DANS {countdown}s
+          </div>
+        )}
+
         <div
           style={{
             position: 'absolute',
@@ -859,14 +890,6 @@ export default function OkapiGame() {
           }}
         >
           <div style={{ textAlign: 'center' }}>
-            {state === 'waiting' && (
-              <div
-                className="text-white/80 tracking-widest"
-                style={{ fontFamily: 'Bebas Neue', fontSize: 20, marginBottom: 8 }}
-              >
-                PROCHAIN TOUR DANS {countdown}s
-              </div>
-            )}
             <MultiplierDisplay
               state={state}
               startTime={startTime}
