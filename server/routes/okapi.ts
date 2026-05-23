@@ -15,6 +15,8 @@ const sockets = new Set<WSLike>()
 interface BetBody {
   user_id: string
   amount_cdf: number
+  /** Optional auto-bet session id when this bet is part of an auto loop. */
+  auto_session_id?: string | null
 }
 
 interface CashoutBody {
@@ -67,8 +69,11 @@ const okapiRoutes: FastifyPluginAsync = async (app) => {
   // --- REST routes ---
 
   app.post<{ Body: BetBody }>('/api/game/bet', async (req, reply) => {
-    const { user_id, amount_cdf } = req.body || ({} as BetBody)
-    if (!user_id || !amount_cdf || amount_cdf < 500 || amount_cdf > 50_000) {
+    const { user_id, amount_cdf, auto_session_id } =
+      req.body || ({} as BetBody)
+    // Manual bets have a 500 CDF floor; auto-bet sessions allow 100 CDF.
+    const min = auto_session_id ? 100 : 500
+    if (!user_id || !amount_cdf || amount_cdf < min || amount_cdf > 50_000) {
       return reply.code(400).send({ error: 'Invalid bet' })
     }
     if (engine.state !== 'WAITING') {
@@ -95,6 +100,7 @@ const okapiRoutes: FastifyPluginAsync = async (app) => {
           round_id: engine.info().round_id,
           amount_cdf,
           status: 'pending',
+          auto_session_id: auto_session_id || null,
         })
       } catch (e) {
         app.log.error({ e }, 'failed to insert bet')

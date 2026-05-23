@@ -10,6 +10,7 @@ import MultiplierDisplay from './MultiplierDisplay'
 import CrashHistory from './CrashHistory'
 import PlayersList from './PlayersList'
 import BetPanel from './BetPanel'
+import type { AutoConfig } from './AutoBetPanel'
 import ClimbCurve from './ClimbCurve'
 
 type GameState = 'waiting' | 'playing' | 'crashed' | 'cashedout'
@@ -79,6 +80,43 @@ export default function OkapiGame() {
   const hasBetRef = useRef(false)
   const betIdRef = useRef<string | null>(null)
   const gotServerMsg = useRef(false)
+  const crashedSafetyRef = useRef<number | null>(null)
+
+  // ---------------- Auto-bet (Aviator-style) ----------------
+  // Client-driven loop that reuses /api/game/bet and /api/game/cashout. The
+  // session row is created via /api/okapi/auto/start and progress (PnL +
+  // round counter) is pushed to /api/okapi/auto/progress after each round.
+  const [autoSession, setAutoSession] = useState<{
+    id: string
+    cfg: AutoConfig
+  } | null>(null)
+  const [autoRoundsPlayed, setAutoRoundsPlayed] = useState<number>(0)
+  const [autoTotalPnl, setAutoTotalPnl] = useState<number>(0)
+  const [autoError, setAutoError] = useState<string | null>(null)
+  const autoStopRequestedRef = useRef<boolean>(false)
+  // Per-round bookkeeping so we can compute delta_cdf on CRASHED.
+  const autoCurrentBetAmountRef = useRef<number>(0)
+  const autoCurrentWinAmountRef = useRef<number>(0)
+  const autoCashedOutThisRoundRef = useRef<boolean>(false)
+  const autoBetInFlightRef = useRef<boolean>(false)
+  // Latest auto-session reference for use inside socket callbacks that close
+  // over stale state.
+  const autoSessionRef = useRef<{ id: string; cfg: AutoConfig } | null>(null)
+  useEffect(() => {
+    autoSessionRef.current = autoSession
+  }, [autoSession])
+  // Ref-routed auto helpers, populated below after the helpers are declared.
+  // Using a ref breaks the "used before declaration" cycle when the socket
+  // subscription effect references the helpers.
+  const autoHandlersRef = useRef<{
+    placeBet: () => Promise<boolean>
+    cashout: () => Promise<void>
+    settleRound: () => Promise<void>
+  }>({
+    placeBet: async () => false,
+    cashout: async () => {},
+    settleRound: async () => {},
+  })
 
   // Pull authoritative balance from the backend on mount
   useEffect(() => {
@@ -112,9 +150,19 @@ export default function OkapiGame() {
           // Fresh round — release any 409-induced bet lock.
           setBetLocked(false)
           setBetError(null)
+          // Cancel the CRASHED safety reset since WAITING did arrive.
+          if (crashedSafetyRef.current) {
+            clearTimeout(crashedSafetyRef.current)
+            crashedSafetyRef.current = null
+          }
           // New round: re-sync wallet so any settled bet from the previous
           // round (lost or won) is reflected on screen.
           syncBalance()
+          // Auto-bet: if a session is active and the user didn't request
+          // STOP, place the bet for this round.
+          if (autoSessionRef.current && !autoStopRequestedRef.current) {
+            autoHandlersRef.current.placeBet()
+          }
           break
         case 'PLAYING':
           setState('playing')
@@ -127,10 +175,55 @@ export default function OkapiGame() {
           setState((prev) => (prev === 'cashedout' ? 'cashedout' : 'crashed'))
           setCrashPoint(msg.crashPoint)
           setHistory((h) => [msg.crashPoint, ...h].slice(0, 20))
+          // Auto-bet: settle the round (sends delta_cdf to /auto/progress).
+          // Runs regardless of cashout outcome (loss = -bet, win = win-bet).
+          if (autoSessionRef.current) {
+            autoHandlersRef.current.settleRound().then(() => {
+              // If the user requested STOP mid-round, finalize the session
+              // now that the round is over.
+              if (
+                autoStopRequestedRef.current &&
+                autoSessionRef.current &&
+                userId
+              ) {
+                const sid = autoSessionRef.current.id
+                okapiApi
+                  .autoStop(sid, userId, 'stopped')
+                  .catch(() => {})
+                  .finally(() => {
+                    setAutoSession(null)
+                    autoStopRequestedRef.current = false
+                  })
+              }
+            })
+          }
+          // Fully clear per-round bet state. Previously only the ref was
+          // cleared, leaving `betId` (a React state) holding a stale UUID
+          // which kept `hasBet=true` if WAITING was somehow missed, locking
+          // the MISER button forever.
+          setBetId(null)
           betIdRef.current = null
+          hasBetRef.current = false
           // Bet was already deducted at placement; nothing else to charge.
           // Still re-sync to be safe (covers reconnect / missed events).
           syncBalance()
+          // Safety: if no WAITING arrives within 15s (engine stuck, WS
+          // dropped, etc.), force-reset the UI so the player can bet again
+          // as soon as a new round actually starts.
+          if (crashedSafetyRef.current) {
+            clearTimeout(crashedSafetyRef.current)
+          }
+          crashedSafetyRef.current = window.setTimeout(() => {
+            setState('waiting')
+            setBetId(null)
+            betIdRef.current = null
+            hasBetRef.current = false
+            setBetLocked(false)
+            setBetError(null)
+            setMultiplier(1)
+            setCrashPoint(null)
+            setCashoutMultiplier(null)
+          }, 15000)
           break
         case 'CASHOUT_CONFIRM':
           // eslint-disable-next-line no-console
@@ -144,7 +237,20 @@ export default function OkapiGame() {
     return () => {
       off()
     }
-  }, [syncBalance])
+  }, [syncBalance, userId])
+
+  // Auto-cashout trigger: when the multiplier crosses the configured target
+  // during PLAYING and we have a live auto bet, fire the cashout exactly once.
+  useEffect(() => {
+    const sess = autoSessionRef.current
+    if (!sess) return
+    if (state !== 'playing') return
+    if (!hasBetRef.current) return
+    if (autoCashedOutThisRoundRef.current) return
+    if (multiplier >= sess.cfg.targetMultiplier) {
+      autoHandlersRef.current.cashout()
+    }
+  }, [multiplier, state])
 
   // Local fallback state machine if no server is connected
   useEffect(() => {
@@ -267,6 +373,167 @@ export default function OkapiGame() {
       setBetSubmitting(false)
     }
   }
+
+  // -------- Auto-bet helpers --------
+
+  // Place a bet on behalf of the auto loop. Returns true on success.
+  const autoPlaceBet = useCallback(async (): Promise<boolean> => {
+    const sess = autoSessionRef.current
+    if (!sess || !userId) return false
+    if (hasBetRef.current || autoBetInFlightRef.current) return false
+    autoBetInFlightRef.current = true
+    autoCurrentBetAmountRef.current = sess.cfg.amount
+    autoCurrentWinAmountRef.current = 0
+    autoCashedOutThisRoundRef.current = false
+    try {
+      const res = await okapiApi.placeBet(userId, sess.cfg.amount, sess.id)
+      setBetId(res.bet_id)
+      betIdRef.current = res.bet_id
+      hasBetRef.current = true
+      if (res.balance !== null && res.balance !== undefined) {
+        updateBalance(res.balance)
+      }
+      setAutoError(null)
+      return true
+    } catch (err: any) {
+      const raw = String(err?.message || '')
+      // eslint-disable-next-line no-console
+      console.error('[okapi auto] placeBet failed:', raw)
+      setAutoError(raw.includes('Insufficient') ? 'Solde insuffisant' : 'Mise refusée')
+      // Skip this round but DO NOT freeze the loop. The CRASHED handler will
+      // not see a winning bet and will simply not record a round delta.
+      autoCurrentBetAmountRef.current = 0
+      return false
+    } finally {
+      autoBetInFlightRef.current = false
+    }
+  }, [userId, updateBalance])
+
+  // Cash out on behalf of the auto loop. Idempotent.
+  const autoCashout = useCallback(async () => {
+    if (!autoSessionRef.current) return
+    if (autoCashedOutThisRoundRef.current) return
+    const currentBetId = betIdRef.current
+    if (!hasBetRef.current || !currentBetId) return
+    autoCashedOutThisRoundRef.current = true
+    const localM = multiplier
+    setState('cashedout')
+    setCashoutMultiplier(localM)
+    try {
+      const res = await okapiApi.cashout(userId, currentBetId)
+      setCashoutMultiplier(res.multiplier)
+      autoCurrentWinAmountRef.current = res.win_amount
+      if (res.balance !== null && res.balance !== undefined) {
+        updateBalance(res.balance)
+      }
+    } catch (err: any) {
+      const raw = String(err?.message || '')
+      // eslint-disable-next-line no-console
+      console.error('[okapi auto] cashout failed:', raw)
+      // Treat as a loss: leave win=0 so the round counts as a loss in PnL.
+      autoCashedOutThisRoundRef.current = false
+      syncBalance()
+    } finally {
+      betIdRef.current = null
+    }
+  }, [multiplier, userId, syncBalance, updateBalance])
+
+  // Settle the round with the backend: push delta to the auto session.
+  const autoSettleRound = useCallback(async () => {
+    const sess = autoSessionRef.current
+    if (!sess || !userId) return
+    const bet = autoCurrentBetAmountRef.current
+    if (bet <= 0) return // no bet was placed this round
+    const win = autoCurrentWinAmountRef.current
+    const delta = (autoCashedOutThisRoundRef.current ? win : 0) - bet
+    autoCurrentBetAmountRef.current = 0
+    autoCurrentWinAmountRef.current = 0
+    autoCashedOutThisRoundRef.current = false
+    try {
+      const res = await okapiApi.autoProgress(sess.id, userId, delta)
+      setAutoRoundsPlayed(res.rounds_played)
+      setAutoTotalPnl(res.total_pnl_cdf)
+      if (res.finished) {
+        setAutoSession(null)
+        autoStopRequestedRef.current = false
+      }
+    } catch (err: any) {
+      // Network blip: don't kill the loop, just log and continue.
+      // eslint-disable-next-line no-console
+      console.error('[okapi auto] progress failed:', err?.message)
+      setAutoError('Erreur réseau (continuera au prochain round)')
+      // Keep local counters approximately in sync.
+      setAutoRoundsPlayed((r) => r + 1)
+      setAutoTotalPnl((p) => p + delta)
+    }
+  }, [userId])
+
+  // User clicked START AUTO.
+  const handleAutoStart = useCallback(
+    async (cfg: AutoConfig) => {
+      if (!userId) {
+        nav('/login')
+        return
+      }
+      setAutoError(null)
+      try {
+        const res = await okapiApi.autoStart({
+          user_id: userId,
+          bet_amount_cdf: cfg.amount,
+          target_multiplier: cfg.targetMultiplier,
+          max_rounds: cfg.maxRounds,
+          stop_on_profit_cdf: cfg.stopOnProfit || null,
+          stop_on_loss_cdf: cfg.stopOnLoss || null,
+        })
+        setAutoRoundsPlayed(0)
+        setAutoTotalPnl(0)
+        autoStopRequestedRef.current = false
+        autoCurrentBetAmountRef.current = 0
+        autoCurrentWinAmountRef.current = 0
+        autoCashedOutThisRoundRef.current = false
+        setAutoSession({ id: res.session_id, cfg })
+        // If we're already in WAITING, place the bet immediately so the user
+        // doesn't have to wait for the next cycle.
+        if (state === 'waiting') {
+          await autoPlaceBet()
+        }
+      } catch (err: any) {
+        // eslint-disable-next-line no-console
+        console.error('[okapi auto] start failed:', err?.message)
+        setAutoError('Impossible de démarrer la session auto')
+      }
+    },
+    [userId, nav, state, autoPlaceBet],
+  )
+
+  // Keep the ref pointing at the latest helper closures so the WS-subscribe
+  // effect (which runs only once) can call them with fresh state.
+  autoHandlersRef.current = {
+    placeBet: autoPlaceBet,
+    cashout: autoCashout,
+    settleRound: autoSettleRound,
+  }
+
+  // User clicked STOP AUTO. Finish current round, then halt.
+  const handleAutoStop = useCallback(async () => {
+    autoStopRequestedRef.current = true
+    const sess = autoSessionRef.current
+    if (!sess || !userId) {
+      setAutoSession(null)
+      return
+    }
+    // If we're not mid-round, end immediately.
+    if (!hasBetRef.current) {
+      try {
+        await okapiApi.autoStop(sess.id, userId, 'stopped')
+      } catch {
+        /* best effort */
+      }
+      setAutoSession(null)
+      autoStopRequestedRef.current = false
+    }
+    // else: the CRASHED handler will detect autoStopRequestedRef and call stop.
+  }, [userId])
 
   const handleCashout = async () => {
     if (!hasBetRef.current) return
@@ -501,6 +768,12 @@ export default function OkapiGame() {
           locked={betLocked || betSubmitting}
           onPlaceBet={handlePlaceBet}
           onCashout={handleCashout}
+          autoRunning={Boolean(autoSession)}
+          autoRoundsPlayed={autoRoundsPlayed}
+          autoTotalPnl={autoTotalPnl}
+          autoError={autoError}
+          onAutoStart={handleAutoStart}
+          onAutoStop={handleAutoStop}
         />
       </div>
     </div>

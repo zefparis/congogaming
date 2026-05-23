@@ -21,6 +21,26 @@ export interface BalanceResponse {
   balance: number
 }
 
+export interface AutoStartParams {
+  user_id: string
+  bet_amount_cdf: number
+  target_multiplier: number
+  max_rounds: number | null
+  stop_on_profit_cdf?: number | null
+  stop_on_loss_cdf?: number | null
+}
+
+export interface AutoStartResponse {
+  session_id: string
+}
+
+export interface AutoProgressResponse {
+  rounds_played: number
+  total_pnl_cdf: number
+  status: 'active' | 'completed' | 'aborted'
+  finished: boolean
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -37,10 +57,14 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const okapiApi = {
-  placeBet: (user_id: string, amount_cdf: number) =>
+  placeBet: (
+    user_id: string,
+    amount_cdf: number,
+    auto_session_id?: string | null,
+  ) =>
     request<BetResponse>('/api/game/bet', {
       method: 'POST',
-      body: JSON.stringify({ user_id, amount_cdf }),
+      body: JSON.stringify({ user_id, amount_cdf, auto_session_id }),
     }),
   cashout: (user_id: string, bet_id: string) =>
     request<CashoutResponse>('/api/game/cashout', {
@@ -49,5 +73,26 @@ export const okapiApi = {
     }),
   history: () => request<HistoryResponse>('/api/game/history'),
   getBalance: (user_id: string) =>
-    request<BalanceResponse>(`/api/wallet/balance?user_id=${encodeURIComponent(user_id)}`),
+    request<BalanceResponse>(
+      `/api/wallet/balance?user_id=${encodeURIComponent(user_id)}`,
+    ),
+  autoStart: (params: AutoStartParams) =>
+    request<AutoStartResponse>('/api/okapi/auto/start', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+  autoProgress: (session_id: string, user_id: string, delta_cdf: number) =>
+    request<AutoProgressResponse>('/api/okapi/auto/progress', {
+      method: 'POST',
+      body: JSON.stringify({ session_id, user_id, delta_cdf }),
+    }),
+  autoStop: (
+    session_id: string,
+    user_id: string,
+    reason: 'completed' | 'stopped' | 'aborted' = 'stopped',
+  ) =>
+    request<{ ok: boolean; status: string }>('/api/okapi/auto/stop', {
+      method: 'POST',
+      body: JSON.stringify({ session_id, user_id, reason }),
+    }),
 }
