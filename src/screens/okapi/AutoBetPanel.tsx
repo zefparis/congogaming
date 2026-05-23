@@ -176,7 +176,7 @@ export default function AutoBetPanel({
         />
       </Row>
       <Row label="Rounds">
-        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {ROUND_OPTIONS.map((r) => {
             const active = maxRounds === r.value
             return (
@@ -186,12 +186,13 @@ export default function AutoBetPanel({
                 style={{
                   background: active ? '#FFD700' : '#333',
                   color: active ? '#000' : '#FFD700',
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 700,
                   borderRadius: 4,
-                  padding: '3px 8px',
+                  padding: '2px 6px',
                   border: 'none',
                   cursor: 'pointer',
+                  minWidth: 22,
                 }}
               >
                 {r.label}
@@ -200,24 +201,38 @@ export default function AutoBetPanel({
           })}
         </div>
       </Row>
-      <Row label="Stop gain (0=off)">
-        <input
-          type="number"
-          min={0}
-          value={stopProfit}
-          onChange={(e) => setStopProfit(Number(e.target.value) || 0)}
-          style={inputStyle}
-        />
-      </Row>
-      <Row label="Stop perte (0=off)">
-        <input
-          type="number"
-          min={0}
-          value={stopLoss}
-          onChange={(e) => setStopLoss(Number(e.target.value) || 0)}
-          style={inputStyle}
-        />
-      </Row>
+      {/* Stop gain / stop perte share one row to save vertical space. */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 6,
+          alignItems: 'center',
+        }}
+      >
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ color: '#aaa', fontSize: 10 }}>Stop gain</span>
+          <input
+            type="number"
+            min={0}
+            value={stopProfit}
+            placeholder="0=off"
+            onChange={(e) => setStopProfit(Number(e.target.value) || 0)}
+            style={{ ...inputStyle, width: '100%', textAlign: 'left' }}
+          />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ color: '#aaa', fontSize: 10 }}>Stop perte</span>
+          <input
+            type="number"
+            min={0}
+            value={stopLoss}
+            placeholder="0=off"
+            onChange={(e) => setStopLoss(Number(e.target.value) || 0)}
+            style={{ ...inputStyle, width: '100%', textAlign: 'left' }}
+          />
+        </label>
+      </div>
       <button
         onClick={start}
         style={{

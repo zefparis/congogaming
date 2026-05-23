@@ -728,16 +728,17 @@ export default function OkapiGame() {
         </div>
       </div>
 
-      {/* BET PANEL */}
+      {/* BET PANEL — extra bottom padding clears the fixed BottomNav (~64px). */}
       <div
         style={{
-          height: 160,
           flexShrink: 0,
           flexGrow: 0,
           background: '#111111',
           borderTop: '1px solid #333333',
-          padding: '12px 16px',
+          padding: '10px 14px',
+          paddingBottom: 'calc(72px + env(safe-area-inset-bottom))',
           zIndex: 30,
+          position: 'relative',
         }}
       >
         {betError && (

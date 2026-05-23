@@ -106,9 +106,11 @@ export default function ClimbCurve({ state, startTime }: Props) {
         const elapsed = (performance.now() - startRef.current) / 1000
         const m = multiplierAt(elapsed)
 
-        // Right-to-left: starts at bottom-right, climbs toward top-left
+        // Aviator-standard direction: starts at bottom-left, climbs toward
+        // top-right as the multiplier grows.
         const SWEEP_SEC = 20
-        const x = w - Math.min(w, (elapsed / SWEEP_SEC) * w)
+        const X_PAD = 20
+        const x = X_PAD + Math.min(w - X_PAD * 2, (elapsed / SWEEP_SEC) * (w - X_PAD * 2))
         const Y_PAD = 20
         const yNorm = Math.min(1, Math.log10(m) / Math.log10(20))
         const y = h - Y_PAD - yNorm * (h - Y_PAD * 2)
@@ -177,7 +179,10 @@ export default function ClimbCurve({ state, startTime }: Props) {
           const prev = pts[Math.max(0, pts.length - 6)]
 
           if (state === 'playing' || state === 'cashedout') {
-            const angle = Math.atan2(tip.y - prev.y, tip.x - prev.x) + Math.PI
+            // okapi-tip.png already faces right, matching the left-to-right
+            // climb direction. No extra +π rotation is needed (which was
+            // there to compensate the previous left-facing sprite).
+            const angle = Math.atan2(tip.y - prev.y, tip.x - prev.x)
             ctx.save()
             ctx.translate(tip.x + dx, tip.y + dy)
             ctx.rotate(angle)
