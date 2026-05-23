@@ -122,12 +122,25 @@ export default function AutoBetPanel({
     <div style={containerStyle}>
       {errorMsg && <ErrorBanner msg={errorMsg} />}
 
-      {/* Row 1: Mise | ×target | ⚙ */}
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center', width: '100%' }}>
-        <div style={{ ...fieldShell, flex: 1, minWidth: 0 }}>
+      {/* Row 1: Mise | ×target | ⚙. boxSizing+overflow:hidden are belt-and-
+          braces against any child trying to expand past the container width
+          (e.g. <input type=number> default size attribute on some browsers). */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 6,
+          alignItems: 'center',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ ...fieldShell, flex: '1 1 0', minWidth: 0 }}>
           <span style={fieldLabel}>Mise</span>
           <input
             type="number"
+            inputMode="numeric"
+            size={1}
             min={MIN_BET}
             max={MAX_BET}
             value={amount}
@@ -137,10 +150,12 @@ export default function AutoBetPanel({
             style={compactInput}
           />
         </div>
-        <div style={{ ...fieldShell, flex: 1, minWidth: 0 }}>
+        <div style={{ ...fieldShell, flex: '1 1 0', minWidth: 0 }}>
           <span style={{ ...fieldLabel, color: '#FFD700' }}>×</span>
           <input
             type="number"
+            inputMode="decimal"
+            size={1}
             step="0.01"
             min={1.01}
             value={target}
