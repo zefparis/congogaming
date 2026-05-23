@@ -86,9 +86,9 @@ export default function HomeScreen() {
             alt="World Cup Trophy"
             style={{
               position: 'absolute',
-              right: '-10px',
+              right: '-5px',
               bottom: '0',
-              height: '88%',
+              height: '72%',
               width: 'auto',
               objectFit: 'contain',
               zIndex: 2,
@@ -98,7 +98,7 @@ export default function HomeScreen() {
           />
 
           {/* Content on top */}
-          <div style={{ position: 'relative', maxWidth: '60%', zIndex: 3, padding: '20px 16px' }}>
+          <div style={{ position: 'relative', maxWidth: '55%', zIndex: 3, padding: '20px 16px' }}>
             <div style={{ fontSize: 10, color: '#FFD700', letterSpacing: 3, marginBottom: 4 }}>
               🏆 ÉVÉNEMENT OFFICIEL
             </div>
