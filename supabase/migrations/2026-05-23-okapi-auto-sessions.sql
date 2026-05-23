@@ -3,6 +3,11 @@
 -- adjusts total_pnl_cdf. A session ends with status='completed' (rounds
 -- counter reached zero), 'stopped' (user STOP AUTO), or 'aborted'
 -- (stop-on-profit / stop-on-loss threshold hit).
+--
+-- NOTE: DROP TABLE first to guarantee the schema matches even if a partial
+-- version of okapi_auto_sessions was created during an earlier attempt.
+-- This is safe because no production data exists in this table yet.
+DROP TABLE IF EXISTS public.okapi_auto_sessions CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.okapi_auto_sessions (
   id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
