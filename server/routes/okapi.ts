@@ -76,7 +76,19 @@ const okapiRoutes: FastifyPluginAsync = async (app) => {
     if (!user_id || !amount_cdf || amount_cdf < min || amount_cdf > 50_000) {
       return reply.code(400).send({ error: 'Invalid bet' })
     }
-    if (engine.state !== 'WAITING') {
+    // Accept bets during WAITING, plus a small grace window (800ms) after the
+    // server transitions to PLAYING. This covers the round-trip latency for
+    // bets posted at countdown=0/1 which otherwise race the state flip and
+    // get rejected as 409. The cost is at most ~0.05 of multiplier (since
+    // m(0.8s) ≈ 1.05), which is acceptable for the race-loser.
+    const BET_GRACE_MS = 800
+    const sincePlayStart =
+      engine.state === 'PLAYING' && engine.startTime
+        ? Date.now() - engine.startTime
+        : Infinity
+    const inGrace =
+      engine.state === 'PLAYING' && sincePlayStart < BET_GRACE_MS
+    if (engine.state !== 'WAITING' && !inGrace) {
       return reply.code(409).send({ error: 'Betting closed' })
     }
 
