@@ -499,7 +499,11 @@ export default function OkapiGame() {
       // useEffect retry on the next TICK and storm the server with 409s.
       syncBalance()
     } finally {
+      // Reset bet state after cashout (mirror CRASHED path) so the next
+      // WAITING tick can place a fresh bet without being blocked by hasBetRef.
+      setBetId(null)
       betIdRef.current = null
+      hasBetRef.current = false
     }
   }, [multiplier, userId, syncBalance, updateBalance])
 
