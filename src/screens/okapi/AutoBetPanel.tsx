@@ -117,59 +117,73 @@ export default function AutoBetPanel({
     )
   }
 
-  // ---------------- IDLE: 2-row compact config + ⚙ ----------------
+  // ---------------- IDLE: 4 native dropdowns + START AUTO ----------------
+  // Native <select> elements never overflow their container (they show a
+  // platform popup). This eliminates the recurring crop bug on mobile.
   return (
     <div style={containerStyle}>
       {errorMsg && <ErrorBanner msg={errorMsg} />}
 
-      {/* Row 1: Mise | ×target | ⚙. boxSizing+overflow:hidden are belt-and-
-          braces against any child trying to expand past the container width
-          (e.g. <input type=number> default size attribute on some browsers). */}
+      {/* Row 1: 4 dropdowns + gear, in a CSS grid so each cell has equal
+          fixed width. minWidth:0 + width:100% on every cell guarantees no
+          child can blow up the row. */}
       <div
         style={{
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr 36px',
           gap: 6,
-          alignItems: 'center',
           width: '100%',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
         }}
       >
-        <div style={{ ...fieldShell, flex: '1 1 0', minWidth: 0 }}>
-          <span style={fieldLabel}>Mise</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            size={1}
-            min={MIN_BET}
-            max={MAX_BET}
+        <Field label="Mise">
+          <select
             value={amount}
-            onChange={(e) =>
-              setAmount(clamp(Number(e.target.value), MIN_BET, MAX_BET))
-            }
-            style={compactInput}
-          />
-        </div>
-        <div style={{ ...fieldShell, flex: '1 1 0', minWidth: 0 }}>
-          <span style={{ ...fieldLabel, color: '#FFD700' }}>×</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            size={1}
-            step="0.01"
-            min={1.01}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            style={selectStyle}
+          >
+            {AMOUNT_OPTIONS.map((v) => (
+              <option key={v} value={v}>
+                {v >= 1000 ? `${v / 1000}k` : v}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="×">
+          <select
             value={target}
-            onChange={(e) => setTarget(Number(e.target.value) || 1.5)}
-            style={compactInput}
-          />
-        </div>
+            onChange={(e) => setTarget(Number(e.target.value))}
+            style={selectStyle}
+          >
+            {TARGET_OPTIONS.map((v) => (
+              <option key={v} value={v}>
+                {v.toFixed(2)}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Tours">
+          <select
+            value={maxRounds == null ? 'inf' : String(maxRounds)}
+            onChange={(e) =>
+              setMaxRounds(e.target.value === 'inf' ? null : Number(e.target.value))
+            }
+            style={selectStyle}
+          >
+            {ROUND_OPTIONS.map((r) => (
+              <option key={r.label} value={r.value == null ? 'inf' : String(r.value)}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+
         <button
           onClick={() => setAdvancedOpen(true)}
           aria-label="Réglages avancés"
           style={{
-            width: 36,
             height: 36,
-            flexShrink: 0,
             background: '#222',
             border: '1px solid #333',
             color: '#FFD700',
@@ -180,38 +194,11 @@ export default function AutoBetPanel({
             justifyContent: 'center',
             fontSize: 18,
             lineHeight: 1,
+            padding: 0,
           }}
         >
           ⚙
         </button>
-      </div>
-
-      {/* Row 2: round chips — wrap so the ∞ chip never overflows */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-        {ROUND_OPTIONS.map((r) => {
-          const active = maxRounds === r.value
-          return (
-            <button
-              key={r.label}
-              onClick={() => setMaxRounds(r.value)}
-              style={{
-                flex: '1 1 auto',
-                background: active ? '#FFD700' : '#222',
-                color: active ? '#000' : '#FFD700',
-                fontSize: 12,
-                fontWeight: 800,
-                borderRadius: 999,
-                padding: '0 10px',
-                border: active ? 'none' : '1px solid #333',
-                cursor: 'pointer',
-                height: 28,
-                minWidth: 36,
-              }}
-            >
-              {r.label}
-            </button>
-          )
-        })}
       </div>
 
       {/* START AUTO — full width gold (mirrors MISER weight) */}
@@ -245,6 +232,68 @@ export default function AutoBetPanel({
       )}
     </div>
   )
+}
+
+// Preset options. Manual users get the input; auto users pick from these.
+const AMOUNT_OPTIONS = [100, 200, 500, 1000, 2000, 5000, 10000, 25000, 50000]
+const TARGET_OPTIONS = [1.2, 1.5, 1.8, 2, 2.5, 3, 5, 10, 20]
+
+function Field({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <label
+      style={{
+        position: 'relative',
+        display: 'block',
+        background: '#222',
+        border: '1px solid #333',
+        borderRadius: 8,
+        height: 36,
+        minWidth: 0,
+        overflow: 'hidden',
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: 3,
+          left: 8,
+          fontSize: 9,
+          fontWeight: 700,
+          color: '#888',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+          pointerEvents: 'none',
+        }}
+      >
+        {label}
+      </span>
+      {children}
+    </label>
+  )
+}
+
+const selectStyle: React.CSSProperties = {
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  background: 'transparent',
+  color: 'white',
+  border: 'none',
+  outline: 'none',
+  width: '100%',
+  height: '100%',
+  padding: '14px 8px 2px',
+  fontSize: 14,
+  fontWeight: 700,
+  textAlign: 'center',
+  textAlignLast: 'center',
+  cursor: 'pointer',
 }
 
 // ---------------- Helpers ----------------
