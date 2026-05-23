@@ -142,7 +142,7 @@ export default function HomeScreen() {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'right top',
+              objectPosition: 'center center',
               opacity: 0.85,
             }}
           />
@@ -154,7 +154,23 @@ export default function HomeScreen() {
                 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.05) 100%)',
             }}
           />
-          <div style={{ position: 'relative', padding: '20px 16px' }}>
+
+          {/* Okapi character */}
+          <img
+            src="/images/okapi/okapi-sprite.png"
+            alt="Okapi"
+            style={{
+              position: 'absolute',
+              right: '-8px',
+              bottom: '0',
+              height: '85%',
+              width: 'auto',
+              objectFit: 'contain',
+              zIndex: 2,
+              filter: 'drop-shadow(0 0 12px rgba(255,165,0,0.5))',
+            }}
+          />
+          <div style={{ position: 'relative', maxWidth: '58%', zIndex: 3, padding: '20px 16px' }}>
             <div style={{ fontSize: 10, color: '#FFD700', letterSpacing: 3, marginBottom: 4 }}>
               🏔️ CRASH GAME
             </div>
