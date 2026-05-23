@@ -506,6 +506,22 @@ export default function OkapiGame() {
       setBetId(null)
       betIdRef.current = null
       hasBetRef.current = false
+      // Safety: if the server crashes/restarts (Render cold start) before
+      // emitting CRASHED for this round, the UI would be stuck on
+      // 'cashedout' indefinitely. Force-reset to 'waiting' after 20s if
+      // nothing else has updated the state.
+      if (crashedSafetyRef.current) clearTimeout(crashedSafetyRef.current)
+      crashedSafetyRef.current = window.setTimeout(() => {
+        // Settle the round locally so auto-bet counters advance and the
+        // next WAITING (whenever it arrives) places a fresh bet.
+        if (autoSessionRef.current && autoCurrentBetAmountRef.current > 0) {
+          autoHandlersRef.current.settleRound()
+        }
+        setState('waiting')
+        setMultiplier(1)
+        setCrashPoint(null)
+        setCashoutMultiplier(null)
+      }, 20000)
     }
   }, [multiplier, userId, syncBalance, updateBalance])
 
@@ -641,6 +657,15 @@ export default function OkapiGame() {
       setBetId(null)
       betIdRef.current = null
       hasBetRef.current = false
+      // Safety: same recovery as autoCashout — if the server restarts before
+      // emitting CRASHED, the UI would otherwise be stuck on 'cashedout'.
+      if (crashedSafetyRef.current) clearTimeout(crashedSafetyRef.current)
+      crashedSafetyRef.current = window.setTimeout(() => {
+        setState('waiting')
+        setMultiplier(1)
+        setCrashPoint(null)
+        setCashoutMultiplier(null)
+      }, 20000)
     }
   }
 
