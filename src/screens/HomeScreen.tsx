@@ -6,19 +6,21 @@ import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
 
 // Shared style for primary home CTAs (gold→orange, warm glow, black text).
+// Inline styles take precedence over any Tailwind utility, so this fully
+// neutralises any other color rule applied to the button.
 const ctaStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '13px 0',
-  background: 'linear-gradient(135deg, #FFD700, #FF6B00)',
+  background: 'linear-gradient(135deg, #FFD700 0%, #FF6B00 100%)',
   color: '#000000',
-  fontWeight: 900,
-  fontSize: 16,
-  borderRadius: 12,
+  fontWeight: '800',
+  letterSpacing: '1.5px',
+  borderRadius: '14px',
   border: 'none',
-  cursor: 'pointer',
+  boxShadow: '0 4px 24px rgba(255, 165, 0, 0.55)',
+  padding: '14px 0',
+  width: '100%',
+  fontSize: '15px',
   fontFamily: 'Bebas Neue',
-  letterSpacing: 1,
-  boxShadow: '0 4px 20px rgba(255, 165, 0, 0.5)',
+  cursor: 'pointer',
 };
 
 export default function HomeScreen() {
