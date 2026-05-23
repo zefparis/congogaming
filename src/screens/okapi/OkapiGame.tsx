@@ -29,10 +29,6 @@ export default function OkapiGame() {
   // Always start at 0; the real balance is fetched from the backend on mount.
   // Never trust the value cached in localStorage to display in-game.
   const [balance, setBalance] = useState<number>(0)
-  // True once we've completed at least one wallet sync (success OR failure).
-  // Until then, do NOT use `balance` to gate UI actions — it's still the
-  // placeholder 0 and would silently block every bet.
-  const [balanceLoaded, setBalanceLoaded] = useState<boolean>(false)
   const [betError, setBetError] = useState<string | null>(null)
   const [betSubmitting, setBetSubmitting] = useState<boolean>(false)
 
@@ -47,30 +43,23 @@ export default function OkapiGame() {
   // reads public.users.balance_cdf. This is the only source of truth for the
   // in-game balance display.
   const syncBalance = useCallback(async () => {
-    if (!userId) {
-      setBalanceLoaded(true)
-      return
-    }
+    if (!userId) return
     // Try the backend wallet endpoint first.
     try {
       const res = await okapiApi.getBalance(userId)
       updateBalance(res.balance)
-      setBalanceLoaded(true)
       return
     } catch {
       /* fallthrough to direct-Supabase fallback below */
     }
-    // Fallback: hit Supabase directly with the anon key. This keeps the
-    // in-game balance correct even if api.congogaming.com hasn't been
-    // redeployed with the new /api/wallet/balance route yet.
+    // Fallback: hit Supabase directly with the anon key. Keeps the in-game
+    // balance correct even if api.congogaming.com hasn't been redeployed
+    // with the new /api/wallet/balance route yet.
     try {
       const bal = await refreshBalance(userId)
       updateBalance(bal)
-      setBalanceLoaded(true)
     } catch {
-      // Don't flip balanceLoaded on failure — leaving it false keeps the
-      // client-side `amount > balance` pre-check disabled so the user can
-      // still attempt to bet; the server remains the authoritative gate.
+      /* keep last known value */
     }
   }, [userId, updateBalance])
 
@@ -229,12 +218,10 @@ export default function OkapiGame() {
       return
     }
     if (betSubmitting) return
-    // Only enforce the client-side insufficient-funds check once we actually
-    // know the real balance. Otherwise the server is the gate.
-    if (balanceLoaded && amount > balance) {
-      setBetError('Solde insuffisant')
-      return
-    }
+    // No client-side balance pre-check: the server is the single source of
+    // truth. The `adjust_balance` RPC enforces non-negative balance and will
+    // reject the bet if funds are insufficient. This avoids any drift between
+    // displayed balance and real wallet from blocking legitimate bets.
     setBetError(null)
     setBetSubmitting(true)
     try {

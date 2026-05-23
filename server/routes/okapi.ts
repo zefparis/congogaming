@@ -31,11 +31,19 @@ const okapiRoutes: FastifyPluginAsync = async (app) => {
     const ws = socket as WSLike
     sockets.add(ws)
 
-    // Send current state + history on connect
+    // Send current state + history on connect.
     ws.send(JSON.stringify({ type: 'HISTORY', history: engine.history }))
     const info = engine.info()
     if (info.state === 'PLAYING' && info.startTime) {
       ws.send(JSON.stringify({ type: 'PLAYING', startTime: info.startTime }))
+    } else if (info.state === 'WAITING') {
+      // Reflect the current waiting countdown so the client doesn't sit in a
+      // stale 'waiting' that doesn't match the real engine cycle.
+      ws.send(JSON.stringify({ type: 'WAITING', countdown: 5 }))
+    } else if (info.state === 'CRASHED' && info.crashPoint != null) {
+      ws.send(
+        JSON.stringify({ type: 'CRASHED', crashPoint: info.crashPoint }),
+      )
     }
 
     ws.on('close', () => sockets.delete(ws))
