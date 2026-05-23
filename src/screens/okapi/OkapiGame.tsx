@@ -483,8 +483,15 @@ export default function OkapiGame() {
     if (!hasBetRef.current || !currentBetId) return
     autoCashedOutThisRoundRef.current = true
     const localM = multiplier
+    // Briefly show the WIN celebration (cashedout state) for 1.5s, then
+    // revert to 'playing' so the okapi keeps climbing until the actual
+    // server-side CRASHED event. Without this revert, the UI would freeze
+    // on the green WIN screen for the rest of the round.
     setState('cashedout')
     setCashoutMultiplier(localM)
+    window.setTimeout(() => {
+      setState((prev) => (prev === 'cashedout' ? 'playing' : prev))
+    }, 1500)
     try {
       const res = await okapiApi.cashout(userId, currentBetId)
       setCashoutMultiplier(res.multiplier)
@@ -638,8 +645,13 @@ export default function OkapiGame() {
     // cleared. This would just produce a server-side 404 "Bet not found".
     if (!currentBetId || currentBetId.startsWith('local-')) return
     const localM = multiplier
+    // Briefly show the WIN celebration, then revert to 'playing' so the
+    // okapi keeps climbing until CRASHED (mirrors autoCashout).
     setState('cashedout')
     setCashoutMultiplier(localM)
+    window.setTimeout(() => {
+      setState((prev) => (prev === 'cashedout' ? 'playing' : prev))
+    }, 1500)
     try {
       const res = await okapiApi.cashout(userId, currentBetId)
       setCashoutMultiplier(res.multiplier)
