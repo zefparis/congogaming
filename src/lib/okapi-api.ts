@@ -51,7 +51,17 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(`API error ${res.status}: ${text}`)
+    // Try to pull a more specific message from JSON payloads like
+    // `{ error: '...', detail: '...' }` so the UI can show the real cause.
+    let extra = ''
+    try {
+      const j = JSON.parse(text) as { error?: string; detail?: string }
+      if (j.detail) extra = ` ${j.detail}`
+      else if (j.error) extra = ` ${j.error}`
+    } catch {
+      /* not json */
+    }
+    throw new Error(`API error ${res.status}: ${text}${extra}`)
   }
   return res.json() as Promise<T>
 }

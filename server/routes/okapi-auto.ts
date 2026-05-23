@@ -76,8 +76,17 @@ const okapiAutoRoutes: FastifyPluginAsync = async (app) => {
       .single();
 
     if (error || !data) {
-      app.log.error({ err: error?.message }, 'okapi auto start failed');
-      return reply.code(500).send({ error: 'Could not start session' });
+      app.log.error({ err: error?.message, code: error?.code }, 'okapi auto start failed');
+      // Surface the underlying Supabase error so the operator can diagnose
+      // missing-table / RLS / column-mismatch issues without digging in logs.
+      // The most common cause in production is that the migration
+      // `supabase/migrations/2026-05-23-okapi-auto-sessions.sql` has not been
+      // applied yet (table does not exist).
+      return reply.code(500).send({
+        error: 'Could not start session',
+        detail: error?.message || 'unknown supabase error',
+        code: error?.code || null,
+      });
     }
     return reply.send({ session_id: data.id });
   });
