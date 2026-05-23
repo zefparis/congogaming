@@ -5,6 +5,22 @@ import { Wallet } from 'lucide-react';
 import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
 
+// Shared style for primary home CTAs (gold→orange, warm glow, black text).
+const ctaStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '13px 0',
+  background: 'linear-gradient(135deg, #FFD700, #FF6B00)',
+  color: '#000000',
+  fontWeight: 900,
+  fontSize: 16,
+  borderRadius: 12,
+  border: 'none',
+  cursor: 'pointer',
+  fontFamily: 'Bebas Neue',
+  letterSpacing: 1,
+  boxShadow: '0 4px 20px rgba(255, 165, 0, 0.5)',
+};
+
 export default function HomeScreen() {
   const nav = useNavigate();
   const session = getSession();
@@ -73,24 +89,14 @@ export default function HomeScreen() {
             <div style={{ fontSize: 13, color: '#00A86B', marginTop: 4, marginBottom: 16 }}>
               ⚽ Gagnez gros — Paris & Prédictions
             </div>
-            <button
+            <motion.button
+              whileHover={{ filter: 'brightness(1.1)' }}
+              whileTap={{ scale: 0.98, filter: 'brightness(1.1)' }}
               onClick={() => nav('/jouer')}
-              style={{
-                width: '100%',
-                padding: '13px 0',
-                background: 'linear-gradient(90deg, #FFD700, #F59E0B)',
-                color: '#000000',
-                fontWeight: 900,
-                fontSize: 16,
-                borderRadius: 8,
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'Bebas Neue',
-                letterSpacing: 2,
-              }}
+              style={ctaStyle}
             >
               JOUER MAINTENANT →
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -137,21 +143,10 @@ export default function HomeScreen() {
               Pariez, encaissez avant le crash. Jusqu'à ×50
             </div>
             <motion.button
-              whileTap={{ scale: 0.96 }}
+              whileHover={{ filter: 'brightness(1.1)' }}
+              whileTap={{ scale: 0.98, filter: 'brightness(1.1)' }}
               onClick={(e) => { e.stopPropagation(); nav('/climb'); }}
-              style={{
-                width: '100%',
-                padding: '12px 0',
-                background: 'linear-gradient(90deg, #FFD700, #F59E0B)',
-                color: '#000000',
-                fontWeight: 900,
-                fontSize: 16,
-                borderRadius: 8,
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'Bebas Neue',
-                letterSpacing: 2,
-              }}
+              style={ctaStyle}
             >
               GRIMPER MAINTENANT →
             </motion.button>
