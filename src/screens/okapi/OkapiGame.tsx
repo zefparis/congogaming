@@ -160,7 +160,15 @@ export default function OkapiGame() {
           syncBalance()
           // Auto-bet: if a session is active and the user didn't request
           // STOP, place the bet for this round.
+          // eslint-disable-next-line no-console
+          console.log('[okapi auto] WAITING received', {
+            hasSession: !!autoSessionRef.current,
+            stopRequested: autoStopRequestedRef.current,
+            handlersReady: !!autoHandlersRef.current.placeBet,
+          })
           if (autoSessionRef.current && !autoStopRequestedRef.current) {
+            // eslint-disable-next-line no-console
+            console.log('[okapi auto] calling placeBet via handlersRef')
             autoHandlersRef.current.placeBet()
           }
           break
