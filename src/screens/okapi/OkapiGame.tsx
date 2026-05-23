@@ -29,9 +29,10 @@ export default function OkapiGame() {
   const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0)
 
   const updateBalance = useCallback((n: number) => {
-    setBalance(n)
+    const num = Number(n) || 0
+    setBalance(num)
     const s = getSession()
-    if (s) saveSession({ ...s, balance_cdf: n })
+    if (s) saveSession({ ...s, balance_cdf: num })
   }, [])
 
   const [state, setState] = useState<GameState>('waiting')
@@ -190,6 +191,9 @@ export default function OkapiGame() {
       betIdRef.current = res.bet_id
       if (res.balance !== null && res.balance !== undefined) {
         updateBalance(res.balance)
+      } else if (userId) {
+        // Server up but Supabase not configured: pull authoritative value.
+        refreshBalance(userId).then(updateBalance).catch(() => {})
       }
     } catch {
       const localId = `local-${Date.now()}`
@@ -211,6 +215,10 @@ export default function OkapiGame() {
         setCashoutMultiplier(res.multiplier)
         if (res.balance !== null && res.balance !== undefined) {
           updateBalance(res.balance)
+        }
+        // Re-fetch from DB as source of truth, mirroring deposit/withdraw flows.
+        if (userId) {
+          refreshBalance(userId).then(updateBalance).catch(() => {})
         }
       }
     } catch {

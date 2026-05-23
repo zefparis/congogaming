@@ -36,5 +36,8 @@ export async function adjustBalance(
     p_delta: delta,
   });
   if (error) throw new Error(error.message);
-  return (data as number) ?? 0;
+  // Postgres `numeric` is serialized as a string by PostgREST. Coerce so
+  // callers always get a real number (otherwise client-side arithmetic on
+  // the returned balance produces NaN).
+  return Number(data ?? 0);
 }
