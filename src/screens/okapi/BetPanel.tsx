@@ -55,18 +55,24 @@ export default function BetPanel({
   const quickLabel = (n: number) =>
     n >= 1000 ? `${n / 1000}k` : `${n}`
 
+  // In AUTO mode, the cashout is handled automatically by the bot, so the
+  // manual CASH OUT button is irrelevant — and on narrow phones the 2-column
+  // grid squeezes the AutoBetPanel to ~50% width, clipping the × field and
+  // the ⚙ button. We collapse to a single full-width column in that case.
+  const isAuto = effectiveMode === 'auto'
+
   return (
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: isAuto ? '1fr' : '1fr 1fr',
         gap: 12,
         width: '100%',
       }}
     >
-      {/* Left: MISE or AUTO. alignSelf:start makes this column content-sized
-          (otherwise the grid would stretch it to match CASH OUT and add a
-          large empty gap below START AUTO / MISER). */}
+      {/* Left (or full width in auto): MISE or AUTO. alignSelf:start makes
+          this column content-sized (otherwise the grid would stretch it to
+          match CASH OUT and add a gap below START AUTO / MISER). */}
       <div
         style={{
           display: 'flex',
@@ -131,7 +137,8 @@ export default function BetPanel({
         )}
       </div>
 
-      {/* Right: CASH OUT */}
+      {/* Right: CASH OUT — only shown in MANUEL mode (auto cashes out itself) */}
+      {!isAuto && (
       <button
         disabled={!canCashout}
         onClick={onCashout}
@@ -157,6 +164,7 @@ export default function BetPanel({
           ×{multiplier.toFixed(2)}
         </span>
       </button>
+      )}
     </div>
   )
 }
