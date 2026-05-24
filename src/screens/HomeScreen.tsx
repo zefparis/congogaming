@@ -27,18 +27,64 @@ const ctaStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
+type FlashLatest = Awaited<ReturnType<typeof api.flashLatest>>;
+
 export default function HomeScreen() {
   const nav = useNavigate();
   const session = getSession();
   const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0);
   const [lotoPot, setLotoPot] = useState<number>(0);
   const [flashPot, setFlashPot] = useState<number>(0);
+  const [flashData, setFlashData] = useState<FlashLatest | null>(null);
+  const [countdown, setCountdown] = useState<string>('--:--');
 
   useEffect(() => {
     if (session) refreshBalance(session.id).then(setBalance).catch(() => {});
     api.lotoLatest().then((r) => setLotoPot(Number(r.pot_cdf || 0))).catch(() => {});
-    api.flashLatest().then((r) => setFlashPot(Number(r.pot_cdf || 0))).catch(() => {});
+    api
+      .flashLatest()
+      .then((r) => {
+        setFlashPot(Number(r.pot_cdf || 0));
+        setFlashData(r);
+      })
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!flashData?.tirage?.drawn_at) {
+      setCountdown('--:--');
+      return;
+    }
+    const lastDraw = new Date(flashData.tirage.drawn_at).getTime();
+    const interval = 30 * 60 * 1000;
+    let refetchScheduled = false;
+
+    const tick = () => {
+      const now = Date.now();
+      const nextDraw = lastDraw + Math.ceil((now - lastDraw) / interval) * interval;
+      const remaining = Math.max(0, Math.floor((nextDraw - now) / 1000));
+      const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+      const s = String(remaining % 60).padStart(2, '0');
+      setCountdown(remaining > 0 ? `${m}:${s}` : 'TIRAGE EN COURS');
+
+      if (remaining === 0 && !refetchScheduled) {
+        refetchScheduled = true;
+        setTimeout(() => {
+          api
+            .flashLatest()
+            .then((r) => {
+              setFlashPot(Number(r.pot_cdf || 0));
+              setFlashData(r);
+            })
+            .catch(() => {});
+        }, 5000);
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [flashData]);
 
   return (
     <div className="min-h-screen pb-24">
@@ -417,7 +463,20 @@ export default function HomeScreen() {
               ⚡ LOTO EXPRESS
             </div>
             <div style={{ color: '#FFFFFF', fontSize: 14, marginTop: 12, fontWeight: 600 }}>
-              Tirage toutes les 30 min
+              Prochain tirage dans
+            </div>
+            <div
+              style={{
+                fontFamily: 'Bebas Neue',
+                fontSize: 32,
+                color: '#00A86B',
+                lineHeight: 1,
+                letterSpacing: 2,
+                marginTop: 4,
+                textShadow: '0 0 12px rgba(0,168,107,0.6)',
+              }}
+            >
+              {countdown}
             </div>
             {flashPot >= 250_000 ? (
               <div
