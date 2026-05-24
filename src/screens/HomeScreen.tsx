@@ -93,7 +93,8 @@ export default function HomeScreen() {
               width: 'auto',
               objectFit: 'contain',
               zIndex: 2,
-              mixBlendMode: 'screen',
+              mixBlendMode: 'normal',
+              opacity: 1,
               filter: 'drop-shadow(0 0 16px rgba(255,215,0,0.7))',
             }}
           />
