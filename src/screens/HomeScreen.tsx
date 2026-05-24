@@ -42,31 +42,35 @@ export default function HomeScreen() {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Banner header with solde overlay */}
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
-        <img
-          src="/images/banner.jpg"
-          alt="Congo Gaming"
-          style={{ width: '100%', height: 'auto', display: 'block' }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            background: 'rgba(0,0,0,0.55)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            borderRadius: '0 0 0 12px',
-            padding: '6px 12px',
-          }}
-        >
-          <div className="text-[10px] text-white uppercase tracking-widest">Solde</div>
-          <div className="font-display text-2xl text-gold flex items-center gap-1">
-            <Wallet className="w-5 h-5" />
+      {/* Banner header */}
+      <img
+        src="/images/banner.jpg"
+        alt="Congo Gaming"
+        style={{ width: '100%', height: 'auto', display: 'block' }}
+      />
+
+      {/* Glassmorphism solde bar */}
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,215,0,0.2)',
+          padding: '8px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, letterSpacing: 2 }}>
+          SOLDE
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Wallet style={{ color: '#FFD700', width: 16, height: 16 }} />
+          <span style={{ color: '#FFD700', fontSize: 20, fontWeight: 800 }}>
             {balance.toLocaleString('fr-FR')}
-          </div>
-          <div className="text-[10px] text-white">CDF</div>
+          </span>
+          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>CDF</span>
         </div>
       </div>
 
