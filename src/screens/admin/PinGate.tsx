@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock } from 'lucide-react';
-import { adminApi, setAdminToken } from '../../lib/adminApi';
+import { adminApi, setAdminSecret, setAdminToken } from '../../lib/adminApi';
 
 export default function PinGate({ onAuthed }: { onAuthed: () => void }) {
   const [secret, setSecret] = useState('');
@@ -14,6 +14,9 @@ export default function PinGate({ onAuthed }: { onAuthed: () => void }) {
     try {
       const { token } = await adminApi.authenticate(secret);
       setAdminToken(token);
+      // Persist the secret in sessionStorage so request() can silently
+      // re-acquire a fresh token if the current one expires mid-session.
+      setAdminSecret(secret);
       onAuthed();
     } catch (err: any) {
       setError(err?.message || 'Code invalide');

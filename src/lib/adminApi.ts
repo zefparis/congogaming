@@ -6,6 +6,15 @@
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const TOKEN_KEY = 'cg_admin_token';
+const SECRET_KEY = 'cg_admin_secret';
+// Toggle verbose Authorization logging by setting localStorage.cg_admin_debug = '1'.
+const DEBUG = (() => {
+  try {
+    return localStorage.getItem('cg_admin_debug') === '1';
+  } catch {
+    return false;
+  }
+})();
 
 export function getAdminToken(): string | null {
   try {
@@ -24,6 +33,23 @@ export function setAdminToken(token: string | null) {
   }
 }
 
+export function getAdminSecret(): string | null {
+  try {
+    return sessionStorage.getItem(SECRET_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAdminSecret(secret: string | null) {
+  try {
+    if (secret) sessionStorage.setItem(SECRET_KEY, secret);
+    else sessionStorage.removeItem(SECRET_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export class AdminAuthError extends Error {
   constructor(message = 'Unauthorized') {
     super(message);
@@ -31,18 +57,70 @@ export class AdminAuthError extends Error {
   }
 }
 
-async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const token = getAdminToken();
+// Direct (no-retry, no auto-reauth) fetch used internally by request() and by
+// the silent re-auth path to avoid infinite loops.
+async function rawFetch(path: string, opts: RequestInit, token: string | null): Promise<Response> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...((opts.headers as Record<string, string>) || {}),
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${BASE}${path}`, { ...opts, headers });
+  if (DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log('[adminApi] →', path, {
+      authorization: headers['Authorization'] ?? '(none)',
+      tokenRaw: token,
+    });
+  }
+  return fetch(`${BASE}${path}`, { ...opts, headers });
+}
+
+// Acquire a fresh token using the cached admin secret. Returns null if no
+// secret is available or re-auth fails.
+async function silentReauth(): Promise<string | null> {
+  const secret = getAdminSecret();
+  if (!secret) return null;
+  try {
+    const res = await fetch(`${BASE}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { token?: string };
+    if (data?.token) {
+      setAdminToken(data.token);
+      if (DEBUG) {
+        // eslint-disable-next-line no-console
+        console.log('[adminApi] ↻ silent re-auth OK, new token stored');
+      }
+      return data.token;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  let token = getAdminToken();
+  let res = await rawFetch(path, opts, token);
+
+  // On 401/400, try a one-shot silent re-auth using the cached secret and
+  // retry the original request once. This avoids the "expired token" dead-end.
+  if ((res.status === 401 || res.status === 400) && path !== '/api/admin/auth') {
+    const newToken = await silentReauth();
+    if (newToken) {
+      token = newToken;
+      res = await rawFetch(path, opts, token);
+    }
+  }
+
   if (res.status === 401) {
     setAdminToken(null);
     throw new AdminAuthError();
   }
+
   const ct = res.headers.get('content-type') || '';
   if (ct.includes('application/json')) {
     const json = await res.json().catch(() => ({}));
