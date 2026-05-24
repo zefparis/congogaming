@@ -204,7 +204,7 @@ export default function HomeScreen() {
           }}
         >
           <img
-            src="/images/okapi/loto-okapi.png"
+            src="/images/loto-okapi.png"
             alt="Loto National"
             style={{
               position: 'absolute',
