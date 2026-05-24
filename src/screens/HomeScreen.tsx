@@ -43,11 +43,14 @@ export default function HomeScreen() {
   return (
     <div className="min-h-screen pb-24">
       {/* Banner header */}
-      <img
-        src="/images/banner.jpg"
-        alt="Congo Gaming"
-        style={{ width: '100%', height: 'auto', display: 'block' }}
-      />
+      <div style={{ overflow: 'hidden' }}>
+        <img
+          src="/images/banner.jpg"
+          alt="Congo Gaming"
+          className="breathe"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        />
+      </div>
 
       {/* Glassmorphism solde bar */}
       <div
@@ -105,6 +108,7 @@ export default function HomeScreen() {
           <img
             src="/images/okapi/copa.PNG"
             alt="World Cup Trophy"
+            className="shimmer-gold"
             style={{
               position: 'absolute',
               right: '-5px',
@@ -115,7 +119,6 @@ export default function HomeScreen() {
               zIndex: 2,
               mixBlendMode: 'normal',
               opacity: 1,
-              filter: 'drop-shadow(0 0 16px rgba(255,215,0,0.7))',
             }}
           />
 
@@ -270,12 +273,11 @@ export default function HomeScreen() {
             </div>
             {lotoPot >= 5_000_000 ? (
               <div
-                className="animate-flicker"
+                className="pulse-red"
                 style={{
                   color: '#FF3333',
                   fontSize: 16,
                   fontWeight: '800',
-                  textShadow: '0 0 12px rgba(255,0,0,0.6), 0 2px 4px rgba(0,0,0,0.9)',
                   letterSpacing: '1px',
                   marginTop: 10,
                 }}
@@ -284,11 +286,11 @@ export default function HomeScreen() {
               </div>
             ) : (
               <div
+                className="pulse-red"
                 style={{
                   color: '#FF3333',
                   fontSize: 16,
                   fontWeight: '800',
-                  textShadow: '0 0 12px rgba(255,0,0,0.6), 0 2px 4px rgba(0,0,0,0.9)',
                   letterSpacing: '1px',
                   marginTop: 80,
                 }}
@@ -381,6 +383,7 @@ export default function HomeScreen() {
           <img
             src="/images/okapi/bloto-ball.PNG"
             alt=""
+            className="float-y"
             style={{
               position: 'absolute',
               right: '-10px',
