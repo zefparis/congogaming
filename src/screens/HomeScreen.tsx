@@ -199,7 +199,7 @@ export default function HomeScreen() {
             position: 'relative',
             overflow: 'hidden',
             borderRadius: 16,
-            minHeight: 240,
+            minHeight: 260,
             cursor: 'pointer',
           }}
         >
@@ -212,7 +212,7 @@ export default function HomeScreen() {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center center',
+              objectPosition: 'center 20%',
             }}
           />
           <div
@@ -224,7 +224,7 @@ export default function HomeScreen() {
             }}
           />
           <div style={{ position: 'relative', zIndex: 3, padding: '20px 16px' }}>
-            <div style={{ fontFamily: 'Bebas Neue', fontSize: 44, color: '#FFD700', lineHeight: 1, letterSpacing: 2 }}>
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: 44, color: '#FFFFFF', lineHeight: 1, letterSpacing: 2, textShadow: '0 0 20px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.9)' }}>
               🎱 LOTO NATIONAL
             </div>
             {lotoPot >= 5_000_000 ? (
