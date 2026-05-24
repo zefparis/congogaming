@@ -192,6 +192,147 @@ export default function HomeScreen() {
           </div>
         </div>
 
+        {/* LOTO NATIONAL — premium hero card with okapi casino background */}
+        <div
+          onClick={() => nav('/loto')}
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 16,
+            minHeight: 240,
+            cursor: 'pointer',
+          }}
+        >
+          <img
+            src="/images/okapi/loto-okapi.png"
+            alt="Loto National"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center center',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 60%)',
+            }}
+          />
+          <div style={{ position: 'relative', zIndex: 3, padding: '20px 16px' }}>
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: 44, color: '#FFD700', lineHeight: 1, letterSpacing: 2 }}>
+              🎱 LOTO NATIONAL
+            </div>
+            {lotoPot >= 5_000_000 ? (
+              <div
+                className="animate-flicker"
+                style={{ color: '#FFD700', fontWeight: 700, fontSize: 15, marginTop: 12 }}
+              >
+                🔥 JACKPOT DISPONIBLE !
+              </div>
+            ) : (
+              <div style={{ color: '#FFFFFF', fontSize: 15, marginTop: 12, fontWeight: 600 }}>
+                Pot actuel : {lotoPot.toLocaleString('fr-FR')} CDF
+              </div>
+            )}
+            <div style={{ color: '#9CA3AF', fontSize: 12, marginTop: 4, marginBottom: 16 }}>
+              Tirage quotidien — 20h00 Kinshasa
+            </div>
+            <motion.button
+              whileHover={{ filter: 'brightness(1.1)' }}
+              whileTap={{ scale: 0.98, filter: 'brightness(1.1)' }}
+              onClick={(e) => { e.stopPropagation(); nav('/loto'); }}
+              style={ctaStyle}
+            >
+              JOUER MAINTENANT →
+            </motion.button>
+          </div>
+        </div>
+
+        {/* LOTO EXPRESS — electric dark card with green accent */}
+        <div
+          onClick={() => nav('/flash')}
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 16,
+            minHeight: 200,
+            cursor: 'pointer',
+            background: '#0a0a1a',
+            border: '1px solid rgba(0,168,107,0.4)',
+          }}
+        >
+          {/* Scattered lightning bolts background */}
+          {[
+            { top: '8%', left: '6%', size: 64, rotate: -15 },
+            { top: '18%', right: '12%', size: 96, rotate: 20 },
+            { top: '55%', left: '20%', size: 80, rotate: 10 },
+            { bottom: '10%', right: '8%', size: 72, rotate: -25 },
+            { bottom: '30%', right: '32%', size: 56, rotate: 35 },
+            { top: '45%', right: '4%', size: 48, rotate: -10 },
+          ].map((b, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                top: b.top,
+                bottom: b.bottom,
+                left: b.left,
+                right: b.right,
+                fontSize: b.size,
+                opacity: 0.08,
+                transform: `rotate(${b.rotate}deg)`,
+                color: '#00A86B',
+                pointerEvents: 'none',
+                lineHeight: 1,
+              }}
+            >
+              ⚡
+            </div>
+          ))}
+
+          <div style={{ position: 'relative', zIndex: 3, padding: '20px 16px' }}>
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: 44, color: '#00A86B', lineHeight: 1, letterSpacing: 2 }}>
+              ⚡ LOTO EXPRESS
+            </div>
+            <div style={{ color: '#FFFFFF', fontSize: 14, marginTop: 12, fontWeight: 600 }}>
+              Tirage toutes les 30 min
+            </div>
+            {flashPot >= 250_000 ? (
+              <div
+                className="animate-flicker"
+                style={{ color: '#00A86B', fontWeight: 700, fontSize: 15, marginTop: 4 }}
+              >
+                ⚡ JACKPOT DISPO !
+              </div>
+            ) : (
+              <div style={{ color: '#FFFFFF', fontSize: 15, marginTop: 4, fontWeight: 600 }}>
+                Pot : {flashPot.toLocaleString('fr-FR')} CDF
+              </div>
+            )}
+            <div style={{ color: '#9CA3AF', fontSize: 12, marginTop: 4, marginBottom: 16 }}>
+              1 000 CDF / ticket
+            </div>
+            <motion.button
+              whileHover={{ filter: 'brightness(1.1)' }}
+              whileTap={{ scale: 0.98, filter: 'brightness(1.1)' }}
+              onClick={(e) => { e.stopPropagation(); nav('/flash'); }}
+              style={{
+                ...ctaStyle,
+                background: '#00A86B',
+                border: '1px solid rgba(0,168,107,0.7)',
+              }}
+            >
+              JOUER MAINTENANT →
+            </motion.button>
+          </div>
+        </div>
+
+        {/* DÉPÔT / RETRAIT — moved below loto cards */}
         <div className="grid grid-cols-2 gap-3">
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -209,62 +350,6 @@ export default function HomeScreen() {
             RETRAIT
             <span className="text-xs font-body opacity-80">- Fonds</span>
           </motion.button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div
-            whileTap={{ scale: 0.97 }}
-            onClick={() => nav('/loto')}
-            className="cursor-pointer rounded-2xl bg-zinc-900 border border-gold/30 p-3 flex flex-col gap-2"
-          >
-            <div className="flex items-center gap-2">
-              <div className="text-2xl">🎱</div>
-              <div className="font-display text-lg text-gold tracking-wider">LOTO CONGO</div>
-            </div>
-            {lotoPot >= 5_000_000 ? (
-              <div className="text-[11px] text-gold font-semibold animate-flicker">
-                🔥 JACKPOT DISPO !
-              </div>
-            ) : (
-              <div className="text-[11px] text-zinc-400">
-                Pot : {lotoPot.toLocaleString('fr-FR')} CDF
-              </div>
-            )}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => { e.stopPropagation(); nav('/loto'); }}
-              className="mt-1 h-9 rounded-xl bg-gold text-black font-display text-sm tracking-wider"
-            >
-              JOUER
-            </motion.button>
-          </motion.div>
-
-          <motion.div
-            whileTap={{ scale: 0.97 }}
-            onClick={() => nav('/flash')}
-            className="cursor-pointer rounded-2xl bg-zinc-900 border border-congogreen/40 p-3 flex flex-col gap-2"
-          >
-            <div className="flex items-center gap-2">
-              <div className="text-2xl">⚡</div>
-              <div className="font-display text-lg text-gold tracking-wider">LOTO FLASH</div>
-            </div>
-            {flashPot >= 250_000 ? (
-              <div className="text-[11px] text-gold font-semibold animate-flicker">
-                ⚡ JACKPOT DISPO !
-              </div>
-            ) : (
-              <div className="text-[11px] text-zinc-400">
-                Tirage /30 min — 1 000 CDF
-              </div>
-            )}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => { e.stopPropagation(); nav('/flash'); }}
-              className="mt-1 h-9 rounded-xl bg-congogreen text-white font-display text-sm tracking-wider"
-            >
-              JOUER
-            </motion.button>
-          </motion.div>
         </div>
 
         <div className="rounded-2xl bg-zinc-900/60 border border-zinc-800 p-4">
