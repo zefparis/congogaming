@@ -508,6 +508,130 @@ export default function HomeScreen() {
           </div>
         </div>
 
+        {/* SCRATCH CARD promo */}
+        <div
+          onClick={() => nav('/scratch')}
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 16,
+            minHeight: 200,
+            cursor: 'pointer',
+            background:
+              'radial-gradient(circle at 80% 20%, rgba(255,215,0,0.18), transparent 40%),' +
+              'radial-gradient(circle at 20% 80%, rgba(255,215,0,0.12), transparent 50%),' +
+              'linear-gradient(135deg, #0a0a1a, #1a1308)',
+            border: '1px solid rgba(255,215,0,0.35)',
+          }}
+        >
+          {/* Sparkle pattern */}
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background:
+                'radial-gradient(2px 2px at 20% 30%, rgba(255,215,0,0.9), transparent 60%),' +
+                'radial-gradient(2px 2px at 60% 60%, rgba(255,255,255,0.7), transparent 60%),' +
+                'radial-gradient(1.5px 1.5px at 80% 20%, rgba(255,215,0,0.7), transparent 60%),' +
+                'radial-gradient(1.5px 1.5px at 40% 80%, rgba(255,255,255,0.6), transparent 60%),' +
+                'radial-gradient(1.5px 1.5px at 12% 70%, rgba(255,215,0,0.7), transparent 60%),' +
+                'radial-gradient(1.5px 1.5px at 90% 85%, rgba(255,255,255,0.5), transparent 60%)',
+              animation: 'flicker 3s ease-in-out infinite',
+            }}
+          />
+
+          {/* Scattered coin/star decorations */}
+          <div
+            aria-hidden
+            style={{ position: 'absolute', top: 18, left: 14, fontSize: 22, opacity: 0.45 }}
+          >
+            ⭐
+          </div>
+          <div
+            aria-hidden
+            style={{ position: 'absolute', bottom: 22, left: '38%', fontSize: 18, opacity: 0.4 }}
+          >
+            🪙
+          </div>
+          <div
+            aria-hidden
+            className="float-y"
+            style={{ position: 'absolute', top: 60, right: 24, fontSize: 28, opacity: 0.55 }}
+          >
+            💎
+          </div>
+          <div
+            aria-hidden
+            style={{ position: 'absolute', bottom: 18, right: 18, fontSize: 22, opacity: 0.5 }}
+          >
+            ⚡
+          </div>
+
+          {/* NOUVEAU badge */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              zIndex: 4,
+              background: 'linear-gradient(135deg, #CE1126, #8a0a18)',
+              color: '#fff',
+              fontFamily: 'Bebas Neue',
+              fontSize: 12,
+              letterSpacing: 1.5,
+              padding: '4px 10px',
+              borderRadius: 999,
+              boxShadow: '0 4px 14px rgba(206,17,38,0.45)',
+            }}
+          >
+            NOUVEAU 🔥
+          </div>
+
+          <div
+            style={{ position: 'relative', zIndex: 3, padding: '20px 16px', maxWidth: '70%' }}
+          >
+            <div style={{ fontSize: 10, color: '#FFD700', letterSpacing: 3, marginBottom: 4 }}>
+              🎫 INSTANT WIN
+            </div>
+            <div
+              style={{
+                fontFamily: 'Bebas Neue',
+                fontSize: 44,
+                color: '#FFD700',
+                lineHeight: 1,
+                letterSpacing: 2,
+                textShadow: '0 2px 12px rgba(255,215,0,0.4)',
+              }}
+            >
+              SCRATCH CARD
+            </div>
+            <div
+              style={{
+                color: '#FFFFFF',
+                fontSize: 13,
+                marginTop: 8,
+                marginBottom: 16,
+                opacity: 0.85,
+              }}
+            >
+              Grattez et gagnez instantanément
+            </div>
+            <motion.button
+              whileHover={{ filter: 'brightness(1.1)' }}
+              whileTap={{ scale: 0.98, filter: 'brightness(1.1)' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                nav('/scratch');
+              }}
+              style={ctaStyle}
+            >
+              GRATTER MAINTENANT →
+            </motion.button>
+          </div>
+        </div>
+
         {/* DÉPÔT / RETRAIT — glassmorphism buttons */}
         <div style={{ display: 'flex', gap: 12 }}>
           <motion.button

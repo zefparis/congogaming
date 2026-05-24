@@ -100,6 +100,24 @@ export const api = {
     }> }>('/api/flash/mes-tickets', {
       headers: { Authorization: `Bearer ${user_id}` },
     }),
+  scratchBuy: (user_id: string, bet_amount_cdf: number) =>
+    req<{
+      ticket_id: string;
+      grid_hidden: true;
+      bet_amount_cdf: number;
+      grid: string[];
+    }>('/api/scratch/buy', {
+      method: 'POST',
+      body: JSON.stringify({ user_id, bet_amount_cdf }),
+    }),
+  scratchClaim: (user_id: string, ticket_id: string) =>
+    req<{ win_amount_cdf: number; new_balance: number; grid: string[] }>(
+      '/api/scratch/claim',
+      {
+        method: 'POST',
+        body: JSON.stringify({ user_id, ticket_id }),
+      },
+    ),
   kycScan: (user_id: string, selfie_b64: string) =>
     req<{
       verdict: 'APPROVED' | 'DENIED' | 'VERIFY_AGE';

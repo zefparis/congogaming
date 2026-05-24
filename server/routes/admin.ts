@@ -841,6 +841,76 @@ export default async function adminRoutes(app: FastifyInstance) {
     });
   });
 
+  // ---- SCRATCH (admin) ----
+
+  app.get<{ Querystring: { page?: string; page_size?: string } }>(
+    '/api/admin/scratch/tickets',
+    async (req, reply) => {
+      const page = Math.max(1, Number(req.query.page || 1));
+      const pageSize = Math.min(100, Math.max(1, Number(req.query.page_size || 25)));
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await supabaseAdmin
+        .from('scratch_tickets')
+        .select('id, user_id, bet_amount_cdf, win_amount_cdf, status, created_at', {
+          count: 'exact',
+        })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (error) return reply.code(500).send({ error: error.message });
+
+      const ids = Array.from(new Set((data || []).map((t: any) => String(t.user_id))));
+      const phoneById = new Map<string, string>();
+      if (ids.length > 0) {
+        const { data: users } = await supabaseAdmin
+          .from('users')
+          .select('id, phone')
+          .in('id', ids);
+        for (const u of users || []) phoneById.set(String(u.id), String(u.phone || ''));
+      }
+
+      return reply.send({
+        items: (data || []).map((t: any) => ({
+          id: t.id,
+          phone: maskPhone(phoneById.get(String(t.user_id))),
+          bet_amount_cdf: Number(t.bet_amount_cdf || 0),
+          win_amount_cdf: Number(t.win_amount_cdf || 0),
+          status: t.status,
+          created_at: t.created_at,
+        })),
+        page,
+        page_size: pageSize,
+        total: count ?? null,
+      });
+    },
+  );
+
+  app.get('/api/admin/scratch/overview', async (_req, reply) => {
+    const todayIso = startOfTodayIso();
+    const { data, error } = await supabaseAdmin
+      .from('scratch_tickets')
+      .select('bet_amount_cdf, win_amount_cdf, status, created_at')
+      .gte('created_at', todayIso);
+    if (error) return reply.code(500).send({ error: error.message });
+
+    let bets_today = 0;
+    let wins_today = 0;
+    let tickets_today = 0;
+    for (const r of data || []) {
+      tickets_today++;
+      bets_today += Number((r as any).bet_amount_cdf || 0);
+      wins_today += Number((r as any).win_amount_cdf || 0);
+    }
+    return reply.send({
+      tickets_today,
+      bets_today,
+      wins_today,
+      // Realised house revenue = bets - wins paid (only on claimed tickets).
+      revenue_today: bets_today - wins_today,
+    });
+  });
+
   app.get<{ Querystring: Record<string, string> }>('/api/admin/transactions/export', async (req, reply) => {
     const { data, error } = await buildTxQuery(req.query).limit(10000);
     if (error) return reply.code(500).send({ error: error.message });

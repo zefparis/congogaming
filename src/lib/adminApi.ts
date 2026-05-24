@@ -330,6 +330,29 @@ export const adminApi = {
     }>(`/api/admin/transactions?${qs.toString()}`);
   },
 
+  scratchTickets: (page = 1) =>
+    request<{
+      items: Array<{
+        id: string;
+        phone: string;
+        bet_amount_cdf: number;
+        win_amount_cdf: number;
+        status: 'pending' | 'revealed' | 'claimed';
+        created_at: string;
+      }>;
+      page: number;
+      page_size: number;
+      total: number | null;
+    }>(`/api/admin/scratch/tickets?page=${page}`),
+
+  scratchOverview: () =>
+    request<{
+      tickets_today: number;
+      bets_today: number;
+      wins_today: number;
+      revenue_today: number;
+    }>('/api/admin/scratch/overview'),
+
   exportTransactionsUrl: (params: Record<string, string | undefined>) => {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {

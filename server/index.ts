@@ -15,6 +15,7 @@ import okapiAutoRoutes from './routes/okapi-auto.js';
 import walletRoutes from './routes/wallet.js';
 import adminRoutes from './routes/admin.js';
 import kycRoutes from './routes/kyc.js';
+import scratchRoutes from './routes/scratch.js';
 import { engine } from './lib/okapi-engine.js';
 import { startCrons } from './cron.js';
 
@@ -48,6 +49,7 @@ await app.register(okapiAutoRoutes);
 await app.register(walletRoutes);
 await app.register(adminRoutes);
 await app.register(kycRoutes);
+await app.register(scratchRoutes);
 
 const port = Number(process.env.PORT || 3001);
 const host = process.env.HOST || '0.0.0.0';

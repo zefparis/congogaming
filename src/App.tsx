@@ -10,6 +10,7 @@ import WithdrawScreen from './screens/WithdrawScreen';
 import AccountScreen from './screens/AccountScreen';
 import LotoScreen from './screens/LotoScreen';
 import FlashScreen from './screens/FlashScreen';
+import ScratchScreen from './screens/ScratchScreen';
 import LegalScreen from './screens/LegalScreen';
 import OkapiGame from './screens/okapi/OkapiGame';
 import AdminScreen from './screens/AdminScreen';
@@ -75,7 +76,7 @@ function KycRoute() {
 
 function AppRoutes() {
   const location = useLocation();
-  const showNav = ['/', '/loto', '/flash', '/climb', '/compte'].includes(location.pathname);
+  const showNav = ['/', '/loto', '/flash', '/scratch', '/climb', '/compte'].includes(location.pathname);
   return (
     <>
       <AnimatePresence mode="wait">
@@ -90,6 +91,7 @@ function AppRoutes() {
           <Route path="/compte" element={<Protected><PageWrap><AccountScreen /></PageWrap></Protected>} />
           <Route path="/loto" element={<Protected><PageWrap><LotoScreen /></PageWrap></Protected>} />
           <Route path="/flash" element={<Protected><PageWrap><FlashScreen /></PageWrap></Protected>} />
+          <Route path="/scratch" element={<Protected><PageWrap><ScratchScreen /></PageWrap></Protected>} />
           <Route path="/climb" element={<Protected><PageWrap fullscreen><OkapiGame /></PageWrap></Protected>} />
           <Route path="/legal" element={<Protected><PageWrap><LegalScreen /></PageWrap></Protected>} />
           <Route path="/kyc" element={<PageWrap><KycRoute /></PageWrap>} />
