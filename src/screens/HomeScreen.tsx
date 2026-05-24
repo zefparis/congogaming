@@ -250,12 +250,28 @@ export default function HomeScreen() {
             {lotoPot >= 5_000_000 ? (
               <div
                 className="animate-flicker"
-                style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}
+                style={{
+                  color: '#FF3333',
+                  fontSize: 16,
+                  fontWeight: '800',
+                  textShadow: '0 0 12px rgba(255,0,0,0.6), 0 2px 4px rgba(0,0,0,0.9)',
+                  letterSpacing: '1px',
+                  marginTop: 10,
+                }}
               >
                 🔥 Jackpot disponible
               </div>
             ) : (
-              <div style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}>
+              <div
+                style={{
+                  color: '#FF3333',
+                  fontSize: 16,
+                  fontWeight: '800',
+                  textShadow: '0 0 12px rgba(255,0,0,0.6), 0 2px 4px rgba(0,0,0,0.9)',
+                  letterSpacing: '1px',
+                  marginTop: 10,
+                }}
+              >
                 🏆 Jackpot en cours
               </div>
             )}
