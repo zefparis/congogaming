@@ -223,24 +223,52 @@ export default function HomeScreen() {
                 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 55%)',
             }}
           />
-          <div style={{ position: 'relative', zIndex: 3, padding: '20px 16px' }}>
-            <div style={{ fontFamily: 'Bebas Neue', fontSize: 42, color: '#FFD700', lineHeight: 1, letterSpacing: 2, textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 30px rgba(255,215,0,0.4)' }}>
-              🎱 LOTO NATIONAL
-            </div>
-            {lotoPot >= 5_000_000 ? (
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: 260,
+              padding: '20px 16px',
+            }}
+          >
+            <div>
               <div
-                className="animate-flicker"
-                style={{ color: '#FFD700', fontWeight: 800, fontSize: 22, marginTop: 12, textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}
+                style={{
+                  fontFamily: 'Bebas Neue',
+                  fontSize: 38,
+                  color: '#FFFFFF',
+                  lineHeight: 1,
+                  letterSpacing: 2,
+                  textShadow:
+                    '0 2px 12px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.9)',
+                }}
               >
-                🔥 JACKPOT DISPONIBLE !
+                🎱 LOTO NATIONAL
               </div>
-            ) : (
-              <div style={{ color: '#FFFFFF', fontSize: 22, marginTop: 12, fontWeight: 800, textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>
-                Pot actuel : {lotoPot.toLocaleString('fr-FR')} CDF
+              {lotoPot >= 5_000_000 ? (
+                <div
+                  className="animate-flicker"
+                  style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}
+                >
+                  🔥 Jackpot disponible
+                </div>
+              ) : (
+                <div style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}>
+                  🏆 Jackpot en cours
+                </div>
+              )}
+              <div
+                style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 12,
+                  marginTop: 4,
+                }}
+              >
+                Tirage quotidien — 20h00 Kinshasa
               </div>
-            )}
-            <div style={{ color: '#FFD700', fontSize: 13, marginTop: 4, marginBottom: 16, opacity: 1, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
-              Tirage quotidien — 20h00 Kinshasa
             </div>
             <motion.button
               whileHover={{ filter: 'brightness(1.1)' }}
@@ -253,7 +281,11 @@ export default function HomeScreen() {
                 fontWeight: '900',
                 border: 'none',
                 boxShadow: '0 4px 20px rgba(255,165,0,0.6)',
-                marginTop: 24,
+                width: 'auto',
+                alignSelf: 'flex-start',
+                paddingLeft: 24,
+                paddingRight: 24,
+                marginTop: 'auto',
               }}
             >
               JOUER MAINTENANT →
