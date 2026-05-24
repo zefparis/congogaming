@@ -199,7 +199,7 @@ export default function HomeScreen() {
             position: 'relative',
             overflow: 'hidden',
             borderRadius: 16,
-            minHeight: 260,
+            minHeight: 300,
             cursor: 'pointer',
           }}
         >
@@ -212,7 +212,7 @@ export default function HomeScreen() {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center 60%',
+              objectPosition: 'center 45%',
             }}
           />
           <div
