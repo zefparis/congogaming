@@ -269,7 +269,7 @@ export default function HomeScreen() {
                   fontWeight: '800',
                   textShadow: '0 0 12px rgba(255,0,0,0.6), 0 2px 4px rgba(0,0,0,0.9)',
                   letterSpacing: '1px',
-                  marginTop: 10,
+                  marginTop: 20,
                 }}
               >
                 🏆 Jackpot en cours
