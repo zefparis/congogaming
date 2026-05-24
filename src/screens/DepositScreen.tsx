@@ -9,12 +9,22 @@ import { api } from '../lib/api';
 
 type State = 'idle' | 'pending' | 'success' | 'error';
 
+const detectProvider = (phone: string): number | null => {
+  if (/^08[45678]/.test(phone)) return 10;  // Orange
+  if (/^08[19]/.test(phone)) return 17;      // Airtel  
+  if (/^097/.test(phone)) return 17;         // Airtel
+  if (/^099/.test(phone)) return 17;         // Airtel
+  if (/^09[23]/.test(phone)) return 19;      // Africell
+  return null;
+};
+
 export default function DepositScreen() {
   const nav = useNavigate();
   const session = getSession();
   const [amount, setAmount] = useState('');
   const [providerId, setProviderId] = useState<number>(10);
   const [phone, setPhone] = useState(session?.phone || '');
+  const [autoDetected, setAutoDetected] = useState(false);
   const [state, setState] = useState<State>('idle');
   const [msg, setMsg] = useState<string>('');
 
@@ -76,7 +86,15 @@ export default function DepositScreen() {
         <input
           inputMode="numeric"
           value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+            setPhone(value);
+            const detected = detectProvider(value);
+            if (detected) {
+              setProviderId(detected);
+              setAutoDetected(true);
+            }
+          }}
           className="bg-transparent w-full font-display text-2xl tracking-widest outline-none mt-1"
         />
       </div>
@@ -85,7 +103,16 @@ export default function DepositScreen() {
         <div className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Opérateur</div>
         <div className="grid grid-cols-3 gap-3">
           {PROVIDERS.map((p) => (
-            <ProviderCard key={p.id} provider={p} selected={providerId === p.id} onClick={() => setProviderId(p.id)} />
+            <ProviderCard
+              key={p.id}
+              provider={p}
+              selected={providerId === p.id}
+              autoDetected={autoDetected && providerId === p.id}
+              onClick={() => {
+                setProviderId(p.id);
+                setAutoDetected(false);
+              }}
+            />
           ))}
         </div>
       </div>

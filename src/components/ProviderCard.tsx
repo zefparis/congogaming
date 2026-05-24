@@ -18,10 +18,11 @@ export const PROVIDERS: Provider[] = [
 type Props = {
   provider: Provider;
   selected: boolean;
+  autoDetected?: boolean;
   onClick: () => void;
 };
 
-export default function ProviderCard({ provider, selected, onClick }: Props) {
+export default function ProviderCard({ provider, selected, autoDetected, onClick }: Props) {
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
@@ -40,6 +41,9 @@ export default function ProviderCard({ provider, selected, onClick }: Props) {
       />
       {selected && (
         <span className="absolute top-2 right-2 bg-congogreen text-white rounded-full w-6 h-6 text-xs flex items-center justify-center font-black shadow">✓</span>
+      )}
+      {selected && autoDetected && (
+        <span className="absolute bottom-2 left-2 bg-white/90 text-black text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Détecté</span>
       )}
     </motion.button>
   );
