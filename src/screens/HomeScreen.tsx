@@ -199,7 +199,7 @@ export default function HomeScreen() {
             position: 'relative',
             overflow: 'hidden',
             borderRadius: 16,
-            minHeight: 300,
+            minHeight: 280,
             cursor: 'pointer',
           }}
         >
@@ -223,69 +223,74 @@ export default function HomeScreen() {
                 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 55%)',
             }}
           />
+          {/* Top section: title + jackpot badge, pinned to top */}
           <div
             style={{
-              position: 'relative',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              padding: 16,
               zIndex: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              minHeight: 260,
-              padding: '20px 16px',
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontFamily: 'Bebas Neue',
-                  fontSize: 38,
-                  color: '#FFFFFF',
-                  lineHeight: 1,
-                  letterSpacing: 2,
-                  textShadow:
-                    '0 2px 12px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.9)',
-                }}
-              >
-                🎱 LOTO NATIONAL
-              </div>
-              {lotoPot >= 5_000_000 ? (
-                <div
-                  className="animate-flicker"
-                  style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}
-                >
-                  🔥 Jackpot disponible
-                </div>
-              ) : (
-                <div style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}>
-                  🏆 Jackpot en cours
-                </div>
-              )}
-              <div
-                style={{
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: 12,
-                  marginTop: 4,
-                }}
-              >
-                Tirage quotidien — 20h00 Kinshasa
-              </div>
+            <div
+              style={{
+                fontFamily: 'Bebas Neue',
+                fontSize: 38,
+                color: '#FFFFFF',
+                lineHeight: 1,
+                letterSpacing: 2,
+                textShadow:
+                  '0 2px 12px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.9)',
+              }}
+            >
+              🎱 LOTO NATIONAL
             </div>
+            {lotoPot >= 5_000_000 ? (
+              <div
+                className="animate-flicker"
+                style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}
+              >
+                🔥 Jackpot disponible
+              </div>
+            ) : (
+              <div style={{ color: '#FFD700', fontSize: 13, marginTop: 10 }}>
+                🏆 Jackpot en cours
+              </div>
+            )}
+          </div>
+
+          {/* Bottom section: button, pinned to bottom */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: 16,
+              zIndex: 3,
+            }}
+          >
             <motion.button
               whileHover={{ filter: 'brightness(1.1)' }}
               whileTap={{ scale: 0.98, filter: 'brightness(1.1)' }}
               onClick={(e) => { e.stopPropagation(); nav('/loto'); }}
               style={{
-                ...ctaStyle,
-                background: 'linear-gradient(135deg, #FFD700, #FF8C00)',
-                color: '#000000',
-                fontWeight: '900',
-                border: 'none',
-                boxShadow: '0 4px 20px rgba(255,165,0,0.6)',
-                width: 'auto',
-                alignSelf: 'flex-start',
-                paddingLeft: 24,
-                paddingRight: 24,
-                marginTop: 'auto',
+                background: 'rgba(255,255,255,0.18)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.4)',
+                color: '#FFFFFF',
+                fontFamily: 'Bebas Neue',
+                fontWeight: '800',
+                fontSize: 15,
+                borderRadius: '14px',
+                width: '100%',
+                padding: '14px 0',
+                letterSpacing: '2px',
+                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                cursor: 'pointer',
               }}
             >
               JOUER MAINTENANT →
