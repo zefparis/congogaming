@@ -377,7 +377,23 @@ export default function HomeScreen() {
             </div>
           ))}
 
-          <div style={{ position: 'relative', zIndex: 3, padding: '20px 16px' }}>
+          {/* Sticker image */}
+          <img
+            src="/images/okapi/bloto-ball.PNG"
+            alt=""
+            style={{
+              position: 'absolute',
+              right: '-10px',
+              bottom: '0',
+              height: '85%',
+              width: 'auto',
+              objectFit: 'contain',
+              zIndex: 2,
+              filter: 'drop-shadow(0 0 10px rgba(0,168,107,0.5))',
+            }}
+          />
+
+          <div style={{ position: 'relative', zIndex: 3, maxWidth: '60%', padding: '20px 16px' }}>
             <div style={{ fontFamily: 'Bebas Neue', fontSize: 44, color: '#00A86B', lineHeight: 1, letterSpacing: 2 }}>
               ⚡ LOTO EXPRESS
             </div>
