@@ -212,7 +212,7 @@ export default function HomeScreen() {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center 20%',
+              objectPosition: 'center 60%',
             }}
           />
           <div
@@ -220,7 +220,7 @@ export default function HomeScreen() {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 60%)',
+                'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 55%)',
             }}
           />
           <div style={{ position: 'relative', zIndex: 3, padding: '20px 16px' }}>
