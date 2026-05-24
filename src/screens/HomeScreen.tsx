@@ -42,17 +42,33 @@ export default function HomeScreen() {
 
   return (
     <div className="min-h-screen pb-24">
-      <header className="flex items-center justify-between p-4 border-b border-zinc-900">
-        <img src="/images/okapi.PNG" alt="Congo Gaming" className="h-10 w-auto object-contain" />
-        <div className="text-right">
-          <div className="text-[10px] text-zinc-500 uppercase tracking-widest">Solde</div>
-          <div className="font-display text-2xl text-gold flex items-center gap-1 justify-end">
+      {/* Banner header with solde overlay */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        <img
+          src="/images/banner.jpg"
+          alt="Congo Gaming"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            borderRadius: '0 0 0 12px',
+            padding: '6px 12px',
+          }}
+        >
+          <div className="text-[10px] text-white uppercase tracking-widest">Solde</div>
+          <div className="font-display text-2xl text-gold flex items-center gap-1">
             <Wallet className="w-5 h-5" />
             {balance.toLocaleString('fr-FR')}
           </div>
-          <div className="text-[10px] text-zinc-500">CDF</div>
+          <div className="text-[10px] text-white">CDF</div>
         </div>
-      </header>
+      </div>
 
       <div className="p-4 space-y-4">
         <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, minHeight: 280 }}>
