@@ -4,7 +4,11 @@
 // on every request. On 401 the token is cleared so the UI falls back to the
 // PIN prompt automatically.
 
-const BASE = import.meta.env.VITE_API_URL || 'https://api.congogaming.com';
+const BASE_URL =
+  (import.meta.env.VITE_API_URL as string | undefined) || 'https://api.congogaming.com';
+const BASE = BASE_URL;
+// eslint-disable-next-line no-console
+console.log('BASE_URL:', BASE_URL);
 const TOKEN_KEY = 'cg_admin_token';
 const SECRET_KEY = 'cg_admin_secret';
 const FALLBACK_SECRET = 'cg_admin_loto_2026';
@@ -61,8 +65,9 @@ export class AdminAuthError extends Error {
 // Direct (no-retry, no auto-reauth) fetch used internally by request() and by
 // the silent re-auth path to avoid infinite loops.
 async function rawFetch(path: string, opts: RequestInit, token: string | null): Promise<Response> {
+  const hasBody = opts.body != null;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
     ...((opts.headers as Record<string, string>) || {}),
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -254,25 +259,9 @@ export const adminApi = {
       body: JSON.stringify({ blocked }),
     }),
 
-  approveKyc: (id: string) => {
-    // eslint-disable-next-line no-console
-    console.log('KYC approve URL:', `/api/admin/users/${id}/kyc-approve`);
-    // eslint-disable-next-line no-console
-    console.log('Token used:', localStorage.getItem('cg_admin_token'));
-    return request<{ ok: boolean; kyc_status: string }>(`/api/admin/users/${id}/kyc-approve`, {
-      method: 'POST',
-    });
-  },
+  approveKyc: (id: string) => approveKyc(id),
 
-  denyKyc: (id: string) => {
-    // eslint-disable-next-line no-console
-    console.log('KYC deny URL:', `/api/admin/users/${id}/kyc-deny`);
-    // eslint-disable-next-line no-console
-    console.log('Token used:', localStorage.getItem('cg_admin_token'));
-    return request<{ ok: boolean; kyc_status: string; blocked: boolean }>(`/api/admin/users/${id}/kyc-deny`, {
-      method: 'POST',
-    });
-  },
+  denyKyc: (id: string) => denyKyc(id),
 
   okapiRounds: (page = 1) =>
     request<{
@@ -349,6 +338,67 @@ export const adminApi = {
     return `${BASE}/api/admin/transactions/export?${qs.toString()}`;
   },
 };
+
+// Direct-fetch KYC actions. We bypass request() to guarantee:
+//   - absolute URL (BASE_URL),
+//   - explicit Content-Type + non-empty JSON body (Fastify rejects empty
+//     bodies when Content-Type: application/json is set, returning 400),
+//   - real error message surfaced to the UI.
+export async function approveKyc(
+  id: string,
+): Promise<{ ok: boolean; kyc_status: string }> {
+  const token = localStorage.getItem(TOKEN_KEY) ?? '';
+  const url = `${BASE_URL}/api/admin/users/${id}/kyc-approve`;
+  // eslint-disable-next-line no-console
+  console.log('KYC approve URL:', url);
+  // eslint-disable-next-line no-console
+  console.log('Token used:', token);
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (res.status === 401) {
+    setAdminToken(null);
+    throw new AdminAuthError();
+  }
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function denyKyc(
+  id: string,
+): Promise<{ ok: boolean; kyc_status: string; blocked: boolean }> {
+  const token = localStorage.getItem(TOKEN_KEY) ?? '';
+  const url = `${BASE_URL}/api/admin/users/${id}/kyc-deny`;
+  // eslint-disable-next-line no-console
+  console.log('KYC deny URL:', url);
+  // eslint-disable-next-line no-console
+  console.log('Token used:', token);
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (res.status === 401) {
+    setAdminToken(null);
+    throw new AdminAuthError();
+  }
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
 
 /**
  * Convenience helper: triggers a CSV download honoring the bearer token.

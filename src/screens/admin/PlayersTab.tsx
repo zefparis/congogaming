@@ -75,7 +75,9 @@ function Drawer({
       await load();
       onChanged();
     } catch (e: any) {
-      setError(e?.message || 'Erreur');
+      // Surface the real backend error (e.g. "Bad Request" details) verbatim.
+      const msg = e instanceof Error ? e.message : String(e ?? 'Erreur');
+      setError(`KYC approve failed: ${msg}`);
     } finally {
       setBusy(false);
     }
@@ -90,7 +92,8 @@ function Drawer({
       await load();
       onChanged();
     } catch (e: any) {
-      setError(e?.message || 'Erreur');
+      const msg = e instanceof Error ? e.message : String(e ?? 'Erreur');
+      setError(`KYC deny failed: ${msg}`);
     } finally {
       setBusy(false);
     }
