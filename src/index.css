@@ -90,3 +90,8 @@ button {
   50%      { transform: scale(1.02); }
 }
 .breathe { animation: breathe 4s ease-in-out infinite; }
+
+@keyframes flag-float {
+  0%, 100% { transform: translateY(0px) rotate(-3deg); }
+  50%      { transform: translateY(-6px) rotate(3deg); }
+}

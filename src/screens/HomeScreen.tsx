@@ -216,7 +216,7 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        {/* LOTO NATIONAL — premium hero card with okapi casino background */}
+        {/* LOTO CONGO — premium hero card with okapi casino background */}
         <div
           onClick={() => nav('/loto')}
           style={{
@@ -229,7 +229,7 @@ export default function HomeScreen() {
         >
           <img
             src="/images/loto-okapi.png"
-            alt="Loto National"
+            alt="Loto Congo"
             style={{
               position: 'absolute',
               inset: 0,
@@ -267,9 +267,21 @@ export default function HomeScreen() {
                 letterSpacing: 2,
                 textShadow:
                   '0 2px 12px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.9)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
               }}
             >
-              🎱 LOTO NATIONAL
+              <span
+                style={{
+                  fontSize: 32,
+                  display: 'inline-block',
+                  animation: 'flag-float 2s ease-in-out infinite',
+                }}
+              >
+                🇨�
+              </span>
+              LOTO CONGO
             </div>
             {lotoPot >= 5_000_000 ? (
               <div
