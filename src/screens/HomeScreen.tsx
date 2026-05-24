@@ -508,23 +508,55 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        {/* DÉPÔT / RETRAIT — moved below loto cards */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* DÉPÔT / RETRAIT — glassmorphism buttons */}
+        <div style={{ display: 'flex', gap: 12 }}>
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => nav('/depot')}
-            className="h-24 rounded-2xl bg-congogreen text-white font-display text-2xl tracking-wide flex flex-col items-center justify-center"
+            style={{
+              flex: 1,
+              height: 80,
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, rgba(0,168,107,0.35), rgba(0,168,107,0.15))',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(0,168,107,0.6)',
+              color: '#FFFFFF',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(0,168,107,0.25)',
+            }}
           >
-            DÉPÔT
-            <span className="text-xs font-body opacity-80">+ Fonds</span>
+            <span style={{ fontFamily: 'Bebas Neue', fontSize: 28, color: '#FFFFFF' }}>DÉPÔT</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>+ Fonds</span>
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => nav('/retrait')}
-            className="h-24 rounded-2xl bg-zinc-900 border border-gold/40 text-gold font-display text-2xl tracking-wide flex flex-col items-center justify-center"
+            style={{
+              flex: 1,
+              height: 80,
+              borderRadius: 16,
+              background: 'rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,215,0,0.4)',
+              color: '#FFD700',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(255,215,0,0.1)',
+            }}
           >
-            RETRAIT
-            <span className="text-xs font-body opacity-80">- Fonds</span>
+            <span style={{ fontFamily: 'Bebas Neue', fontSize: 28, color: '#FFD700' }}>RETRAIT</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,215,0,0.6)' }}>- Fonds</span>
           </motion.button>
         </div>
 
