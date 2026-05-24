@@ -402,9 +402,9 @@ export default function HomeScreen() {
             className="float-y"
             style={{
               position: 'absolute',
-              right: '-10px',
-              top: '15%',
-              height: '75%',
+              right: '8px',
+              bottom: '48%',
+              height: '35%',
               width: 'auto',
               objectFit: 'contain',
               zIndex: 2,
@@ -418,12 +418,13 @@ export default function HomeScreen() {
             alt=""
             style={{
               position: 'absolute',
-              right: '0px',
-              bottom: '0px',
-              height: '70%',
+              right: '8px',
+              bottom: '8px',
+              height: '45%',
               width: 'auto',
               objectFit: 'contain',
               zIndex: 2,
+              mixBlendMode: 'screen',
               animation: 'fire-pulse 1.2s ease-in-out infinite',
               filter: 'drop-shadow(0 0 12px rgba(255,100,0,0.8))',
             }}
