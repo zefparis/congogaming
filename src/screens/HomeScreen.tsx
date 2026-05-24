@@ -272,15 +272,28 @@ export default function HomeScreen() {
                 gap: 10,
               }}
             >
-              <span
+              <svg
+                width="36"
+                height="24"
+                viewBox="0 0 36 24"
                 style={{
-                  fontSize: 32,
                   display: 'inline-block',
                   animation: 'flag-float 2s ease-in-out infinite',
+                  borderRadius: 3,
+                  flexShrink: 0,
                 }}
               >
-                🇨�
-              </span>
+                {/* Blue background */}
+                <rect width="36" height="24" fill="#007FFF"/>
+                {/* Red diagonal stripe with yellow border */}
+                <polygon points="0,24 36,0 36,6 0,30" fill="#F7D618"/>
+                <polygon points="0,21 36,-3 36,3 0,27" fill="#CE1020"/>
+                {/* Yellow star top-left */}
+                <polygon
+                  points="6,4 7,7 10,7 7.5,9 8.5,12 6,10 3.5,12 4.5,9 2,7 5,7"
+                  fill="#F7D618"
+                />
+              </svg>
               LOTO CONGO
             </div>
             {lotoPot >= 5_000_000 ? (
