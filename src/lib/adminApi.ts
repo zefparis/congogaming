@@ -67,7 +67,21 @@ export const adminApi = {
       users_count: number;
       okapi_rounds_today: number;
       kyc?: { approved: number; pending: number; denied: number; verify_age: number };
+      active_players_today: number;
+      total_deposits_today: number;
+      total_withdrawals_today: number;
+      avg_crash_point: number;
+      loto_tickets_today: number;
     }>('/api/admin/overview'),
+
+  transactionsSummary: () =>
+    request<{
+      deposits_success_cdf: number;
+      withdrawals_success_cdf: number;
+      total_count: number;
+      failed_count: number;
+      failure_rate: number;
+    }>('/api/admin/transactions/summary'),
 
   avadapayBalance: () =>
     request<{ balance_cdf: number | null; raw?: any; error?: string }>(
@@ -103,6 +117,8 @@ export const adminApi = {
         last_activity_at: string | null;
         kyc_status: 'pending' | 'approved' | 'denied' | 'verify_age';
         blocked: boolean;
+        pnl_cdf: number;
+        rounds_24h: number;
       }>;
       page: number;
       page_size: number;
@@ -180,6 +196,8 @@ export const adminApi = {
         total_bets: number;
         total_cashouts: number;
         house_profit: number;
+        players_count: number;
+        biggest_cashout: number;
       }>;
       page: number;
       page_size: number;
@@ -195,6 +213,9 @@ export const adminApi = {
         numeros: number[];
         jackpot_cdf: number | null;
         winners_count: number;
+        winners: number;
+        tickets_sold: number;
+        revenue_cdf: number;
       }>;
       page: number;
       page_size: number;

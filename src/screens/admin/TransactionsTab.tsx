@@ -4,6 +4,7 @@ import { adminApi, downloadTransactionsCsv } from '../../lib/adminApi';
 import { fmtCdf, fmtDateTime, maskPhone, txStatusLabel } from './format';
 
 type Row = Awaited<ReturnType<typeof adminApi.transactions>>['items'][number];
+type Summary = Awaited<ReturnType<typeof adminApi.transactionsSummary>>;
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tous statuts' },
@@ -28,6 +29,12 @@ export default function TransactionsTab() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [summary, setSummary] = useState<Summary | null>(null);
+
+  async function loadSummary() {
+    const s = await adminApi.transactionsSummary().catch(() => null);
+    if (s) setSummary(s);
+  }
 
   async function load() {
     const r = await adminApi
@@ -44,6 +51,12 @@ export default function TransactionsTab() {
     const t = setInterval(load, 30000);
     return () => clearInterval(t);
   }, [page, status, type, provider, from, to]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    loadSummary();
+    const t = setInterval(loadSummary, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   function resetPage() {
     setPage(1);
@@ -66,8 +79,48 @@ export default function TransactionsTab() {
     }
   }
 
+  const failureRate = summary ? summary.failure_rate : 0;
+  const failureColor = failureRate > 0.2 ? '#f87171' : '#9ca3af';
+
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] p-4">
+          <div className="text-[11px] uppercase tracking-wider text-emerald-300/80">
+            Dépôts réussis (jour)
+          </div>
+          <div className="mt-1 font-display text-2xl text-emerald-300">
+            {fmtCdf(summary?.deposits_success_cdf ?? 0)}
+          </div>
+        </div>
+        <div className="rounded-xl border border-gold/30 bg-gold/[0.06] p-4">
+          <div className="text-[11px] uppercase tracking-wider text-gold/80">
+            Retraits réussis (jour)
+          </div>
+          <div className="mt-1 font-display text-2xl text-gold">
+            {fmtCdf(summary?.withdrawals_success_cdf ?? 0)}
+          </div>
+        </div>
+        <div
+          className="rounded-xl border p-4"
+          style={{
+            borderColor: failureRate > 0.2 ? 'rgba(248,113,113,0.4)' : 'rgba(255,255,255,0.1)',
+            background:
+              failureRate > 0.2 ? 'rgba(248,113,113,0.06)' : 'rgba(255,255,255,0.02)',
+          }}
+        >
+          <div className="text-[11px] uppercase tracking-wider text-white/50">
+            Taux d'échec (jour)
+          </div>
+          <div className="mt-1 font-display text-2xl" style={{ color: failureColor }}>
+            {(failureRate * 100).toFixed(1)}%
+          </div>
+          <div className="mt-1 text-xs text-white/40">
+            {summary?.failed_count ?? 0} / {summary?.total_count ?? 0} transactions
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-6">
         <select
           value={status}

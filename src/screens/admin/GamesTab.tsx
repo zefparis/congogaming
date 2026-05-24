@@ -28,15 +28,17 @@ function OkapiSubTab() {
               <th className="px-3 py-2">ID</th>
               <th className="px-3 py-2">Démarré</th>
               <th className="px-3 py-2 text-right">Crash ×</th>
+              <th className="px-3 py-2 text-right">Joueurs</th>
               <th className="px-3 py-2 text-right">Mises</th>
               <th className="px-3 py-2 text-right">Cashouts</th>
+              <th className="px-3 py-2 text-right">Meilleur cashout</th>
               <th className="px-3 py-2 text-right">Profit maison</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-white/40">
+                <td colSpan={8} className="px-3 py-6 text-center text-white/40">
                   Aucun round.
                 </td>
               </tr>
@@ -48,8 +50,10 @@ function OkapiSubTab() {
                 <td className="px-3 py-2 text-right font-display text-lg text-gold">
                   {r.crash_point.toFixed(2)}×
                 </td>
+                <td className="px-3 py-2 text-right text-white/80">{r.players_count}</td>
                 <td className="px-3 py-2 text-right text-white/80">{fmtCdf(r.total_bets)}</td>
                 <td className="px-3 py-2 text-right text-white/80">{fmtCdf(r.total_cashouts)}</td>
+                <td className="px-3 py-2 text-right text-emerald-300">{fmtCdf(r.biggest_cashout)}</td>
                 <td
                   className="px-3 py-2 text-right font-semibold"
                   style={{ color: r.house_profit >= 0 ? '#34d399' : '#f87171' }}
@@ -126,13 +130,15 @@ function LotoSubTab() {
               <th className="px-3 py-2">Tiré le</th>
               <th className="px-3 py-2">Numéros</th>
               <th className="px-3 py-2 text-right">Jackpot</th>
+              <th className="px-3 py-2 text-right">Tickets vendus</th>
+              <th className="px-3 py-2 text-right">Revenus</th>
               <th className="px-3 py-2 text-right">Gagnants</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-white/40">
+                <td colSpan={8} className="px-3 py-6 text-center text-white/40">
                   Aucun tirage.
                 </td>
               </tr>
@@ -167,7 +173,9 @@ function LotoSubTab() {
                 <td className="px-3 py-2 text-right text-gold">
                   {t.jackpot_cdf != null ? fmtCdf(t.jackpot_cdf) : '—'}
                 </td>
-                <td className="px-3 py-2 text-right text-white/80">{t.winners_count}</td>
+                <td className="px-3 py-2 text-right text-white/80">{t.tickets_sold}</td>
+                <td className="px-3 py-2 text-right text-emerald-300">{fmtCdf(t.revenue_cdf)}</td>
+                <td className="px-3 py-2 text-right text-white/80">{t.winners}</td>
               </tr>
             ))}
           </tbody>

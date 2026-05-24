@@ -9,24 +9,21 @@ import {
   YAxis,
 } from 'recharts';
 import {
+  Activity as ActivityIcon,
   ArrowDownRight,
   ArrowUpRight,
   Coins,
   Gamepad2,
   ShieldCheck,
   Ticket,
+  TrendingUp,
   Users,
   Wallet,
 } from 'lucide-react';
 import { adminApi } from '../../lib/adminApi';
 import { fmtCdf, fmtInt, fmtRelative } from './format';
 
-type Overview = {
-  total_balance_cdf: number;
-  users_count: number;
-  okapi_rounds_today: number;
-  kyc?: { approved: number; pending: number; denied: number; verify_age: number };
-};
+type Overview = Awaited<ReturnType<typeof adminApi.overview>>;
 
 type Activity = Awaited<ReturnType<typeof adminApi.activity>>['events'][number];
 
@@ -138,6 +135,44 @@ export default function OverviewTab() {
           icon={<Gamepad2 size={20} />}
           label="Rounds Okapi aujourd'hui"
           value={fmtInt(overview?.okapi_rounds_today ?? 0)}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Kpi
+          icon={<ActivityIcon size={20} />}
+          label="Joueurs actifs aujourd'hui"
+          value={fmtInt(overview?.active_players_today ?? 0)}
+          hint="Distinct user_id sur okapi_bets"
+        />
+        <Kpi
+          icon={<ArrowDownRight size={20} />}
+          label="Dépôts réussis (jour)"
+          value={fmtCdf(overview?.total_deposits_today ?? 0)}
+          accent="#34d399"
+        />
+        <Kpi
+          icon={<ArrowUpRight size={20} />}
+          label="Retraits réussis (jour)"
+          value={fmtCdf(overview?.total_withdrawals_today ?? 0)}
+          accent="#fbbf24"
+        />
+        <Kpi
+          icon={<Gamepad2 size={20} />}
+          label="Rounds Okapi (jour)"
+          value={fmtInt(overview?.okapi_rounds_today ?? 0)}
+        />
+        <Kpi
+          icon={<TrendingUp size={20} />}
+          label="Crash point moyen (jour)"
+          value={`${(overview?.avg_crash_point ?? 0).toFixed(2)}×`}
+          hint="Moyenne crash_point"
+        />
+        <Kpi
+          icon={<Ticket size={20} />}
+          label="Tickets Loto (jour)"
+          value={fmtInt(overview?.loto_tickets_today ?? 0)}
+          hint="Loto Congo + Flash"
         />
       </div>
 

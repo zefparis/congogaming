@@ -385,11 +385,12 @@ export default function PlayersTab() {
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-white/5">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-white/[0.03] text-left text-[11px] uppercase tracking-wider text-white/50">
             <tr>
               <th className="px-3 py-2">Téléphone</th>
               <th className="px-3 py-2">KYC</th>
+              <th className="px-3 py-2">Risque</th>
               <th className="px-3 py-2 text-right">Solde</th>
               <th className="px-3 py-2">Inscrit le</th>
               <th className="px-3 py-2">Dernière activité</th>
@@ -398,28 +399,48 @@ export default function PlayersTab() {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-white/40">
+                <td colSpan={6} className="px-3 py-6 text-center text-white/40">
                   Aucun joueur.
                 </td>
               </tr>
             )}
-            {rows.map((u) => (
-              <tr
-                key={u.id}
-                onClick={() => setSelectedId(u.id)}
-                className="cursor-pointer border-t border-white/5 hover:bg-white/[0.03]"
-              >
-                <td className="px-3 py-2 font-mono text-white">{u.phone}</td>
-                <td className="px-3 py-2">
-                  <KycBadge status={u.kyc_status} />
-                </td>
-                <td className="px-3 py-2 text-right text-gold">{fmtCdf(u.balance_cdf)}</td>
-                <td className="px-3 py-2 text-white/70">{fmtDateTime(u.created_at)}</td>
-                <td className="px-3 py-2 text-white/70">
-                  {u.last_activity_at ? `il y a ${fmtRelative(u.last_activity_at)}` : '—'}
-                </td>
-              </tr>
-            ))}
+            {rows.map((u) => {
+              const bigLoser = (u.pnl_cdf ?? 0) < -50_000;
+              const excessivePlay = (u.rounds_24h ?? 0) > 100;
+              const atRisk = bigLoser || excessivePlay;
+              const reasons: string[] = [];
+              if (bigLoser) reasons.push(`P&L ${fmtCdf(u.pnl_cdf)}`);
+              if (excessivePlay) reasons.push(`${u.rounds_24h} rounds/24h`);
+              return (
+                <tr
+                  key={u.id}
+                  onClick={() => setSelectedId(u.id)}
+                  className="cursor-pointer border-t border-white/5 hover:bg-white/[0.03]"
+                >
+                  <td className="px-3 py-2 font-mono text-white">{u.phone}</td>
+                  <td className="px-3 py-2">
+                    <KycBadge status={u.kyc_status} />
+                  </td>
+                  <td className="px-3 py-2">
+                    {atRisk ? (
+                      <span
+                        title={reasons.join(' · ')}
+                        className="inline-flex items-center gap-1 rounded bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-red-300 ring-1 ring-red-500/40"
+                      >
+                        ⚠ À RISQUE
+                      </span>
+                    ) : (
+                      <span className="text-white/30">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right text-gold">{fmtCdf(u.balance_cdf)}</td>
+                  <td className="px-3 py-2 text-white/70">{fmtDateTime(u.created_at)}</td>
+                  <td className="px-3 py-2 text-white/70">
+                    {u.last_activity_at ? `il y a ${fmtRelative(u.last_activity_at)}` : '—'}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
