@@ -395,7 +395,7 @@ export default function HomeScreen() {
             </div>
           ))}
 
-          {/* Sticker image */}
+          {/* Loto balls sticker - center-right */}
           <img
             src="/images/okapi/bloto-ball.PNG"
             alt=""
@@ -403,12 +403,29 @@ export default function HomeScreen() {
             style={{
               position: 'absolute',
               right: '-10px',
-              bottom: '0',
-              height: '85%',
+              top: '15%',
+              height: '75%',
               width: 'auto',
               objectFit: 'contain',
               zIndex: 2,
               filter: 'drop-shadow(0 0 10px rgba(0,168,107,0.5))',
+            }}
+          />
+
+          {/* Fire ball sticker - bottom-right */}
+          <img
+            src="/images/okapi/fire.JPG"
+            alt=""
+            style={{
+              position: 'absolute',
+              right: '0px',
+              bottom: '0px',
+              height: '70%',
+              width: 'auto',
+              objectFit: 'contain',
+              zIndex: 2,
+              animation: 'fire-pulse 1.2s ease-in-out infinite',
+              filter: 'drop-shadow(0 0 12px rgba(255,100,0,0.8))',
             }}
           />
 
