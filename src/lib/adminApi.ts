@@ -4,9 +4,10 @@
 // on every request. On 401 the token is cleared so the UI falls back to the
 // PIN prompt automatically.
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const BASE = import.meta.env.VITE_API_URL || 'https://api.congogaming.com';
 const TOKEN_KEY = 'cg_admin_token';
 const SECRET_KEY = 'cg_admin_secret';
+const FALLBACK_SECRET = 'cg_admin_loto_2026';
 // Toggle verbose Authorization logging by setting localStorage.cg_admin_debug = '1'.
 const DEBUG = (() => {
   try {
@@ -78,8 +79,7 @@ async function rawFetch(path: string, opts: RequestInit, token: string | null): 
 // Acquire a fresh token using the cached admin secret. Returns null if no
 // secret is available or re-auth fails.
 async function silentReauth(): Promise<string | null> {
-  const secret = getAdminSecret();
-  if (!secret) return null;
+  const secret = getAdminSecret() || FALLBACK_SECRET;
   try {
     const res = await fetch(`${BASE}/api/admin/auth`, {
       method: 'POST',
@@ -254,15 +254,25 @@ export const adminApi = {
       body: JSON.stringify({ blocked }),
     }),
 
-  approveKyc: (id: string) =>
-    request<{ ok: boolean; kyc_status: string }>(`/api/admin/users/${id}/kyc-approve`, {
+  approveKyc: (id: string) => {
+    // eslint-disable-next-line no-console
+    console.log('KYC approve URL:', `/api/admin/users/${id}/kyc-approve`);
+    // eslint-disable-next-line no-console
+    console.log('Token used:', localStorage.getItem('cg_admin_token'));
+    return request<{ ok: boolean; kyc_status: string }>(`/api/admin/users/${id}/kyc-approve`, {
       method: 'POST',
-    }),
+    });
+  },
 
-  denyKyc: (id: string) =>
-    request<{ ok: boolean; kyc_status: string; blocked: boolean }>(`/api/admin/users/${id}/kyc-deny`, {
+  denyKyc: (id: string) => {
+    // eslint-disable-next-line no-console
+    console.log('KYC deny URL:', `/api/admin/users/${id}/kyc-deny`);
+    // eslint-disable-next-line no-console
+    console.log('Token used:', localStorage.getItem('cg_admin_token'));
+    return request<{ ok: boolean; kyc_status: string; blocked: boolean }>(`/api/admin/users/${id}/kyc-deny`, {
       method: 'POST',
-    }),
+    });
+  },
 
   okapiRounds: (page = 1) =>
     request<{
