@@ -66,6 +66,36 @@ function Drawer({
     }
   }
 
+  async function approveKyc() {
+    if (!confirm('Approuver la vérification KYC de ce joueur ?')) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await adminApi.approveKyc(userId);
+      await load();
+      onChanged();
+    } catch (e: any) {
+      setError(e?.message || 'Erreur');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function denyKyc() {
+    if (!confirm('Refuser la vérification KYC de ce joueur ?')) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await adminApi.denyKyc(userId);
+      await load();
+      onChanged();
+    } catch (e: any) {
+      setError(e?.message || 'Erreur');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-black/60" onClick={onClose}>
       <div
@@ -164,6 +194,61 @@ function Drawer({
                 </button>
               </div>
             </div>
+
+            {data.user.kyc_status === 'verify_age' && (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: 16,
+                  background: 'rgba(255,165,0,0.1)',
+                  border: '1px solid rgba(255,165,0,0.3)',
+                  borderRadius: 12,
+                }}
+              >
+                <div style={{ color: '#FFD700', fontWeight: 700, marginBottom: 8 }}>
+                  ⚠️ Vérification manuelle requise
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 12 }}>
+                  Âge estimé : 19-25 ans. Confirmez l'identité de ce joueur.
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={approveKyc}
+                    disabled={busy}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: '#00A86B',
+                      color: 'white',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      opacity: busy ? 0.5 : 1,
+                    }}
+                  >
+                    ✓ APPROUVER
+                  </button>
+                  <button
+                    onClick={denyKyc}
+                    disabled={busy}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: '#CC0000',
+                      color: 'white',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      opacity: busy ? 0.5 : 1,
+                    }}
+                  >
+                    ✗ REFUSER
+                  </button>
+                </div>
+              </div>
+            )}
 
             {data.kyc_checks && data.kyc_checks.length > 0 && (
               <div className="mt-6">

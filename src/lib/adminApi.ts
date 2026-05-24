@@ -160,6 +160,16 @@ export const adminApi = {
       body: JSON.stringify({ blocked }),
     }),
 
+  approveKyc: (id: string) =>
+    request<{ ok: boolean; kyc_status: string }>(`/api/admin/users/${id}/kyc-approve`, {
+      method: 'POST',
+    }),
+
+  denyKyc: (id: string) =>
+    request<{ ok: boolean; kyc_status: string; blocked: boolean }>(`/api/admin/users/${id}/kyc-deny`, {
+      method: 'POST',
+    }),
+
   okapiRounds: (page = 1) =>
     request<{
       items: Array<{

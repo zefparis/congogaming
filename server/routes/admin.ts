@@ -443,6 +443,26 @@ export default async function adminRoutes(app: FastifyInstance) {
     },
   );
 
+  app.post<{ Params: { id: string } }>('/api/admin/users/:id/kyc-approve', async (req, reply) => {
+    const id = req.params.id;
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ kyc_status: 'approved' })
+      .eq('id', id);
+    if (error) return reply.code(400).send({ error: error.message });
+    return reply.send({ ok: true, kyc_status: 'approved' });
+  });
+
+  app.post<{ Params: { id: string } }>('/api/admin/users/:id/kyc-deny', async (req, reply) => {
+    const id = req.params.id;
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ kyc_status: 'denied', blocked: true })
+      .eq('id', id);
+    if (error) return reply.code(400).send({ error: error.message });
+    return reply.send({ ok: true, kyc_status: 'denied', blocked: true });
+  });
+
   // ---- JEUX ----
 
   app.get<{ Querystring: { page?: string; page_size?: string } }>(
