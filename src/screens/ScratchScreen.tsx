@@ -205,30 +205,39 @@ export default function ScratchScreen() {
     return () => cancelAnimationFrame(raf);
   }, [ticketId, grid, okapiReady, drawBase, drawScratchLayer]);
 
-  // Idle paint: when there is no active ticket, fill the scratch canvas with
-  // the same gold gradient + an "ACHETER" hint, so the card never shows up
-  // as an empty/brown rect before the first purchase or after REJOUER.
+  // Idle paint: when there is no active ticket, fill the scratch (top)
+  // canvas with the gold gradient + "ACHETER" hint AND wipe the base
+  // (symbols) canvas. The symbols layer must NEVER hold pixels before the
+  // ticket is purchased — otherwise the outcome would be visible to anyone
+  // who could peek behind the overlay (or to the user himself if the top
+  // canvas failed to paint for any reason).
   useEffect(() => {
     if (ticketId) return;
-    const canvas = scratchRef.current;
-    if (!canvas) return;
+    const top = scratchRef.current;
+    const base = baseRef.current;
     const raf = requestAnimationFrame(() => {
-      sizeCanvas(canvas);
-      const ctx = canvas.getContext('2d');
+      if (base) {
+        sizeCanvas(base);
+        const bctx = base.getContext('2d');
+        if (bctx) bctx.clearRect(0, 0, base.width, base.height);
+      }
+      if (!top) return;
+      sizeCanvas(top);
+      const ctx = top.getContext('2d');
       if (!ctx) return;
       ctx.globalCompositeOperation = 'source-over';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, top.width, top.height);
+      const gradient = ctx.createLinearGradient(0, 0, top.width, top.height);
       gradient.addColorStop(0, '#FFD700');
       gradient.addColorStop(0.5, '#DAA520');
       gradient.addColorStop(1, '#B8860B');
       ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, top.width, top.height);
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.font = 'bold 28px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('ACHETER', canvas.width / 2, canvas.height / 2);
+      ctx.fillText('ACHETER', top.width / 2, top.height / 2);
     });
     return () => cancelAnimationFrame(raf);
   }, [ticketId]);
@@ -264,10 +273,17 @@ export default function ScratchScreen() {
     }
     try {
       const r = await api.scratchClaim(userId, ticketId);
-      setBalance(r.new_balance);
-      setResult({ win: r.win_amount_cdf, bet });
+      // SERVER-ONLY TRUTH: win is decided exclusively by the backend.
+      // The grid symbols rendered on the base canvas are purely cosmetic
+      // and MUST NOT influence win detection. Any client-side grid
+      // evaluation would be a security regression.
+      const winAmount = Number(r.win_amount_cdf || 0);
+      const isWin = winAmount > 0;
+      setBalance(Number(r.new_balance || 0));
+      setResult({ win: isWin ? winAmount : 0, bet });
     } catch (e) {
       console.error(e);
+      // On network/claim failure, we do NOT infer a win locally.
       setResult({ win: 0, bet });
     }
   }, [ticketId, bet, userId]);
