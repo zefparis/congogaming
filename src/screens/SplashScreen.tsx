@@ -1,46 +1,44 @@
 // Splash / onboarding screen for visitors who don't yet have a session.
-// Visual identity for the post-PredictStreet relaunch: a single hero image
-// (no video, no OkapiBet branding, no casino card carousel). The screen is
-// strictly informational + funnels the user into /register or /login.
+// Hero-image driven layout (no video, no OkapiBet branding, no casino
+// carousel). The screen funnels visitors into /register or /login and
+// teases the four live games (Okapi Climb, Predictstreet, Loto, Scratch).
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, type NavigateFunction } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { getSession, refreshBalance } from '../lib/auth';
+import { getSession } from '../lib/auth';
 
-const fmtCdf = (n: number) =>
-  new Intl.NumberFormat('fr-FR').format(Math.round(n));
-
+type Badge = { label: string; color: string };
 type GameTile = {
   emoji: string;
   title: string;
   subtitle: string;
-  badge?: { label: string; color: string };
-  onClick: (nav: ReturnType<typeof useNavigate>) => void;
+  badge?: Badge;
+  to: string;
 };
+
+const fadeUp = (delay: number) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay, duration: 0.45 },
+});
 
 export default function SplashScreen() {
   const nav = useNavigate();
   const [jackpot, setJackpot] = useState<number>(5_000_000);
 
-  // If the user already has a session, bounce them straight to the home
-  // screen. We also opportunistically refresh the balance so the home view
-  // doesn't render with a stale figure.
+  // Bounce already-logged-in users to home, otherwise fetch the live
+  // jackpot (silent failure → keep the 5M CDF placeholder).
   useEffect(() => {
-    const session = getSession();
-    if (session) {
-      refreshBalance(session.id).catch(() => {});
+    if (getSession()) {
       nav('/', { replace: true });
+      return;
     }
-  }, [nav]);
-
-  // Live jackpot. We tolerate API failure silently (the default 5M CDF stays
-  // shown) — this is a marketing screen, not a transactional surface.
-  useEffect(() => {
     api
       .lotoLatest()
       .then((r) => setJackpot(Number(r.pot_cdf || 5_000_000)))
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const games: GameTile[] = [
@@ -49,239 +47,362 @@ export default function SplashScreen() {
       title: 'OKAPI CLIMB',
       subtitle: 'CRASH × 50',
       badge: { label: 'LIVE', color: '#00C875' },
-      onClick: (n) => n('/register'),
+      to: '/climb',
     },
     {
       emoji: '⚽',
       title: 'PREDICTSTREET',
       subtitle: 'PARIS FOOT WC26',
       badge: { label: 'FIFA', color: '#4a9eff' },
-      onClick: (n) => n('/register'),
+      to: '/jouer',
     },
     {
       emoji: '🎱',
       title: 'LOTO CONGO',
       subtitle: '20H KINSHASA',
-      onClick: (n) => n('/register'),
+      to: '/loto',
     },
     {
       emoji: '🎰',
       title: 'SCRATCH CARD',
       subtitle: 'GAIN INSTANT',
       badge: { label: 'NOUVEAU', color: '#FF8C00' },
-      onClick: (n) => n('/register'),
+      to: '/scratch',
     },
   ];
 
+  const goto = (path: string) => (n: NavigateFunction) => n(path);
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#05050A' }}>
-      {/* 1. HERO */}
+    <div style={{ minHeight: '100vh', background: '#05050A' }}>
+      {/* 1. HERO ---------------------------------------------------------- */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="relative w-full overflow-hidden"
-        style={{ height: '52vw', maxHeight: 260 }}
+        {...fadeUp(0)}
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '52vw',
+          maxHeight: 260,
+          overflow: 'hidden',
+        }}
       >
         <img
           src="/images/heroplash.png"
           alt=""
           aria-hidden
-          className="absolute inset-0 w-full h-full"
-          style={{ objectFit: 'cover', objectPosition: 'center' }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
         />
         <div
           aria-hidden
-          className="absolute inset-0"
           style={{
+            position: 'absolute',
+            inset: 0,
             background:
-              'linear-gradient(180deg, rgba(5,5,10,0.2) 0%, rgba(5,5,10,0.8) 75%, rgba(5,5,10,1) 100%)',
+              'linear-gradient(180deg, rgba(5,5,10,0.15) 0%, rgba(5,5,10,0.75) 72%, rgba(5,5,10,1) 100%)',
           }}
         />
-        <div className="absolute inset-x-0 bottom-0 px-5 pb-4 flex flex-col items-center gap-2">
-          <span
-            className="px-3 py-1 rounded-full text-[10px] font-bold tracking-widest"
-            style={{
-              background: 'rgba(0,200,117,0.18)',
-              color: '#00C875',
-              border: '1px solid rgba(0,200,117,0.45)',
-            }}
-          >
-            PLATEFORME OFFICIELLE DRC
-          </span>
-          <span className="text-[10px] tracking-[0.25em]" style={{ color: '#9CA3AF' }}>
-            JOUEZ · GAGNEZ · ENCAISSEZ
-          </span>
+        {/* Top-left badge */}
+        <span
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 16,
+            padding: '4px 10px',
+            borderRadius: 999,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: 2,
+            color: '#00C875',
+            background: 'rgba(0,200,117,0.15)',
+            border: '1px solid rgba(0,200,117,0.45)',
+          }}
+        >
+          PLATEFORME OFFICIELLE DRC
+        </span>
+        {/* Bottom-centered tagline */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 16,
+            textAlign: 'center',
+            fontSize: 10,
+            letterSpacing: 5,
+            color: 'rgba(255,255,255,0.45)',
+          }}
+        >
+          JOUEZ · GAGNEZ · ENCAISSEZ
         </div>
       </motion.div>
 
-      {/* 2. JACKPOT BAND */}
+      {/* 2. JACKPOT BAND ------------------------------------------------- */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.4 }}
-        className="px-4 py-3 flex items-center justify-between"
+        {...fadeUp(0.1)}
         style={{
-          background: '#0D0D18',
-          borderTop: '1px solid rgba(255,215,0,0.35)',
-          borderBottom: '1px solid rgba(255,215,0,0.35)',
+          background: 'rgba(20,14,2,0.98)',
+          borderTop: '2px solid #FF8C00',
+          borderBottom: '2px solid #FF8C00',
+          padding: '12px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
         <div>
-          <div className="text-[9px] tracking-widest" style={{ color: '#9CA3AF' }}>
+          <div
+            style={{
+              fontSize: 7,
+              letterSpacing: 3,
+              color: 'rgba(255,255,255,0.45)',
+            }}
+          >
             JACKPOT ACTUEL
           </div>
           <div
-            className="font-display text-2xl leading-none"
-            style={{ color: '#FFD700' }}
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: '#FFD700',
+              lineHeight: 1.1,
+            }}
           >
-            {fmtCdf(jackpot)} <span style={{ fontSize: 12 }}>CDF</span>
+            {Math.max(jackpot, 500_000).toLocaleString('fr-FR')} CDF
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-[9px] tracking-widest" style={{ color: '#9CA3AF' }}>
+        <div style={{ textAlign: 'right' }}>
+          <div
+            style={{
+              fontSize: 7,
+              letterSpacing: 3,
+              color: 'rgba(255,255,255,0.45)',
+            }}
+          >
             PARTENAIRE
           </div>
           <div
-            className="text-sm font-bold tracking-wide"
-            style={{ color: '#4a9eff' }}
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: '#4a9eff',
+              letterSpacing: 1,
+            }}
           >
             PREDICTSTREET
           </div>
         </div>
       </motion.div>
 
-      {/* 3. GAMES GRID 2x2 */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.4 }}
-        className="px-4 mt-4 grid grid-cols-2 gap-3"
-      >
-        {games.map((g) => (
-          <motion.button
-            key={g.title}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => g.onClick(nav)}
-            className="relative text-left p-3 flex flex-col gap-1"
-            style={{
-              background: '#0D0D18',
-              border: '1px solid rgba(255,215,0,0.18)',
-              borderRadius: 12,
-              minHeight: 92,
-            }}
-          >
-            {g.badge && (
-              <span
-                className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider"
+      {/* 3. GAMES GRID --------------------------------------------------- */}
+      <motion.div {...fadeUp(0.2)} style={{ padding: 16 }}>
+        <div
+          style={{
+            fontSize: 9,
+            letterSpacing: 4,
+            color: 'rgba(255,255,255,0.25)',
+            marginBottom: 10,
+          }}
+        >
+          NOS JEUX
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 10,
+          }}
+        >
+          {games.map((g) => (
+            <button
+              key={g.title}
+              type="button"
+              onClick={() => goto(g.to)(nav)}
+              style={{
+                position: 'relative',
+                textAlign: 'left',
+                background: '#0D0D18',
+                border: '1px solid rgba(255,215,0,0.25)',
+                borderRadius: 12,
+                padding: 16,
+                color: '#FFD700',
+                cursor: 'pointer',
+                minHeight: 108,
+              }}
+            >
+              {g.badge && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    color: g.badge.color,
+                    background: `${g.badge.color}22`,
+                    border: `1px solid ${g.badge.color}66`,
+                  }}
+                >
+                  {g.badge.label}
+                </span>
+              )}
+              <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 8 }}>
+                {g.emoji}
+              </div>
+              <div
                 style={{
-                  background: `${g.badge.color}22`,
-                  color: g.badge.color,
-                  border: `1px solid ${g.badge.color}66`,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: '#FFD700',
+                  letterSpacing: 1,
                 }}
               >
-                {g.badge.label}
-              </span>
-            )}
-            <span className="text-2xl">{g.emoji}</span>
-            <span
-              className="text-sm font-bold tracking-wide"
-              style={{ color: '#FFFFFF' }}
-            >
-              {g.title}
-            </span>
-            <span className="text-[10px] tracking-wider" style={{ color: '#9CA3AF' }}>
-              {g.subtitle}
-            </span>
-          </motion.button>
-        ))}
+                {g.title}
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: 1,
+                  color: 'rgba(255,255,255,0.45)',
+                  marginTop: 2,
+                }}
+              >
+                {g.subtitle}
+              </div>
+            </button>
+          ))}
+        </div>
       </motion.div>
 
-      {/* 4. BONUS BANNER */}
+      {/* 4. BONUS BANNER ------------------------------------------------- */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
+        {...fadeUp(0.3)}
         onClick={() => nav('/register')}
-        className="mx-4 mt-4 rounded-xl px-3.5 py-2.5 flex items-center gap-3 cursor-pointer"
         style={{
-          background:
-            'linear-gradient(90deg, rgba(255,215,0,0.18) 0%, rgba(255,140,0,0.06) 60%, transparent 100%)',
-          border: '1px solid rgba(255,215,0,0.4)',
+          margin: '0 16px',
+          background: 'rgba(255,215,0,0.06)',
+          border: '1px solid rgba(255,215,0,0.25)',
+          borderRadius: 12,
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          cursor: 'pointer',
         }}
       >
-        <span className="text-2xl">🎁</span>
-        <div className="flex-1">
-          <p
-            className="font-semibold text-xs tracking-wide"
-            style={{ color: '#FFD700' }}
+        <span style={{ fontSize: 22 }}>🎁</span>
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              fontSize: 9,
+              letterSpacing: 2,
+              color: '#FFD700',
+              fontWeight: 700,
+            }}
           >
             BONUS DE BIENVENUE
-          </p>
-          <p className="text-white text-sm font-bold">
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>
             +100% jusqu'à 500K CDF
-          </p>
+          </div>
         </div>
-        <span className="text-lg" style={{ color: '#FFD700' }}>
-          →
-        </span>
+        <span style={{ color: '#FFD700', fontSize: 18 }}>→</span>
       </motion.div>
 
-      {/* 5. CTAs */}
+      {/* 5. CTAs --------------------------------------------------------- */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.4 }}
-        className="px-4 mt-4 flex flex-col gap-2.5"
+        {...fadeUp(0.4)}
+        style={{
+          padding: '16px 16px 0',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}
       >
-        <motion.button
-          whileTap={{ scale: 0.97 }}
+        <button
+          type="button"
           onClick={() => nav('/register')}
-          className="w-full h-14 rounded-2xl font-display tracking-wider"
           style={{
-            background: 'linear-gradient(90deg, #FFD700 0%, #FF8C00 100%)',
-            color: '#000',
-            fontSize: 22,
-            boxShadow: '0 8px 24px rgba(255,215,0,0.25)',
+            width: '100%',
+            height: 56,
+            borderRadius: 16,
+            border: 'none',
+            background: 'linear-gradient(135deg, #FFD700, #FF8C00)',
+            color: '#000000',
+            fontWeight: 900,
+            fontSize: 18,
+            letterSpacing: 3,
+            cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(255,140,0,0.25)',
           }}
         >
           S'INSCRIRE &amp; JOUER
-        </motion.button>
+        </button>
         <button
+          type="button"
           onClick={() => nav('/login')}
-          className="w-full h-10 text-sm tracking-wider"
-          style={{ color: '#FFD700' }}
+          style={{
+            width: '100%',
+            height: 52,
+            borderRadius: 16,
+            background: 'transparent',
+            border: '1px solid rgba(255,215,0,0.5)',
+            color: '#FFD700',
+            fontSize: 16,
+            letterSpacing: 3,
+            cursor: 'pointer',
+          }}
         >
-          J'ai déjà un compte
+          J'AI DÉJÀ UN COMPTE
         </button>
       </motion.div>
 
-      {/* 6. PAYMENT PILLS */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.55, duration: 0.4 }}
-        className="px-4 mt-4 flex justify-center gap-2 flex-wrap"
+      {/* 6. PAYMENT PILLS ----------------------------------------------- */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 8,
+          padding: '16px 16px 0',
+          flexWrap: 'wrap',
+        }}
       >
         {['ORANGE MONEY', 'AIRTEL', 'AFRICELL'].map((p) => (
           <span
             key={p}
-            className="px-2.5 py-1 rounded-full text-[9px] tracking-widest"
             style={{
-              background: '#0D0D18',
-              color: '#9CA3AF',
-              border: '1px solid rgba(255,255,255,0.06)',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 8,
+              padding: '4px 12px',
+              fontSize: 9,
+              letterSpacing: 1,
+              color: 'rgba(255,255,255,0.35)',
             }}
           >
             {p}
           </span>
         ))}
-      </motion.div>
+      </div>
 
-      {/* 7. DISCLAIMER */}
+      {/* 7. DISCLAIMER --------------------------------------------------- */}
       <p
-        className="text-center text-[9px] mt-3 mb-4 px-4 leading-relaxed"
-        style={{ color: '#4B5563' }}
+        style={{
+          textAlign: 'center',
+          fontSize: 9,
+          color: 'rgba(255,255,255,0.15)',
+          padding: '12px 16px 24px',
+          margin: 0,
+        }}
       >
         +18 ANS · AGRÉÉ MJS N°047/2016
       </p>
