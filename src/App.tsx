@@ -16,6 +16,7 @@ import OkapiGame from './screens/okapi/OkapiGame';
 import AdminScreen from './screens/AdminScreen';
 import KycScreen from './screens/KycScreen';
 import BottomNav from './components/BottomNav';
+import InstallPrompt from './components/InstallPrompt';
 import { clearSession, getSession } from './lib/auth';
 
 function PageWrap({ children, fullscreen = false }: { children: React.ReactNode; fullscreen?: boolean }) {
@@ -98,6 +99,7 @@ function AppRoutes() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
+      {showNav && <InstallPrompt />}
       {showNav && <BottomNav />}
     </>
   );
