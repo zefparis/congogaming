@@ -106,9 +106,9 @@ export default function ScratchScreen() {
     ctx.clearRect(0, 0, CANVAS, CANVAS);
 
     const bg = ctx.createLinearGradient(0, 0, CANVAS, CANVAS);
-    bg.addColorStop(0, '#3a2a0a');
-    bg.addColorStop(0.5, '#1a1308');
-    bg.addColorStop(1, '#3a2a0a');
+    bg.addColorStop(0, '#0a0a0a');
+    bg.addColorStop(0.5, '#000000');
+    bg.addColorStop(1, '#0a0a0a');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, CANVAS, CANVAS);
 
@@ -125,9 +125,9 @@ export default function ScratchScreen() {
 
     for (let i = 0; i < 9; i++) {
       const r = cellRect(i);
-      ctx.fillStyle = '#0e0b06';
+      ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(r.x, r.y, r.w, r.h);
-      ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+      ctx.strokeStyle = 'rgba(255,215,0,0.4)';
       ctx.lineWidth = 1;
       ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
 
@@ -451,7 +451,10 @@ export default function ScratchScreen() {
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 8,
-          padding: '16px 18px 12px',
+          padding: '16px 18px',
+          height: 88,
+          boxSizing: 'border-box',
+          flexShrink: 0,
         }}
       >
         {BETS.map((b) => {
@@ -463,15 +466,13 @@ export default function ScratchScreen() {
               disabled={!!ticketId}
               style={{
                 padding: '12px 6px',
-                background: selected
-                  ? 'linear-gradient(180deg, #FFD700, #b88a1f)'
-                  : 'rgba(255,255,255,0.05)',
+                background: selected ? '#FFD700' : 'rgba(255,255,255,0.05)',
                 border: selected
                   ? '1px solid #FFD700'
                   : '1px solid rgba(255,255,255,0.1)',
-                color: selected ? '#1a140a' : 'rgba(255,255,255,0.7)',
+                color: selected ? '#000000' : 'rgba(255,255,255,0.7)',
                 borderRadius: 12,
-                fontWeight: 700,
+                fontWeight: selected ? 900 : 700,
                 fontSize: 13,
                 cursor: ticketId ? 'not-allowed' : 'pointer',
                 opacity: ticketId && !selected ? 0.5 : 1,
@@ -490,7 +491,8 @@ export default function ScratchScreen() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: '8px 18px 0',
+          padding: '0 18px',
+          marginTop: 16,
         }}
       >
         <div
@@ -499,7 +501,7 @@ export default function ScratchScreen() {
             height: 300,
             borderRadius: 18,
             padding: 6,
-            background: 'linear-gradient(135deg, #FFD700 0%, #7a5b10 50%, #FFD700 100%)',
+            background: 'linear-gradient(135deg, #FFD700 0%, #FF8C00 50%, #FFD700 100%)',
             boxShadow: '0 18px 40px -16px rgba(0,0,0,0.8)',
             position: 'relative',
           }}
@@ -556,10 +558,10 @@ export default function ScratchScreen() {
             border: 'none',
             cursor: canBuy ? 'pointer' : 'not-allowed',
             fontSize: 16,
-            fontWeight: 800,
+            fontWeight: 900,
             letterSpacing: '0.04em',
-            color: '#1a140a',
-            background: 'linear-gradient(180deg, #FFD700, #b88a1f)',
+            color: '#000000',
+            background: 'linear-gradient(135deg, #FFD700, #FF8C00)',
             boxShadow: '0 10px 30px -10px rgba(255,215,0,0.6)',
             opacity: canBuy ? 1 : 0.5,
           }}
@@ -598,7 +600,7 @@ export default function ScratchScreen() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'linear-gradient(180deg, #1a140a, #0e0b06)',
+              background: 'linear-gradient(180deg, #0a0a0a, #000000)',
               border: '1px solid rgba(255,215,0,0.35)',
               borderRadius: 18,
               padding: '28px 22px',
@@ -657,10 +659,10 @@ export default function ScratchScreen() {
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: 15,
-                fontWeight: 800,
+                fontWeight: 900,
                 letterSpacing: '0.04em',
-                color: '#1a140a',
-                background: 'linear-gradient(180deg, #FFD700, #b88a1f)',
+                color: '#000000',
+                background: 'linear-gradient(135deg, #FFD700, #FF8C00)',
               }}
             >
               REJOUER
