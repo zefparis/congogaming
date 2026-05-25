@@ -24,11 +24,12 @@ type DetectedOperator = { id: number; name: string; color: string };
 
 function detectProvider(phone: string): DetectedOperator | null {
   const p = phone.replace(/\s/g, '');
-  if (/^08[45678]/.test(p)) return { id: 10, name: 'Orange Money', color: '#FF6600' };
-  if (/^08[19]/.test(p))    return { id: 17, name: 'Airtel Money',  color: '#FF0000' };
-  if (/^097/.test(p))       return { id: 17, name: 'Airtel Money',  color: '#FF0000' };
-  if (/^099/.test(p))       return { id: 17, name: 'Airtel Money',  color: '#FF0000' };
-  if (/^09[023]/.test(p))   return { id: 19, name: 'Africell',      color: '#0066CC' };
+  // Orange Money: 084, 085, 086, 087, 088, 089
+  if (/^08[4-9]/.test(p)) return { id: 10, name: 'Orange Money', color: '#FF6600' };
+  // Airtel Money: 097, 098, 099
+  if (/^09[7-9]/.test(p)) return { id: 17, name: 'Airtel Money', color: '#FF0000' };
+  // Africell: 090, 091, 092, 093
+  if (/^09[0-3]/.test(p)) return { id: 19, name: 'Africell',     color: '#0066CC' };
   return null;
 }
 
