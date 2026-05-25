@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
+import GainsModal from '../components/GainsModal';
 
 type State = 'idle' | 'pending' | 'success' | 'error';
 
@@ -66,6 +67,7 @@ export default function LotoScreen() {
   const [potCdf, setPotCdf] = useState(0);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [showTickets, setShowTickets] = useState(false);
+  const [showGains, setShowGains] = useState(false);
   const [countdown, setCountdown] = useState<string>(() => getCountdownToKinshasa20h());
 
   useEffect(() => {
@@ -154,7 +156,23 @@ export default function LotoScreen() {
           }}
         />
         <h1 className="font-display text-2xl text-gold tracking-wider ml-auto">LOTO</h1>
+        <button
+          type="button"
+          onClick={() => setShowGains(true)}
+          style={{
+            background: 'rgba(255,215,0,0.1)',
+            border: '1px solid rgba(255,215,0,0.3)',
+            borderRadius: 20,
+            padding: '6px 14px',
+            color: '#FFD700',
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          ℹ️ Gains
+        </button>
       </header>
+      <GainsModal open={showGains} onClose={() => setShowGains(false)} type="loto" />
 
       {/* Dernier tirage */}
       <div className="mt-3 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">

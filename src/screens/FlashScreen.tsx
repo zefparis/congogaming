@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
+import GainsModal from '../components/GainsModal';
 
 type State = 'idle' | 'pending' | 'success' | 'error';
 
@@ -68,6 +69,7 @@ export default function FlashScreen() {
   const [potCdf, setPotCdf] = useState(0);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [showTickets, setShowTickets] = useState(false);
+  const [showGains, setShowGains] = useState(false);
 
   const [remaining, setRemaining] = useState<number>(msToNextSlot());
   const lastZeroRef = useRef<number>(0);
@@ -176,7 +178,23 @@ export default function FlashScreen() {
         <h1 className="font-display text-2xl text-gold tracking-wider ml-auto flex items-center gap-1">
           <Zap className="w-5 h-5" /> LOTO FLASH
         </h1>
+        <button
+          type="button"
+          onClick={() => setShowGains(true)}
+          style={{
+            background: 'rgba(255,215,0,0.1)',
+            border: '1px solid rgba(255,215,0,0.3)',
+            borderRadius: 20,
+            padding: '6px 14px',
+            color: '#FFD700',
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          ℹ️ Gains
+        </button>
       </header>
+      <GainsModal open={showGains} onClose={() => setShowGains(false)} type="flash" />
 
       <div className="mt-2 flex justify-end">
         <span className="inline-flex items-center gap-1 bg-congogreen text-white text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full animate-pulse">
