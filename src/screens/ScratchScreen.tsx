@@ -165,12 +165,12 @@ export default function ScratchScreen() {
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, CANVAS, CANVAS);
 
-    const grad = ctx.createLinearGradient(0, 0, CANVAS, CANVAS);
-    grad.addColorStop(0, '#8a7a55');
-    grad.addColorStop(0.5, '#6b6256');
-    grad.addColorStop(1, '#8a7a55');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, CANVAS, CANVAS);
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#FFD700');
+    gradient.addColorStop(0.5, '#DAA520');
+    gradient.addColorStop(1, '#B8860B');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const sheen = ctx.createLinearGradient(0, 0, CANVAS, CANVAS);
     sheen.addColorStop(0, 'rgba(255,255,255,0.2)');
@@ -394,7 +394,7 @@ export default function ScratchScreen() {
   const canBuy = balance >= bet && !busy && !ticketId;
 
   return (
-    <div className="min-h-screen pb-24">
+    <div style={{ overflowY: 'auto', height: '100vh', paddingBottom: 80 }}>
       {/* Header */}
       <div
         style={{
@@ -451,9 +451,7 @@ export default function ScratchScreen() {
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 8,
-          padding: '16px 18px',
-          height: 88,
-          boxSizing: 'border-box',
+          padding: '12px 18px 0',
           flexShrink: 0,
         }}
       >
@@ -465,7 +463,8 @@ export default function ScratchScreen() {
               onClick={() => !ticketId && setBet(b)}
               disabled={!!ticketId}
               style={{
-                padding: '12px 6px',
+                height: 56,
+                padding: '0 6px',
                 background: selected ? '#FFD700' : 'rgba(255,255,255,0.05)',
                 border: selected
                   ? '1px solid #FFD700'
@@ -473,13 +472,19 @@ export default function ScratchScreen() {
                 color: selected ? '#000000' : 'rgba(255,255,255,0.7)',
                 borderRadius: 12,
                 fontWeight: selected ? 900 : 700,
-                fontSize: 13,
+                fontSize: 18,
+                lineHeight: 1,
                 cursor: ticketId ? 'not-allowed' : 'pointer',
                 opacity: ticketId && !selected ? 0.5 : 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
               }}
             >
-              {b.toLocaleString('fr-FR')}
-              <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>CDF</div>
+              <span>{b.toLocaleString('fr-FR')}</span>
+              <span style={{ fontSize: 10, opacity: 0.8 }}>CDF</span>
             </button>
           );
         })}
@@ -492,7 +497,7 @@ export default function ScratchScreen() {
           flexDirection: 'column',
           alignItems: 'center',
           padding: '0 18px',
-          marginTop: 16,
+          marginTop: 20,
         }}
       >
         <div
@@ -558,10 +563,10 @@ export default function ScratchScreen() {
             border: 'none',
             cursor: canBuy ? 'pointer' : 'not-allowed',
             fontSize: 16,
-            fontWeight: 900,
+            fontWeight: '900',
             letterSpacing: '0.04em',
             color: '#000000',
-            background: 'linear-gradient(135deg, #FFD700, #FF8C00)',
+            background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
             boxShadow: '0 10px 30px -10px rgba(255,215,0,0.6)',
             opacity: canBuy ? 1 : 0.5,
           }}
