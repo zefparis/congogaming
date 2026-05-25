@@ -58,9 +58,15 @@ export class GameEngine extends EventEmitter {
     // WAITING
     this.state = 'WAITING'
     this.startTime = null
-    this.crashPoint = null
-    this.roundId = null
     this.bets.clear()
+
+    // Pre-generate crash point and create the round row BEFORE opening
+    // betting. Bets placed during WAITING reference `engine.roundId`, so
+    // the round must exist by then — otherwise every bet is persisted
+    // with round_id=null and admin aggregations (joueurs / mises /
+    // cashouts / profit maison) join nothing and report 0.
+    this.crashPoint = generateCrashPoint()
+    this.roundId = await this.createRound(this.crashPoint)
 
     let countdown = Math.ceil(WAIT_MS / 1000)
     this.emit('broadcast', { type: 'WAITING', countdown })
@@ -73,10 +79,6 @@ export class GameEngine extends EventEmitter {
 
     await sleep(WAIT_MS)
     clearInterval(waitInterval)
-
-    // Create round in DB
-    this.crashPoint = generateCrashPoint()
-    this.roundId = await this.createRound(this.crashPoint)
 
     // PLAYING
     this.state = 'PLAYING'
