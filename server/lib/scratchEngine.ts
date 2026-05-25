@@ -43,23 +43,26 @@ type Outcome =
   | { kind: 'consolation' }
   | { kind: 'lose' };
 
-const OUTCOME_WEIGHTS: { o: Outcome; w: number }[] = [
-  { o: { kind: 'jackpot_okapi' }, w: 1 },
-  { o: { kind: 'three', sym: 'diamond' }, w: 3 },
-  { o: { kind: 'three', sym: 'lightning' }, w: 6 },
-  { o: { kind: 'three', sym: 'star' }, w: 15 },
-  { o: { kind: 'three', sym: 'coin' }, w: 30 },
-  { o: { kind: 'three', sym: 'flame' }, w: 50 },
-  { o: { kind: 'consolation' }, w: 380 },
-  { o: { kind: 'lose' }, w: 515 },
-];
-
+// Explicit roll ladder (cumulative probabilities). The previous weighted
+// table over-rewarded small wins; this ladder is the source of truth and
+// matches the product spec:
+//   0.5%  okapi      ×50
+//   1.0%  diamond    ×20
+//   2.0%  lightning  ×10
+//   2.0%  star       ×5
+//   1.0%  coin       ×3
+//   1.0%  flame      ×2
+//  25.0%  consolation ×0.5
+//  67.5%  lose
 function pickOutcome(): Outcome {
-  const total = OUTCOME_WEIGHTS.reduce((s, x) => s + x.w, 0);
-  let r = Math.random() * total;
-  for (const { o, w } of OUTCOME_WEIGHTS) {
-    if ((r -= w) <= 0) return o;
-  }
+  const roll = Math.random();
+  if (roll < 0.005) return { kind: 'jackpot_okapi' };
+  if (roll < 0.015) return { kind: 'three', sym: 'diamond' };
+  if (roll < 0.035) return { kind: 'three', sym: 'lightning' };
+  if (roll < 0.055) return { kind: 'three', sym: 'star' };
+  if (roll < 0.065) return { kind: 'three', sym: 'coin' };
+  if (roll < 0.075) return { kind: 'three', sym: 'flame' };
+  if (roll < 0.325) return { kind: 'consolation' };
   return { kind: 'lose' };
 }
 

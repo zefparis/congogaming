@@ -205,6 +205,34 @@ export default function ScratchScreen() {
     return () => cancelAnimationFrame(raf);
   }, [ticketId, grid, okapiReady, drawBase, drawScratchLayer]);
 
+  // Idle paint: when there is no active ticket, fill the scratch canvas with
+  // the same gold gradient + an "ACHETER" hint, so the card never shows up
+  // as an empty/brown rect before the first purchase or after REJOUER.
+  useEffect(() => {
+    if (ticketId) return;
+    const canvas = scratchRef.current;
+    if (!canvas) return;
+    const raf = requestAnimationFrame(() => {
+      sizeCanvas(canvas);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#FFD700');
+      gradient.addColorStop(0.5, '#DAA520');
+      gradient.addColorStop(1, '#B8860B');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('ACHETER', canvas.width / 2, canvas.height / 2);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [ticketId]);
+
   const measureCell = (ctx: CanvasRenderingContext2D, i: number) => {
     const r = cellRect(i);
     const data = ctx.getImageData(r.x, r.y, r.w, r.h).data;
