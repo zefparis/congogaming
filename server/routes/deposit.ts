@@ -24,6 +24,15 @@ function normalizePhone(phone: string, provider_id: number): string {
   return phone;
 }
 
+// Provider-specific minimum deposit amounts (CDF). Africell/Afrimoney
+// rejects anything below 2250 CDF at the wallet level, so we surface a
+// clear error before hitting Unipesa.
+const MIN_AMOUNTS: Record<number, number> = {
+  10: 100,   // Orange
+  17: 100,   // Airtel
+  19: 2250,  // Africell / Afrimoney
+};
+
 export default async function depositRoutes(app: FastifyInstance) {
   app.post('/api/deposit', async (req, reply) => {
     const { user_id, amount, provider_id, phone } = (req.body || {}) as {
@@ -32,7 +41,12 @@ export default async function depositRoutes(app: FastifyInstance) {
     if (!user_id || !amount || !provider_id || !phone) {
       return reply.code(400).send({ error: 'Missing fields' });
     }
-    if (amount < 100) return reply.code(400).send({ error: 'Amount too low' });
+    const minAmount = MIN_AMOUNTS[provider_id] ?? 100;
+    if (amount < minAmount) {
+      return reply.code(400).send({
+        error: `Montant minimum ${minAmount} CDF pour cet opérateur`,
+      });
+    }
 
     const order_id = newOrderId();
 
