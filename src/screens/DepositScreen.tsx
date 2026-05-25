@@ -9,6 +9,15 @@ import { api } from '../lib/api';
 
 type State = 'idle' | 'pending' | 'success' | 'error';
 
+// Keep these in sync with server/routes/deposit.ts MIN_AMOUNTS.
+const MIN_AMOUNTS: Record<number, number> = {
+  10: 100,   // Orange
+  17: 100,   // Airtel
+  19: 2250,  // Africell / Afrimoney
+};
+const DEFAULT_CHIPS = [1000, 5000, 10000, 25000];
+const AFRICELL_CHIPS = [2500, 5000, 10000, 20000];
+
 const detectProvider = (phone: string): number | null => {
   if (/^08[45678]/.test(phone)) return 10;  // Orange
   if (/^08[19]/.test(phone)) return 17;      // Airtel  
@@ -37,7 +46,12 @@ export default function DepositScreen() {
   const submit = async () => {
     if (!session) return;
     const amt = Number(amount);
-    if (!amt || amt < 100) { setState('error'); setMsg('Montant minimum 100 CDF'); return; }
+    const minAmount = MIN_AMOUNTS[providerId] ?? 100;
+    if (!amt || amt < minAmount) {
+      setState('error');
+      setMsg(`Montant minimum : ${minAmount.toLocaleString('fr-FR')} CDF`);
+      return;
+    }
     if (!/^0[89]\d{8}$/.test(phone)) { setState('error'); setMsg('Numéro invalide'); return; }
     setState('pending');
     setMsg('Demande envoyée. Confirmez sur votre téléphone…');
@@ -123,7 +137,7 @@ export default function DepositScreen() {
           {amount ? Number(amount).toLocaleString('fr-FR') : <span className="text-zinc-700">0</span>}
         </div>
         <div className="flex gap-2 mt-3">
-          {[1000, 5000, 10000, 25000].map((v) => (
+          {(providerId === 19 ? AFRICELL_CHIPS : DEFAULT_CHIPS).map((v) => (
             <button
               key={v}
               onClick={() => setAmount(String(v))}
@@ -133,6 +147,11 @@ export default function DepositScreen() {
             </button>
           ))}
         </div>
+        {providerId === 19 && (
+          <div className="mt-2 text-[11px] text-amber-400/80">
+            Montant minimum : 2 250 CDF
+          </div>
+        )}
       </div>
 
       <div className="mt-4">
