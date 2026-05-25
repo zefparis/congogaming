@@ -33,12 +33,11 @@ export default function RegisterScreen() {
     try {
       setLoading(true);
       const user = await registerUser(phone, pin);
-      // Mandatory KYC at registration (PredictStreet contract). New accounts
-      // are created with kyc_status='pending' (DB default), so this branch
-      // always runs — explicit check kept defensive for future flows.
-      if (user.kyc_status === 'pending') {
-        nav('/kyc', { replace: true });
-      } else if (user.blocked || user.kyc_status === 'denied') {
+      // KYC is now scoped to PredictStreet (/jouer) only — see
+      // `PredictStreetRoute` in App.tsx. Fresh accounts go straight to
+      // home; the KYC scan is triggered the first time they tap the
+      // FIFA card.
+      if (user.blocked || user.kyc_status === 'denied') {
         // Shouldn't happen on a fresh insert, but be safe.
         setErr('Compte bloqué.');
       } else {

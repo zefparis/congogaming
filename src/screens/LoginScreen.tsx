@@ -36,14 +36,11 @@ export default function LoginScreen() {
     if (pin.length !== 4 || loading) return;
     try {
       setLoading(true);
-      const user = await loginUser(phone, pin);
-      // Route based on KYC status. Returning users with kyc_status='pending'
-      // (e.g. abandoned the flow before scan) are sent back through KYC.
-      if (user.kyc_status === 'pending') {
-        nav('/kyc', { replace: true });
-      } else {
-        nav('/', { replace: true });
-      }
+      await loginUser(phone, pin);
+      // KYC is scoped to /jouer (PredictStreet) only — see
+      // `PredictStreetRoute` in App.tsx. Always land returning users
+      // on home; the KYC scan is triggered on the FIFA card tap.
+      nav('/', { replace: true });
     } catch (e: any) {
       setErr(e.message || 'Erreur');
       setPin('');
