@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import NumPad from '../components/NumPad';
-import ProviderCard, { PROVIDERS } from '../components/ProviderCard';
 import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
 
@@ -18,14 +17,20 @@ const MIN_AMOUNTS: Record<number, number> = {
 const DEFAULT_CHIPS = [1000, 5000, 10000, 25000];
 const AFRICELL_CHIPS = [2500, 5000, 10000, 20000];
 
-const detectProvider = (phone: string): number | null => {
-  if (/^08[45678]/.test(phone)) return 10;  // Orange
-  if (/^08[19]/.test(phone)) return 17;      // Airtel  
-  if (/^097/.test(phone)) return 17;         // Airtel
-  if (/^099/.test(phone)) return 17;         // Airtel
-  if (/^09[23]/.test(phone)) return 19;      // Africell
+// Detect the mobile-money operator from the user's phone number. Used
+// instead of the previous manual ProviderCard selector. Mirrors the
+// server-side provider_id mapping (Orange=10, Airtel=17, Africell=19).
+type DetectedOperator = { id: number; name: string; color: string };
+
+function detectProvider(phone: string): DetectedOperator | null {
+  const p = phone.replace(/\s/g, '');
+  if (/^08[45678]/.test(p)) return { id: 10, name: 'Orange Money', color: '#FF6600' };
+  if (/^08[19]/.test(p))    return { id: 17, name: 'Airtel Money',  color: '#FF0000' };
+  if (/^097/.test(p))       return { id: 17, name: 'Airtel Money',  color: '#FF0000' };
+  if (/^099/.test(p))       return { id: 17, name: 'Airtel Money',  color: '#FF0000' };
+  if (/^09[023]/.test(p))   return { id: 19, name: 'Africell',      color: '#0066CC' };
   return null;
-};
+}
 
 export default function DepositScreen() {
   const nav = useNavigate();
@@ -33,7 +38,9 @@ export default function DepositScreen() {
   const [amount, setAmount] = useState('');
   const [providerId, setProviderId] = useState<number>(10);
   const [phone, setPhone] = useState(session?.phone || '');
-  const [autoDetected, setAutoDetected] = useState(false);
+  const [detectedOperator, setDetectedOperator] = useState<DetectedOperator | null>(
+    () => detectProvider(session?.phone || ''),
+  );
   const [state, setState] = useState<State>('idle');
   const [msg, setMsg] = useState<string>('');
 
@@ -105,30 +112,60 @@ export default function DepositScreen() {
             setPhone(value);
             const detected = detectProvider(value);
             if (detected) {
-              setProviderId(detected);
-              setAutoDetected(true);
+              setProviderId(detected.id);
+              setDetectedOperator(detected);
+            } else {
+              setDetectedOperator(null);
             }
           }}
           className="bg-transparent w-full font-display text-2xl tracking-widest outline-none mt-1"
         />
-      </div>
-
-      <div className="mt-4">
-        <div className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Opérateur</div>
-        <div className="grid grid-cols-3 gap-3">
-          {PROVIDERS.map((p) => (
-            <ProviderCard
-              key={p.id}
-              provider={p}
-              selected={providerId === p.id}
-              autoDetected={autoDetected && providerId === p.id}
-              onClick={() => {
-                setProviderId(p.id);
-                setAutoDetected(false);
+        {phone.length >= 3 && detectedOperator && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: `${detectedOperator.color}18`,
+              border: `1px solid ${detectedOperator.color}60`,
+              borderRadius: 10,
+              padding: '8px 14px',
+              marginTop: 8,
+            }}
+          >
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: detectedOperator.color,
               }}
             />
-          ))}
-        </div>
+            <span
+              style={{
+                color: detectedOperator.color,
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {detectedOperator.name} détecté
+            </span>
+            <span
+              style={{
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: 11,
+                marginLeft: 'auto',
+              }}
+            >
+              ✓ automatique
+            </span>
+          </div>
+        )}
+        {phone.length === 10 && !detectedOperator && (
+          <div style={{ color: '#FF4444', fontSize: 12, marginTop: 6 }}>
+            Numéro non reconnu — vérifiez votre numéro
+          </div>
+        )}
       </div>
 
       <div className="mt-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
@@ -147,9 +184,9 @@ export default function DepositScreen() {
             </button>
           ))}
         </div>
-        {providerId === 19 && (
-          <div className="mt-2 text-[11px] text-amber-400/80">
-            Montant minimum : 2 250 CDF
+        {detectedOperator?.id === 19 && Number(amount) > 0 && Number(amount) < 2250 && (
+          <div style={{ color: '#FF8C00', fontSize: 12, marginTop: 8 }}>
+            Montant minimum Africell : 2 250 CDF
           </div>
         )}
       </div>
