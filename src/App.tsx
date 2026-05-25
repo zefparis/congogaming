@@ -48,10 +48,32 @@ function Protected({ children }: { children: React.ReactNode }) {
     clearSession();
     return <Navigate to="/splash" replace />;
   }
-  // Mandatory KYC at registration (PredictStreet contract). Anyone with a
-  // 'pending' status MUST complete the KYC scan before reaching any other
-  // protected route. 'approved' and 'verify_age' may proceed normally.
-  if (session.kyc_status === 'pending') {
+  // KYC is no longer a global gate. It's enforced ONLY on the PredictStreet
+  // sports-betting route (/jouer) via `PredictStreetRoute` below. All other
+  // games (Climb, Loto, Flash, Scratch) and account pages are reachable
+  // immediately after registration regardless of `kyc_status`.
+  return <>{children}</>;
+}
+
+/**
+ * Sports-betting (PredictStreet) gate. FIFA WC26 betting requires a
+ * verified identity per the PredictStreet contract, so we redirect users
+ * with a `pending` KYC status to /kyc (preserving the intended
+ * destination in localStorage so KycScreen can bounce them back here).
+ */
+function PredictStreetRoute({ children }: { children: React.ReactNode }) {
+  const session = getSession();
+  if (!session) return <Navigate to="/splash" replace />;
+  if (session.blocked || session.kyc_status === 'denied') {
+    clearSession();
+    return <Navigate to="/splash" replace />;
+  }
+  if (session.kyc_status !== 'approved' && session.kyc_status !== 'verify_age') {
+    try {
+      localStorage.setItem('kyc_redirect', '/jouer');
+    } catch {
+      /* storage unavailable — KycScreen will fall back to '/' */
+    }
     return <Navigate to="/kyc" replace />;
   }
   return <>{children}</>;
@@ -86,7 +108,16 @@ function AppRoutes() {
           <Route path="/login" element={<PageWrap><LoginScreen /></PageWrap>} />
           <Route path="/register" element={<PageWrap><RegisterScreen /></PageWrap>} />
           <Route path="/" element={<Protected><PageWrap><HomeScreen /></PageWrap></Protected>} />
-          <Route path="/jouer" element={<Protected><PageWrap><GameScreen /></PageWrap></Protected>} />
+          <Route
+            path="/jouer"
+            element={
+              <Protected>
+                <PredictStreetRoute>
+                  <PageWrap><GameScreen /></PageWrap>
+                </PredictStreetRoute>
+              </Protected>
+            }
+          />
           <Route path="/depot" element={<Protected><PageWrap><DepositScreen /></PageWrap></Protected>} />
           <Route path="/retrait" element={<Protected><PageWrap><WithdrawScreen /></PageWrap></Protected>} />
           <Route path="/compte" element={<Protected><PageWrap><AccountScreen /></PageWrap></Protected>} />

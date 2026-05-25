@@ -134,17 +134,39 @@ export default function KycScreen() {
     }
   }
 
+  // After a successful (APPROVED or VERIFY_AGE) scan, bounce the user to
+  // wherever they were trying to go before being intercepted by the KYC
+  // gate — typically /jouer (PredictStreet). We default to home if no
+  // intended destination was recorded.
+  function consumeKycRedirect(): string {
+    try {
+      const dest = localStorage.getItem('kyc_redirect');
+      if (dest) {
+        localStorage.removeItem('kyc_redirect');
+        return dest;
+      }
+    } catch {
+      /* storage unavailable */
+    }
+    return '/';
+  }
+
   function onApprovedContinue() {
-    nav('/', { replace: true });
+    nav(consumeKycRedirect(), { replace: true });
   }
 
   function onDeniedAcknowledge() {
+    try {
+      localStorage.removeItem('kyc_redirect');
+    } catch {
+      /* ignore */
+    }
     clearSession();
     nav('/splash', { replace: true });
   }
 
   function onVerifyAgeContinue() {
-    nav('/', { replace: true });
+    nav(consumeKycRedirect(), { replace: true });
   }
 
   return (
@@ -156,9 +178,11 @@ export default function KycScreen() {
           className="h-10 w-auto object-contain ml-auto"
         />
       </div>
-      <h1 className="font-display text-3xl text-gold tracking-wide">VÉRIFICATION D'IDENTITÉ</h1>
+      <h1 className="font-display text-3xl text-gold tracking-wide">
+        Vérification requise pour PredictStreet
+      </h1>
       <p className="text-zinc-400 text-sm mt-1 mb-6">
-        Conformité PredictStreet · Vérification biométrique de l'âge
+        Les paris sportifs FIFA 2026 nécessitent une vérification d'identité.
       </p>
 
       {stage === 'capture' && (

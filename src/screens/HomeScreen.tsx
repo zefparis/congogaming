@@ -185,7 +185,26 @@ export default function HomeScreen() {
             <motion.button
               whileHover={{ filter: 'brightness(1.1)' }}
               whileTap={{ scale: 0.98, filter: 'brightness(1.1)' }}
-              onClick={() => nav('/jouer')}
+              onClick={() => {
+                // PredictStreet (FIFA WC26) requires a verified identity.
+                // We persist the intended destination so KycScreen can
+                // bounce the user back here once the scan succeeds.
+                const s = getSession();
+                if (!s) {
+                  nav('/login');
+                  return;
+                }
+                if (s.kyc_status === 'approved' || s.kyc_status === 'verify_age') {
+                  nav('/jouer');
+                } else {
+                  try {
+                    localStorage.setItem('kyc_redirect', '/jouer');
+                  } catch {
+                    /* storage unavailable */
+                  }
+                  nav('/kyc');
+                }
+              }}
               style={ctaStyle}
             >
               JOUER MAINTENANT →
