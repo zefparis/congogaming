@@ -18,9 +18,12 @@ export default async function scratchRoutes(app: FastifyInstance) {
         if (!ALLOWED_BETS.has(bet)) return reply.code(400).send({ error: 'invalid_bet' });
 
         // Atomically debit the bet (RPC enforces non-negative balance).
+        // p_delta is explicitly Number()-cast to avoid Postgres function
+        // resolution ambiguity between adjust_balance(uuid, integer) and
+        // adjust_balance(uuid, numeric) overloads.
         const { error: debitErr } = await supabaseAdmin.rpc('adjust_balance', {
           p_user_id: user_id,
-          p_delta: -bet,
+          p_delta: Number(-bet),
         });
         if (debitErr) return reply.code(400).send({ error: debitErr.message });
 
@@ -29,9 +32,9 @@ export default async function scratchRoutes(app: FastifyInstance) {
           .from('scratch_tickets')
           .insert({
             user_id,
-            bet_amount_cdf: bet,
+            bet_amount_cdf: Number(bet),
             grid,
-            win_amount_cdf: win,
+            win_amount_cdf: Number(win),
             status: 'pending',
           })
           .select('id')
@@ -39,7 +42,10 @@ export default async function scratchRoutes(app: FastifyInstance) {
         if (insErr || !ticket) {
           // Best-effort refund if we couldn't persist the ticket.
           try {
-            await supabaseAdmin.rpc('adjust_balance', { p_user_id: user_id, p_delta: bet });
+            await supabaseAdmin.rpc('adjust_balance', {
+              p_user_id: user_id,
+              p_delta: Number(bet),
+            });
           } catch {
             /* ignore refund failure */
           }
@@ -49,7 +55,7 @@ export default async function scratchRoutes(app: FastifyInstance) {
         return reply.send({
           ticket_id: ticket.id,
           grid_hidden: true,
-          bet_amount_cdf: bet,
+          bet_amount_cdf: Number(bet),
           grid, // symbols only — payout not exposed
         });
       } catch (e: any) {
@@ -93,7 +99,7 @@ export default async function scratchRoutes(app: FastifyInstance) {
         if (win > 0) {
           const { data: bal, error: credErr } = await supabaseAdmin.rpc('adjust_balance', {
             p_user_id: user_id,
-            p_delta: win,
+            p_delta: Number(win),
           });
           if (credErr) return reply.code(500).send({ error: credErr.message });
           new_balance = Number(bal ?? 0);
@@ -107,8 +113,8 @@ export default async function scratchRoutes(app: FastifyInstance) {
         }
 
         return reply.send({
-          win_amount_cdf: win,
-          new_balance,
+          win_amount_cdf: Number(win),
+          new_balance: Number(new_balance),
           grid: ticket.grid,
         });
       } catch (e: any) {

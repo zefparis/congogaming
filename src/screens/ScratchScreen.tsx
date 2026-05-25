@@ -56,6 +56,7 @@ export default function ScratchScreen() {
   const baseRef = useRef<HTMLCanvasElement | null>(null);
   const scratchRef = useRef<HTMLCanvasElement | null>(null);
   const okapiImg = useRef<HTMLImageElement | null>(null);
+  const [okapiReady, setOkapiReady] = useState(false);
 
   const drawingRef = useRef(false);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
@@ -69,11 +70,15 @@ export default function ScratchScreen() {
     refreshBalance(userId).then(setBalance).catch(() => {});
   }, [userId]);
 
-  // Preload okapi image once.
+  // Preload okapi image once. We bump `okapiReady` so the drawing effect
+  // re-renders the grid once the image is actually decoded — without it the
+  // jackpot cells would silently fall through to the emoji fallback if the
+  // network call lost the race against the canvas draw.
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
       okapiImg.current = img;
+      setOkapiReady(true);
     };
     img.onerror = () => {
       okapiImg.current = null;
@@ -81,11 +86,23 @@ export default function ScratchScreen() {
     img.src = '/images/okapi/okapi-tip.png';
   }, []);
 
+  // Ensure the canvas internal pixel buffer matches its CSS size. Without
+  // this the bottom canvas can render black when its offsetWidth/Height are
+  // measured to 0 during the very first layout pass.
+  const sizeCanvas = (canvas: HTMLCanvasElement) => {
+    const w = canvas.offsetWidth || CANVAS;
+    const h = canvas.offsetHeight || CANVAS;
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+  };
+
   // ----- BASE LAYER: 3×3 grid with symbols (drawn once per ticket) -----
   const drawBase = useCallback(() => {
     const canvas = baseRef.current;
     if (!canvas || !grid) return;
-    const ctx = canvas.getContext('2d')!;
+    sizeCanvas(canvas);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     ctx.clearRect(0, 0, CANVAS, CANVAS);
 
     const bg = ctx.createLinearGradient(0, 0, CANVAS, CANVAS);
@@ -142,7 +159,9 @@ export default function ScratchScreen() {
   const drawScratchLayer = useCallback(() => {
     const canvas = scratchRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    sizeCanvas(canvas);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, CANVAS, CANVAS);
 
@@ -170,14 +189,21 @@ export default function ScratchScreen() {
     ctx.fillText('avec votre doigt', CANVAS / 2, CANVAS / 2 + 14);
   }, []);
 
+  // Draw both layers AFTER the ticket is purchased and the canvases are
+  // mounted/laid out. A requestAnimationFrame tick gives the browser a
+  // chance to compute offsetWidth/offsetHeight; without it, sizeCanvas can
+  // read 0 and the base layer renders as an empty (black-looking) rect.
   useEffect(() => {
-    if (!grid) return;
+    if (!ticketId || !grid) return;
     cellRevealedRef.current = Array(9).fill(false);
     cellStrokesRef.current = Array(9).fill(0);
     claimingRef.current = false;
-    drawBase();
-    drawScratchLayer();
-  }, [grid, drawBase, drawScratchLayer]);
+    const raf = requestAnimationFrame(() => {
+      drawBase();
+      drawScratchLayer();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [ticketId, grid, okapiReady, drawBase, drawScratchLayer]);
 
   const measureCell = (ctx: CanvasRenderingContext2D, i: number) => {
     const r = cellRect(i);
