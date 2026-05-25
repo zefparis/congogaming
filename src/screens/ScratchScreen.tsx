@@ -52,6 +52,10 @@ export default function ScratchScreen() {
   const [grid, setGrid] = useState<Sym[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ win: number; bet: number } | null>(null);
+  // Visual cue: flash the header balance green for ~2s after the server
+  // credits a winning ticket so the user has an unambiguous confirmation
+  // that the new balance has landed.
+  const [balanceFlash, setBalanceFlash] = useState(false);
 
   const baseRef = useRef<HTMLCanvasElement | null>(null);
   const scratchRef = useRef<HTMLCanvasElement | null>(null);
@@ -279,7 +283,21 @@ export default function ScratchScreen() {
       // evaluation would be a security regression.
       const winAmount = Number(r.win_amount_cdf || 0);
       const isWin = winAmount > 0;
-      setBalance(Number(r.new_balance || 0));
+      // Use the authoritative new_balance from the claim response when
+      // present (server already includes it post-credit) — falls back to
+      // a fresh refreshBalance() if the field is missing.
+      if (r.new_balance !== undefined && r.new_balance !== null) {
+        setBalance(Number(r.new_balance));
+      } else {
+        refreshBalance(userId).then(setBalance).catch(() => {});
+      }
+      // Belt-and-suspenders: persist the new balance into the session so
+      // other screens see the credit without a page refresh.
+      refreshBalance(userId).catch(() => {});
+      if (isWin) {
+        setBalanceFlash(true);
+        window.setTimeout(() => setBalanceFlash(false), 2000);
+      }
       setResult({ win: isWin ? winAmount : 0, bet });
     } catch (e) {
       console.error(e);
@@ -483,7 +501,15 @@ export default function ScratchScreen() {
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Wallet style={{ color: '#FFD700', width: 14, height: 14 }} />
-          <span style={{ color: '#FFD700', fontSize: 13, fontWeight: 800 }}>
+          <span
+            style={{
+              color: balanceFlash ? '#00C875' : '#FFD700',
+              fontSize: 13,
+              fontWeight: 800,
+              transition: 'color 0.25s ease, text-shadow 0.25s ease',
+              textShadow: balanceFlash ? '0 0 12px rgba(0,200,117,0.6)' : 'none',
+            }}
+          >
             {balance.toLocaleString('fr-FR')}
           </span>
         </div>
@@ -673,9 +699,19 @@ export default function ScratchScreen() {
                 </div>
                 <p
                   style={{
+                    color: '#00C875',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    marginTop: 10,
+                  }}
+                >
+                  +{result.win.toLocaleString('fr-FR')} CDF ajouté à votre solde !
+                </p>
+                <p
+                  style={{
                     color: 'rgba(255,255,255,0.6)',
                     fontSize: 13,
-                    marginTop: 12,
+                    marginTop: 8,
                   }}
                 >
                   Mise : {result.bet.toLocaleString('fr-FR')} CDF
