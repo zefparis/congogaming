@@ -549,7 +549,7 @@ export default function HomeScreen() {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%)',
+                'linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.1) 100%)',
             }}
           />
 
@@ -574,17 +574,25 @@ export default function HomeScreen() {
           <div
             style={{ position: 'relative', zIndex: 3, padding: '20px 16px', maxWidth: '70%' }}
           >
-            <div style={{ fontSize: 10, color: '#FFD700', letterSpacing: 3, marginBottom: 4 }}>
+            <div
+              style={{
+                fontSize: 10,
+                color: '#FFFFFF',
+                letterSpacing: 3,
+                marginBottom: 4,
+                textShadow: '0 1px 4px rgba(0,0,0,1)',
+              }}
+            >
               🎫 INSTANT WIN
             </div>
             <div
               style={{
                 fontFamily: 'Bebas Neue',
-                fontSize: 44,
+                fontSize: 48,
                 color: '#FFD700',
                 lineHeight: 1,
                 letterSpacing: 2,
-                textShadow: '0 2px 12px rgba(255,215,0,0.4)',
+                textShadow: '0 2px 8px rgba(0,0,0,1), 0 0 30px rgba(0,0,0,0.9)',
               }}
             >
               SCRATCH CARD
@@ -595,7 +603,7 @@ export default function HomeScreen() {
                 fontSize: 13,
                 marginTop: 8,
                 marginBottom: 16,
-                opacity: 0.85,
+                textShadow: '0 1px 6px rgba(0,0,0,1)',
               }}
             >
               Grattez et gagnez instantanément
