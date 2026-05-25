@@ -515,15 +515,38 @@ export default function HomeScreen() {
             position: 'relative',
             overflow: 'hidden',
             borderRadius: 16,
-            minHeight: 200,
+            minHeight: 220,
             cursor: 'pointer',
-            background:
-              'radial-gradient(circle at 80% 20%, rgba(255,215,0,0.18), transparent 40%),' +
-              'radial-gradient(circle at 20% 80%, rgba(255,215,0,0.12), transparent 50%),' +
-              'linear-gradient(135deg, #0a0a1a, #1a1308)',
             border: '1px solid rgba(255,215,0,0.35)',
+            background: '#0a0a1a',
           }}
         >
+          {/* Background image */}
+          <img
+            src="/images/scratch.jpg"
+            alt=""
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              opacity: 0.7,
+            }}
+          />
+          {/* Dark gradient overlay for legibility */}
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%)',
+            }}
+          />
+
           {/* Sparkle pattern */}
           <div
             aria-hidden
@@ -541,53 +564,6 @@ export default function HomeScreen() {
               animation: 'flicker 3s ease-in-out infinite',
             }}
           />
-
-          {/* Scattered coin/star decorations */}
-          <div
-            aria-hidden
-            style={{ position: 'absolute', top: 18, left: 14, fontSize: 22, opacity: 0.45 }}
-          >
-            ⭐
-          </div>
-          <div
-            aria-hidden
-            style={{ position: 'absolute', bottom: 22, left: '38%', fontSize: 18, opacity: 0.4 }}
-          >
-            🪙
-          </div>
-          <div
-            aria-hidden
-            className="float-y"
-            style={{ position: 'absolute', top: 60, right: 24, fontSize: 28, opacity: 0.55 }}
-          >
-            💎
-          </div>
-          <div
-            aria-hidden
-            style={{ position: 'absolute', bottom: 18, right: 18, fontSize: 22, opacity: 0.5 }}
-          >
-            ⚡
-          </div>
-
-          {/* NOUVEAU badge */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              zIndex: 4,
-              background: 'linear-gradient(135deg, #CE1126, #8a0a18)',
-              color: '#fff',
-              fontFamily: 'Bebas Neue',
-              fontSize: 12,
-              letterSpacing: 1.5,
-              padding: '4px 10px',
-              borderRadius: 999,
-              boxShadow: '0 4px 14px rgba(206,17,38,0.45)',
-            }}
-          >
-            NOUVEAU 🔥
-          </div>
 
           <div
             style={{ position: 'relative', zIndex: 3, padding: '20px 16px', maxWidth: '70%' }}
