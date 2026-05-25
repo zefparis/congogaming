@@ -36,28 +36,25 @@ export default async function callbackRoutes(app: FastifyInstance) {
       .update({ status, transaction_id })
       .eq('order_id', order_id);
 
-    if (status === 2 && wasNotSuccess) {
-      if (tx.type === 'deposit') {
-        const { data: user } = await supabaseAdmin
-          .from('users')
-          .select('balance_cdf')
-          .eq('id', tx.user_id)
-          .single();
-        const newBal = Number(user?.balance_cdf || 0) + Number(tx.amount);
-        await supabaseAdmin.from('users').update({ balance_cdf: newBal }).eq('id', tx.user_id);
-      }
-      // For withdrawal, balance was already deducted at request time.
+    // Use the atomic `adjust_balance` RPC for every credit/debit so we
+    // never race read-modify-write against another concurrent callback
+    // or game action (scratch credit, climb cashout, etc).
+
+    // DEPOSIT credit on first success.
+    if (status === 2 && wasNotSuccess && tx.type === 'deposit') {
+      await supabaseAdmin.rpc('adjust_balance', {
+        p_user_id: tx.user_id,
+        p_delta: Number(tx.amount),
+      });
     }
 
+    // WITHDRAWAL refund when the provider ultimately fails (status 3).
+    // The amount was debited at request time, so we credit it back.
     if (status === 3 && tx.type === 'withdrawal' && wasNotSuccess) {
-      // refund
-      const { data: user } = await supabaseAdmin
-        .from('users')
-        .select('balance_cdf')
-        .eq('id', tx.user_id)
-        .single();
-      const newBal = Number(user?.balance_cdf || 0) + Number(tx.amount);
-      await supabaseAdmin.from('users').update({ balance_cdf: newBal }).eq('id', tx.user_id);
+      await supabaseAdmin.rpc('adjust_balance', {
+        p_user_id: tx.user_id,
+        p_delta: Number(tx.amount),
+      });
     }
 
     return reply.code(200).send({ ok: true });
