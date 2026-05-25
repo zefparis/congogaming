@@ -537,7 +537,7 @@ export default function HomeScreen() {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'right center',
+              objectPosition: 'left center',
               opacity: 0.9,
               zIndex: 0,
             }}
