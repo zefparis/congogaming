@@ -518,14 +518,19 @@ export default function HomeScreen() {
             minHeight: 220,
             cursor: 'pointer',
             border: '1px solid rgba(255,215,0,0.35)',
-            background: '#0a0a1a',
           }}
         >
-          {/* Background image */}
+          {/* Background image — MUST stay first child so it sits behind the
+              dark overlay and content. File: public/images/scratch.jpg */}
           <img
             src="/images/scratch.jpg"
             alt=""
             aria-hidden
+            onError={(e) => {
+              // Surface a clear console signal if the asset path ever breaks.
+              // eslint-disable-next-line no-console
+              console.error('[HomeScreen] scratch.jpg failed to load', e.currentTarget.src);
+            }}
             style={{
               position: 'absolute',
               inset: 0,
@@ -534,6 +539,7 @@ export default function HomeScreen() {
               objectFit: 'cover',
               objectPosition: 'center',
               opacity: 0.7,
+              zIndex: 0,
             }}
           />
           {/* Dark gradient overlay for legibility */}
