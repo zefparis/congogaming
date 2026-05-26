@@ -87,7 +87,7 @@ export default function SplashScreen() {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          opacity: 0.5,
+          opacity: 0.55,
           pointerEvents: 'none',
           zIndex: 0,
         }}
@@ -99,7 +99,7 @@ export default function SplashScreen() {
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(4,8,15,0.3) 0%, rgba(4,8,15,0.1) 20%, rgba(4,8,15,0.55) 60%, rgba(4,8,15,0.98) 80%, #04080f 100%)',
+            'linear-gradient(180deg, rgba(4,8,15,0.15) 0%, rgba(4,8,15,0.05) 25%, rgba(4,8,15,0.45) 58%, rgba(4,8,15,0.96) 78%, #04080f 100%)',
           pointerEvents: 'none',
           zIndex: 1,
         }}
@@ -200,8 +200,9 @@ export default function SplashScreen() {
             style={{
               margin: 0,
               fontFamily: BEBAS,
-              fontSize: 72,
+              fontSize: 52,
               lineHeight: 0.85,
+              letterSpacing: 4,
               color: '#ffffff',
               textAlign: 'center',
               textShadow: '0 0 60px rgba(255,255,255,0.15)',
@@ -217,7 +218,7 @@ export default function SplashScreen() {
               fontFamily: BARLOW,
               fontWeight: 300,
               fontStyle: 'italic',
-              fontSize: 12,
+              fontSize: 11,
               letterSpacing: 5,
               color: 'rgba(255,255,255,0.45)',
               textTransform: 'uppercase',
@@ -305,7 +306,7 @@ export default function SplashScreen() {
             ))}
           </div>
 
-          {/* 8. ADI PredictStreet fire block */}
+          {/* 8. ADI PredictStreet pill */}
           <div
             style={{
               position: 'relative',
@@ -322,7 +323,7 @@ export default function SplashScreen() {
                 inset: -8,
                 borderRadius: 8,
                 background:
-                  'radial-gradient(ellipse at center, rgba(255,140,0,0.25) 0%, transparent 70%)',
+                  'radial-gradient(ellipse at center, rgba(255,140,0,0.12) 0%, transparent 70%)',
                 animation: 'splashFirebreath 2.5s ease-in-out infinite',
                 pointerEvents: 'none',
               }}
@@ -330,49 +331,29 @@ export default function SplashScreen() {
             <div
               style={{
                 position: 'relative',
-                border: '1px solid rgba(255,140,0,0.5)',
-                borderRadius: 6,
-                background: 'rgba(255,80,0,0.08)',
-                padding: '14px 24px',
+                border: '1px solid rgba(255,255,255,0.25)',
+                borderRadius: 4,
+                background: 'rgba(255,255,255,0.06)',
+                padding: '12px 20px',
                 textAlign: 'center',
               }}
             >
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
+                  fontFamily: BEBAS,
+                  fontSize: 22,
+                  letterSpacing: 4,
+                  color: '#ffffff',
                 }}
               >
-                <span style={fireDot('#ff6600', 0)} />
-                <span
-                  style={{
-                    fontFamily: BEBAS,
-                    fontSize: 26,
-                    letterSpacing: 4,
-                    backgroundImage:
-                      'linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00)',
-                    backgroundSize: '200% auto',
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    color: 'transparent',
-                    animation: 'splashShimmer 2s linear infinite',
-                  }}
-                >
-                  ADI PredictStreet
-                </span>
-                <span style={fireDot('#ff9900', 0.3)} />
-                <span style={fireDot('#ffcc00', 0.6)} />
+                ADI PREDICTSTREET
               </div>
               <div
                 style={{
-                  marginTop: 6,
-                  fontSize: 9,
-                  letterSpacing: 2.5,
-                  color: 'rgba(255,180,60,0.45)',
-                  textTransform: 'uppercase',
+                  marginTop: 4,
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: 'rgba(255,255,255,0.4)',
                   fontFamily: BARLOW,
                 }}
               >
@@ -394,15 +375,16 @@ export default function SplashScreen() {
               background: '#ffffff',
               color: '#04080f',
               fontFamily: BEBAS,
-              fontSize: 24,
+              fontSize: 22,
               letterSpacing: 5,
+              whiteSpace: 'nowrap',
               cursor: 'pointer',
               boxShadow: '0 6px 30px rgba(255,255,255,0.2)',
               marginBottom: 10,
               animation: 'splashFadeup 1.3s ease-out both',
             }}
           >
-            S'INSCRIRE MAINTENANT
+            S'INSCRIRE
           </button>
 
           {/* 10. CTA secondary */}
@@ -457,16 +439,6 @@ const dotPulse: React.CSSProperties = {
   display: 'inline-block',
   animation: 'splashPulse 2s ease-in-out infinite',
 };
-
-const fireDot = (color: string, delay: number): React.CSSProperties => ({
-  width: 5,
-  height: 5,
-  borderRadius: '50%',
-  background: color,
-  display: 'inline-block',
-  boxShadow: `0 0 6px ${color}`,
-  animation: `splashFireflicker 1.2s ease-in-out ${delay}s infinite`,
-});
 
 const KEYFRAMES = `
 @keyframes splashFadeup {
