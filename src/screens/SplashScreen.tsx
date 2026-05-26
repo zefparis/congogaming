@@ -1,25 +1,15 @@
 // Splash / onboarding screen for visitors who don't yet have a session.
 // Minimal premium branding splash — brand block + 2 CTAs only.
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import { useEffect } from 'react';
 import { getSession } from '../lib/auth';
 
 export default function SplashScreen() {
   const nav = useNavigate();
-  const [jackpot, setJackpot] = useState<number | null>(null);
 
-  // Bounce already-logged-in users to home, otherwise fetch the live
-  // jackpot (silent failure → leave jackpot line hidden).
+  // Bounce already-logged-in users to home.
   useEffect(() => {
-    if (getSession()) {
-      nav('/', { replace: true });
-      return;
-    }
-    api
-      .lotoLatest()
-      .then((r) => setJackpot(Number(r.pot_cdf || 0) || null))
-      .catch(() => {});
+    if (getSession()) nav('/', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -27,7 +17,7 @@ export default function SplashScreen() {
     <div
       style={{
         position: 'relative',
-        minHeight: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: '#06060E',
@@ -117,7 +107,7 @@ export default function SplashScreen() {
           muted
           playsInline
           style={{
-            width: 160,
+            width: 220,
             height: 'auto',
             objectFit: 'contain',
             marginTop: 24,
@@ -127,23 +117,17 @@ export default function SplashScreen() {
           <source src="/videos/okapibet.mp4" type="video/mp4" />
         </video>
 
-        {jackpot != null && (
-          <div
-            style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              color: 'rgba(255,215,0,0.5)',
-              marginTop: 8,
-              textAlign: 'center',
-            }}
-          >
-            JACKPOT {jackpot.toLocaleString('fr-FR')} CDF
-          </div>
-        )}
       </div>
 
       {/* SECTION 2 — CTAs */}
-      <div style={{ padding: '0 20px 40px', position: 'relative', zIndex: 1 }}>
+      <div
+        style={{
+          flexShrink: 0,
+          padding: '0 20px calc(env(safe-area-inset-bottom, 0px) + 24px)',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
         <button
           type="button"
           onClick={() => nav('/register')}
