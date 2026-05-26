@@ -91,31 +91,43 @@ export default function SplashScreen() {
         />
 
         <div
+          className="font-display"
           style={{
-            fontSize: 11,
-            letterSpacing: 5,
-            color: 'rgba(255,255,255,0.3)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'rgba(240,160,0,0.08)',
+            border: '1px solid rgba(240,160,0,0.3)',
+            borderRadius: 8,
+            padding: '8px 16px',
+            color: '#ffffff',
+            fontSize: 20,
+            letterSpacing: 3,
             textAlign: 'center',
           }}
         >
-          JOUEZ · GAGNEZ · ENCAISSEZ
+          <span>JOUEZ</span>
+          <span style={{ color: '#f0b800' }}>·</span>
+          <span>GAGNEZ</span>
+          <span style={{ color: '#f0b800' }}>·</span>
+          <span>ENCAISSEZ</span>
         </div>
 
         <video
+          src="/videos/okapibet.mp4"
           autoPlay
           loop
           muted
           playsInline
           style={{
-            width: 220,
+            width: 200,
             height: 'auto',
             objectFit: 'contain',
             marginTop: 24,
-            mixBlendMode: 'screen',
+            mixBlendMode: 'lighten',
+            filter: 'drop-shadow(0 0 20px rgba(240,160,0,0.45))',
           }}
-        >
-          <source src="/videos/okapibet.mp4" type="video/mp4" />
-        </video>
+        />
 
       </div>
 
@@ -132,12 +144,14 @@ export default function SplashScreen() {
           type="button"
           onClick={() => nav('/register')}
           style={{
+            position: 'relative',
+            overflow: 'hidden',
             width: '100%',
             height: 56,
             border: 'none',
             borderRadius: 16,
-            background: 'linear-gradient(135deg, #FFD700, #FF8C00)',
-            color: '#000000',
+            background: 'linear-gradient(135deg, #e07800, #f0b800, #ffcc00)',
+            color: '#1a0a00',
             fontWeight: 900,
             fontSize: 17,
             letterSpacing: 3,
@@ -145,8 +159,24 @@ export default function SplashScreen() {
             marginBottom: 10,
           }}
         >
-          S'INSCRIRE
+          <span style={{ position: 'relative', zIndex: 1 }}>S'INSCRIRE</span>
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '40%',
+              height: '100%',
+              background:
+                'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)',
+              transform: 'translateX(-120%)',
+              animation: 'splashShimmer 2.5s linear infinite',
+              pointerEvents: 'none',
+            }}
+          />
         </button>
+        <style>{`@keyframes splashShimmer { 0% { transform: translateX(-120%); } 100% { transform: translateX(320%); } }`}</style>
 
         <button
           type="button"
