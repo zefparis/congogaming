@@ -25,12 +25,14 @@ export function validateCongoPhone(phone: string): boolean {
   return /^0(8\d|9\d)\d{7}$/.test(p);
 }
 
-export function detectOperator(phone: string): 'Vodacom' | 'Orange' | 'Airtel' | 'Africell' | null {
-  const p = phone.replace(/\s+/g, '');
-  if (/^09[0]\d{7}$/.test(p)) return 'Africell';
-  if (/^09[78]\d{7}$/.test(p)) return 'Airtel';
-  if (/^09\d{8}$/.test(p)) return 'Vodacom';
-  if (/^08\d{8}$/.test(p)) return 'Orange';
+export function detectOperator(phone: string): 'Orange' | 'Airtel' | 'Africell' | null {
+  const p = phone.replace(/\s/g, '');
+  // Orange Money: 084, 085, 086, 087, 088, 089
+  if (/^08[4-9]/.test(p)) return 'Orange';
+  // Airtel Money: 097, 098, 099
+  if (/^09[7-9]/.test(p)) return 'Airtel';
+  // Africell: 090, 091, 092, 093
+  if (/^09[0-3]/.test(p)) return 'Africell';
   return null;
 }
 
