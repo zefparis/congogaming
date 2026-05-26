@@ -50,7 +50,7 @@ export default function SplashScreen() {
     >
       {/* Background image */}
       <img
-        src="/images/screensplash.png"
+        src="/images/screensplash.jpg"
         alt=""
         aria-hidden
         style={{
