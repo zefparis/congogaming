@@ -142,7 +142,7 @@ export default function AutoBetPanel({
             style={selectStyle}
           >
             {AMOUNT_OPTIONS.map((v) => (
-              <option key={v} value={v}>
+              <option key={v} value={v} style={optionStyle}>
                 {v >= 1000 ? `${v / 1000}k` : v}
               </option>
             ))}
@@ -156,7 +156,7 @@ export default function AutoBetPanel({
             style={selectStyle}
           >
             {TARGET_OPTIONS.map((v) => (
-              <option key={v} value={v}>
+              <option key={v} value={v} style={optionStyle}>
                 {v.toFixed(2)}
               </option>
             ))}
@@ -172,7 +172,7 @@ export default function AutoBetPanel({
             style={selectStyle}
           >
             {ROUND_OPTIONS.map((r) => (
-              <option key={r.label} value={r.value == null ? 'inf' : String(r.value)}>
+              <option key={r.label} value={r.value == null ? 'inf' : String(r.value)} style={optionStyle}>
                 {r.label}
               </option>
             ))}
@@ -282,9 +282,10 @@ const selectStyle: React.CSSProperties = {
   appearance: 'none',
   WebkitAppearance: 'none',
   MozAppearance: 'none',
-  background: 'transparent',
-  color: 'white',
-  border: 'none',
+  background: '#1a1a2e',
+  color: '#FFFFFF',
+  border: '1px solid rgba(255,215,0,0.3)',
+  borderRadius: 8,
   outline: 'none',
   width: '100%',
   height: '100%',
@@ -294,6 +295,12 @@ const selectStyle: React.CSSProperties = {
   textAlign: 'center',
   textAlignLast: 'center',
   cursor: 'pointer',
+  colorScheme: 'dark',
+}
+
+const optionStyle: React.CSSProperties = {
+  background: '#1a1a2e',
+  color: '#FFFFFF',
 }
 
 // ---------------- Helpers ----------------
