@@ -127,8 +127,8 @@ export default function DepositScreen() {
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              background: `${detectedOperator.color}18`,
-              border: `1px solid ${detectedOperator.color}60`,
+              background: 'rgba(0,200,117,0.1)',
+              border: '1px solid rgba(0,200,117,0.4)',
               borderRadius: 10,
               padding: '8px 14px',
               marginTop: 8,
@@ -139,12 +139,12 @@ export default function DepositScreen() {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                background: detectedOperator.color,
+                background: '#00C875',
               }}
             />
             <span
               style={{
-                color: detectedOperator.color,
+                color: '#00C875',
                 fontSize: 13,
                 fontWeight: 700,
               }}
