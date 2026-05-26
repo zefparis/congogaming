@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wallet } from 'lucide-react';
+import { Wallet, Plus, ArrowDownToLine } from 'lucide-react';
 import { getSession, refreshBalance } from '../lib/auth';
 import { api } from '../lib/api';
 
@@ -109,17 +109,66 @@ export default function HomeScreen() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          rowGap: 8,
         }}
       >
         <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, letterSpacing: 2 }}>
           SOLDE
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Wallet style={{ color: '#FFD700', width: 16, height: 16 }} />
-          <span style={{ color: '#FFD700', fontSize: 20, fontWeight: 800 }}>
-            {balance.toLocaleString('fr-FR')}
-          </span>
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>CDF</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Wallet style={{ color: '#FFD700', width: 16, height: 16 }} />
+            <span style={{ color: '#FFD700', fontSize: 20, fontWeight: 800 }}>
+              {balance.toLocaleString('fr-FR')}
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>CDF</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => nav('/depot')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                background:
+                  'linear-gradient(180deg, #fff1a8 0%, #ffcf3a 30%, #e8a800 50%, #ffcf3a 70%, #fff1a8 100%)',
+                color: '#0a0500',
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: 1,
+                padding: '7px 14px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <Plus style={{ width: 14, height: 14 }} />
+              DÉPÔT
+            </button>
+            <button
+              type="button"
+              onClick={() => nav('/retrait')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                background: 'transparent',
+                color: '#f0c000',
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: 1,
+                padding: '7px 14px',
+                borderRadius: 8,
+                border: '1px solid rgba(240,160,0,0.6)',
+                cursor: 'pointer',
+              }}
+            >
+              <ArrowDownToLine style={{ width: 14, height: 14 }} />
+              RETRAIT
+            </button>
+          </div>
         </div>
       </div>
 
