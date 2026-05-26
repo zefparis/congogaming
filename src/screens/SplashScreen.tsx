@@ -113,21 +113,35 @@ export default function SplashScreen() {
           <span>ENCAISSEZ</span>
         </div>
 
-        <video
-          src="/videos/okapibet.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
+        <div
           style={{
-            width: 200,
-            height: 'auto',
-            objectFit: 'contain',
+            width: 220,
+            height: 220,
+            borderRadius: 110,
+            overflow: 'hidden',
+            border: '2px solid #f0b800',
+            background: '#000',
+            boxShadow: '0 0 30px rgba(240,160,0,0.5)',
             marginTop: 24,
-            mixBlendMode: 'lighten',
-            filter: 'drop-shadow(0 0 20px rgba(240,160,0,0.45))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-        />
+        >
+          <video
+            src="/videos/okapibet.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              mixBlendMode: 'lighten',
+            }}
+          />
+        </div>
 
       </div>
 
@@ -147,16 +161,19 @@ export default function SplashScreen() {
             position: 'relative',
             overflow: 'hidden',
             width: '100%',
-            height: 56,
-            border: 'none',
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #e07800, #f0b800, #ffcc00)',
-            color: '#1a0a00',
+            border: 0,
+            borderRadius: 14,
+            padding: '18px 0',
+            background:
+              'linear-gradient(180deg, #ffe066 0%, #f0a500 18%, #c97f00 50%, #f0a500 82%, #ffe066 100%)',
+            color: '#1a0800',
             fontWeight: 900,
-            fontSize: 17,
+            fontSize: 22,
             letterSpacing: 3,
             cursor: 'pointer',
             marginBottom: 10,
+            boxShadow:
+              'inset 0 1px 0 rgba(255,240,150,0.6), inset 0 -1px 0 rgba(80,40,0,0.4), 0 4px 16px rgba(200,120,0,0.5)',
           }}
         >
           <span style={{ position: 'relative', zIndex: 1 }}>S'INSCRIRE</span>
@@ -183,15 +200,18 @@ export default function SplashScreen() {
           onClick={() => nav('/login')}
           style={{
             width: '100%',
-            height: 52,
-            borderRadius: 16,
-            background: 'transparent',
-            border: '1px solid rgba(255,215,0,0.45)',
-            color: '#FFD700',
+            borderRadius: 14,
+            padding: '18px 0',
+            background:
+              'linear-gradient(180deg, #b8860b 0%, #8b6914 40%, #6b500f 60%, #b8860b 100%)',
+            border: '1px solid #f0c040',
+            color: '#ffe08a',
             fontWeight: 700,
-            fontSize: 15,
+            fontSize: 22,
             letterSpacing: 3,
             cursor: 'pointer',
+            boxShadow:
+              'inset 0 1px 0 rgba(255,220,100,0.3), 0 2px 8px rgba(0,0,0,0.5)',
           }}
         >
           DÉJÀ CLIENT
