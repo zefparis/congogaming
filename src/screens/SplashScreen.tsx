@@ -165,15 +165,15 @@ export default function SplashScreen() {
             borderRadius: 14,
             padding: '18px 0',
             background:
-              'linear-gradient(180deg, #ffe066 0%, #f0a500 18%, #c97f00 50%, #f0a500 82%, #ffe066 100%)',
-            color: '#1a0800',
+              'linear-gradient(180deg, #ffe566 0%, #f5a800 25%, #b87800 50%, #f5a800 75%, #ffe566 100%)',
+            borderTop: '1px solid rgba(255,240,180,0.8)',
+            color: '#0a0500',
             fontWeight: 900,
             fontSize: 22,
             letterSpacing: 3,
             cursor: 'pointer',
             marginBottom: 10,
-            boxShadow:
-              'inset 0 1px 0 rgba(255,240,150,0.6), inset 0 -1px 0 rgba(80,40,0,0.4), 0 4px 16px rgba(200,120,0,0.5)',
+            boxShadow: '0 0 12px rgba(240,165,0,0.7)',
           }}
         >
           <span style={{ position: 'relative', zIndex: 1 }}>S'INSCRIRE</span>
@@ -203,15 +203,14 @@ export default function SplashScreen() {
             borderRadius: 14,
             padding: '18px 0',
             background:
-              'linear-gradient(180deg, #b8860b 0%, #8b6914 40%, #6b500f 60%, #b8860b 100%)',
-            border: '1px solid #f0c040',
-            color: '#ffe08a',
+              'linear-gradient(180deg, #a07820 0%, #6b4f0a 25%, #4a3506 50%, #6b4f0a 75%, #a07820 100%)',
+            border: '1.5px solid #c89020',
+            color: '#ffd060',
             fontWeight: 700,
             fontSize: 22,
             letterSpacing: 3,
             cursor: 'pointer',
-            boxShadow:
-              'inset 0 1px 0 rgba(255,220,100,0.3), 0 2px 8px rgba(0,0,0,0.5)',
+            boxShadow: '0 0 8px rgba(200,144,32,0.5)',
           }}
         >
           DÉJÀ CLIENT
@@ -219,25 +218,39 @@ export default function SplashScreen() {
 
         <div
           style={{
-            fontSize: 9,
-            letterSpacing: 2,
-            color: 'rgba(255,255,255,0.2)',
-            textAlign: 'center',
-            marginTop: 12,
+            marginTop: 16,
+            paddingBottom: 32,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
           }}
         >
-          ORANGE MONEY · AIRTEL · AFRICELL
-        </div>
-
-        <div
-          style={{
-            fontSize: 8,
-            color: 'rgba(255,255,255,0.12)',
-            textAlign: 'center',
-            marginTop: 6,
-          }}
-        >
-          +18 ANS · AGRÉÉ MJS N°047/2016
+          <div
+            style={{
+              fontSize: 12,
+              letterSpacing: 2,
+              color: 'rgba(255,255,255,0.7)',
+              textAlign: 'center',
+            }}
+          >
+            ORANGE MONEY · AIRTEL · AFRICELL
+          </div>
+          <span
+            style={{
+              display: 'inline-block',
+              fontSize: 11,
+              letterSpacing: 1.5,
+              color: '#f0b800',
+              background: 'rgba(240,160,0,0.12)',
+              border: '1px solid rgba(240,160,0,0.3)',
+              borderRadius: 6,
+              padding: '3px 10px',
+              marginTop: 4,
+            }}
+          >
+            +18 ANS · AGRÉÉ MJS N°047/2016
+          </span>
         </div>
       </div>
     </div>
