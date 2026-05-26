@@ -1,255 +1,327 @@
 // Splash / onboarding screen for visitors who don't yet have a session.
-// Minimal premium branding splash — brand block + 2 CTAs only.
+// FIFA World Cup 2026 / PredictStreet co-branded design.
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getSession } from '../lib/auth';
+
+const BEBAS = "'Bebas Neue', sans-serif";
+const BARLOW = "'Barlow Condensed', sans-serif";
+const KICKOFF = new Date('2026-06-11T00:00:00Z').getTime();
+
+function diff(target: number) {
+  const ms = Math.max(0, target - Date.now());
+  const s = Math.floor(ms / 1000);
+  return {
+    d: Math.floor(s / 86400),
+    h: Math.floor((s % 86400) / 3600),
+    m: Math.floor((s % 3600) / 60),
+    s: s % 60,
+  };
+}
 
 export default function SplashScreen() {
   const nav = useNavigate();
+  const [t, setT] = useState(() => diff(KICKOFF));
 
-  // Bounce already-logged-in users to home.
   useEffect(() => {
-    if (getSession()) nav('/', { replace: true });
+    if (getSession()) {
+      nav('/', { replace: true });
+      return;
+    }
+    const id = setInterval(() => setT(diff(KICKOFF)), 1000);
+    return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
     <div
       style={{
         position: 'relative',
         minHeight: '100dvh',
+        background: '#050c1f',
+        color: '#ffffff',
+        fontFamily: BARLOW,
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        background: '#06060E',
-        paddingBottom: 40,
       }}
     >
-      {/* Subtle top glow */}
+      {/* Background image */}
+      <img
+        src="/images/screensplash.png"
+        alt=""
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: 0.45,
+          pointerEvents: 'none',
+        }}
+      />
+      {/* Overlay gradient */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
           inset: 0,
           background:
-            'radial-gradient(ellipse at 50% -20%, rgba(255,165,0,0.08), transparent 60%)',
+            'linear-gradient(180deg, rgba(5,12,31,0) 0%, rgba(5,12,31,0.55) 55%, #050c1f 82%, #050c1f 100%)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* SECTION 1 — HERO */}
+      {/* Content layer */}
       <div
         style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 24px',
           position: 'relative',
           zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: '100dvh',
+          padding: '16px 20px 28px',
         }}
       >
-        <span
+        {/* Topbar */}
+        <div
           style={{
-            display: 'inline-block',
-            padding: '6px 16px',
-            borderRadius: 20,
-            border: '1.5px solid #c8a000',
-            color: '#f0c000',
-            fontSize: 10,
-            letterSpacing: 3,
-            fontWeight: 700,
-            marginBottom: 28,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 11,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.75)',
           }}
         >
-          PLATEFORME OFFICIELLE DRC
-        </span>
+          <span>DRC · Officiel</span>
+          <span>Agréé MJS N°047/2016</span>
+        </div>
 
+        {/* Flex spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* FIFA logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+          <img
+            src="/images/logo/logofifa.jpg"
+            alt="FIFA"
+            style={{ height: 44, width: 'auto', display: 'block' }}
+          />
+        </div>
+
+        {/* Separator line */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            margin: '6px 0 18px',
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: 11,
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+          }}
+        >
+          <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
+          <span style={{ whiteSpace: 'nowrap' }}>
+            Partenaire officiel prediction market
+          </span>
+          <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
+        </div>
+
+        {/* Title */}
         <h1
           style={{
             margin: 0,
             textAlign: 'center',
+            fontFamily: BEBAS,
+            fontSize: 68,
+            lineHeight: 0.95,
             letterSpacing: 2,
-            lineHeight: 0.9,
-            fontWeight: 900,
-            fontSize: 64,
+            color: '#ffffff',
           }}
         >
-          <span style={{ display: 'block', color: '#FFFFFF' }}>CONGO</span>
-          <span style={{ display: 'block', color: '#FFD700' }}>GAMING</span>
+          CONGO GAMING
         </h1>
 
+        {/* Italic subtitle */}
         <div
-          aria-hidden
           style={{
-            width: 60,
-            height: 2,
-            margin: '18px auto',
-            background:
-              'linear-gradient(90deg, transparent, #FFD700, transparent)',
-          }}
-        />
-
-        <div
-          className="font-display"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            background: 'rgba(240,160,0,0.08)',
-            border: '1px solid rgba(240,160,0,0.3)',
-            borderRadius: 8,
-            padding: '8px 16px',
-            color: '#ffffff',
-            fontSize: 20,
-            letterSpacing: 3,
             textAlign: 'center',
+            fontFamily: BARLOW,
+            fontStyle: 'italic',
+            fontSize: 16,
+            letterSpacing: 1,
+            color: 'rgba(255,255,255,0.85)',
+            marginTop: 6,
           }}
         >
-          <span>JOUEZ</span>
-          <span style={{ color: '#f0b800' }}>·</span>
-          <span>GAGNEZ</span>
-          <span style={{ color: '#f0b800' }}>·</span>
-          <span>ENCAISSEZ</span>
+          Prediction Market · DRC
         </div>
 
+        {/* FIFA tag */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <span
+            style={{
+              display: 'inline-block',
+              border: '1px solid rgba(255,255,255,0.6)',
+              borderRadius: 999,
+              padding: '5px 14px',
+              fontFamily: BARLOW,
+              fontSize: 12,
+              letterSpacing: 3,
+              textTransform: 'uppercase',
+              color: '#ffffff',
+            }}
+          >
+            FIFA World Cup 2026™
+          </span>
+        </div>
+
+        {/* Countdown */}
         <div
           style={{
-            width: '100%',
-            height: 220,
-            borderRadius: 16,
-            overflow: 'hidden',
-            border: '2px solid #f0b800',
-            background: '#000',
-            boxShadow: '0 0 20px rgba(240,184,0,0.5)',
-            marginTop: 24,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 8,
+            marginTop: 22,
           }}
         >
-          <video
-            src="/videos/okapibet.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              mixBlendMode: 'lighten',
-            }}
-          />
+          {[
+            { v: t.d, l: 'Jours' },
+            { v: t.h, l: 'Heures' },
+            { v: t.m, l: 'Min' },
+            { v: t.s, l: 'Sec' },
+          ].map((c) => (
+            <div
+              key={c.l}
+              style={{
+                border: '1px solid rgba(255,255,255,0.25)',
+                borderRadius: 10,
+                background: 'rgba(255,255,255,0.04)',
+                padding: '10px 4px',
+                textAlign: 'center',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: BEBAS,
+                  fontSize: 28,
+                  lineHeight: 1,
+                  letterSpacing: 1,
+                  color: '#ffffff',
+                }}
+              >
+                {pad(c.v)}
+              </div>
+              <div
+                style={{
+                  marginTop: 4,
+                  fontFamily: BARLOW,
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.6)',
+                }}
+              >
+                {c.l}
+              </div>
+            </div>
+          ))}
         </div>
 
-      </div>
+        {/* ADI pill */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
+          <span
+            style={{
+              display: 'inline-block',
+              border: '1px solid rgba(255,255,255,0.35)',
+              borderRadius: 999,
+              padding: '6px 14px',
+              fontFamily: BARLOW,
+              fontSize: 11,
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.85)',
+            }}
+          >
+            ADI PredictStreet · Powered by FIFA Data
+          </span>
+        </div>
 
-      {/* SECTION 2 — CTAs */}
-      <div
-        style={{
-          flexShrink: 0,
-          padding: '0 20px calc(env(safe-area-inset-bottom, 0px) + 24px)',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
+        {/* Buttons */}
         <button
           type="button"
           onClick={() => nav('/register')}
           style={{
-            position: 'relative',
-            overflow: 'hidden',
+            marginTop: 22,
             width: '100%',
             border: 'none',
-            borderRadius: 14,
-            padding: '18px 0',
-            background:
-              'linear-gradient(180deg, #fff1a8 0%, #ffcf3a 30%, #e8a800 50%, #ffcf3a 70%, #fff1a8 100%)',
-            color: '#0a0500',
-            fontWeight: 900,
+            borderRadius: 12,
+            padding: '16px 0',
+            background: '#ffffff',
+            color: '#050c1f',
+            fontFamily: BEBAS,
             fontSize: 22,
-            letterSpacing: 3,
+            letterSpacing: 4,
             cursor: 'pointer',
-            marginBottom: 10,
-            boxShadow: '0 0 12px rgba(240,165,0,0.7)',
           }}
         >
-          <span style={{ position: 'relative', zIndex: 1 }}>S'INSCRIRE</span>
-          <span
-            aria-hidden
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '40%',
-              height: '100%',
-              background:
-                'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)',
-              transform: 'translateX(-120%)',
-              animation: 'splashShimmer 2.5s linear infinite',
-              pointerEvents: 'none',
-            }}
-          />
+          S'INSCRIRE
         </button>
-        <style>{`@keyframes splashShimmer { 0% { transform: translateX(-120%); } 100% { transform: translateX(320%); } }`}</style>
 
         <button
           type="button"
           onClick={() => nav('/login')}
           style={{
+            marginTop: 10,
             width: '100%',
-            borderRadius: 14,
-            padding: '18px 0',
-            background:
-              'linear-gradient(180deg, #d9a847 0%, #a87a1a 35%, #7a5410 50%, #a87a1a 65%, #d9a847 100%)',
-            border: '1.5px solid #d9a847',
-            color: '#ffe488',
-            fontWeight: 700,
-            fontSize: 22,
-            letterSpacing: 3,
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.6)',
+            borderRadius: 12,
+            padding: '14px 0',
+            color: '#ffffff',
+            fontFamily: BEBAS,
+            fontSize: 20,
+            letterSpacing: 4,
             cursor: 'pointer',
-            boxShadow: '0 0 8px rgba(200,144,32,0.5)',
           }}
         >
           DÉJÀ CLIENT
         </button>
 
+        {/* Footer */}
         <div
           style={{
-            marginTop: 16,
-            paddingBottom: 32,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
+            marginTop: 22,
+            textAlign: 'center',
+            fontFamily: BARLOW,
+            color: 'rgba(255,255,255,0.55)',
+            fontSize: 12,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              letterSpacing: 2,
-              color: 'rgba(255,255,255,0.7)',
-              textAlign: 'center',
-            }}
-          >
-            ORANGE MONEY · AIRTEL · AFRICELL
-          </div>
-          <span
-            style={{
-              display: 'inline-block',
-              fontSize: 11,
-              letterSpacing: 1.5,
-              color: '#f0b800',
-              background: 'rgba(240,160,0,0.12)',
-              border: '1px solid rgba(240,160,0,0.3)',
-              borderRadius: 6,
-              padding: '3px 10px',
-              marginTop: 4,
-            }}
-          >
-            +18 ANS · AGRÉÉ MJS N°047/2016
-          </span>
+          Orange Money · Airtel Money · Africell Money
+        </div>
+        <div
+          style={{
+            marginTop: 4,
+            textAlign: 'center',
+            fontFamily: BARLOW,
+            color: 'rgba(255,255,255,0.35)',
+            fontSize: 10,
+            letterSpacing: 1.5,
+          }}
+        >
+          +18 ans · Agréé MJS N°047/2016 · Jouez responsable
         </div>
       </div>
     </div>
