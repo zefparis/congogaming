@@ -20,6 +20,13 @@ function normalizePhone(phone: string, provider_id: number): string {
     return phone;
   }
 
+  // Africell (19): format 0XXXXXXXXX (same as Orange)
+  if (provider_id === 19) {
+    if (phone.startsWith('243')) phone = '0' + phone.slice(3);
+    if (!phone.startsWith('0')) phone = '0' + phone;
+    return phone;
+  }
+
   // Default: return as-is
   return phone;
 }
