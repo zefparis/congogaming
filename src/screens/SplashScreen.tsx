@@ -17,11 +17,11 @@ export default function SplashScreen() {
     <div
       style={{
         position: 'relative',
-        height: '100dvh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: '#06060E',
-        overflow: 'hidden',
+        paddingBottom: 40,
       }}
     >
       {/* Subtle top glow */}
@@ -52,12 +52,12 @@ export default function SplashScreen() {
         <span
           style={{
             display: 'inline-block',
-            padding: '4px 14px',
+            padding: '6px 16px',
             borderRadius: 20,
-            border: '1px solid rgba(0,200,117,0.5)',
-            color: '#00C875',
+            border: '1.5px solid #c8a000',
+            color: '#f0c000',
             fontSize: 10,
-            letterSpacing: 4,
+            letterSpacing: 3,
             fontWeight: 700,
             marginBottom: 28,
           }}
@@ -115,13 +115,13 @@ export default function SplashScreen() {
 
         <div
           style={{
-            width: 220,
+            width: '100%',
             height: 220,
-            borderRadius: 110,
+            borderRadius: 16,
             overflow: 'hidden',
             border: '2px solid #f0b800',
             background: '#000',
-            boxShadow: '0 0 30px rgba(240,160,0,0.5)',
+            boxShadow: '0 0 20px rgba(240,184,0,0.5)',
             marginTop: 24,
             display: 'flex',
             alignItems: 'center',
