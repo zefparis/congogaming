@@ -1,27 +1,55 @@
-// Splash / onboarding screen for visitors who don't yet have a session.
-// FIFA World Cup 2026 / PredictStreet co-branded design.
+// FIFA World Cup 2026 splash — IHC Abu Dhabi · ADI PredictStreet co-branding.
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getSession } from '../lib/auth';
 
 const BEBAS = "'Bebas Neue', sans-serif";
 const BARLOW = "'Barlow Condensed', sans-serif";
 const KICKOFF = new Date('2026-06-11T00:00:00Z').getTime();
 
-function diff(target: number) {
+type T = { d: string; h: string; m: string; s: string };
+function diff(target: number): T {
   const ms = Math.max(0, target - Date.now());
-  const s = Math.floor(ms / 1000);
+  const sec = Math.floor(ms / 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
   return {
-    d: Math.floor(s / 86400),
-    h: Math.floor((s % 86400) / 3600),
-    m: Math.floor((s % 3600) / 60),
-    s: s % 60,
+    d: pad(Math.floor(sec / 86400)),
+    h: pad(Math.floor((sec % 86400) / 3600)),
+    m: pad(Math.floor((sec % 3600) / 60)),
+    s: pad(sec % 60),
   };
 }
 
+const FIRE_COLORS = ['#ff6600', '#ff9900', '#ffcc00', '#ff4400'];
+const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+
+type Particle = {
+  left: number;
+  bottom: number;
+  size: number;
+  color: string;
+  opacity: number;
+  duration: number;
+  delay: number;
+};
+
 export default function SplashScreen() {
   const nav = useNavigate();
-  const [t, setT] = useState(() => diff(KICKOFF));
+  const [t, setT] = useState<T>(() => diff(KICKOFF));
+
+  const particles = useMemo<Particle[]>(
+    () =>
+      Array.from({ length: 18 }, () => ({
+        left: rand(0, 100),
+        bottom: rand(0, 30),
+        size: rand(2, 6),
+        color: FIRE_COLORS[Math.floor(Math.random() * FIRE_COLORS.length)],
+        opacity: rand(0.2, 0.8),
+        duration: rand(3, 7),
+        delay: rand(0, 4),
+      })),
+    [],
+  );
 
   useEffect(() => {
     if (getSession()) {
@@ -33,14 +61,12 @@ export default function SplashScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pad = (n: number) => String(n).padStart(2, '0');
-
   return (
     <div
       style={{
         position: 'relative',
         minHeight: '100dvh',
-        background: '#050c1f',
+        background: '#04080f',
         color: '#ffffff',
         fontFamily: BARLOW,
         overflow: 'hidden',
@@ -48,6 +74,8 @@ export default function SplashScreen() {
         flexDirection: 'column',
       }}
     >
+      <style>{KEYFRAMES}</style>
+
       {/* Background image */}
       <img
         src="/images/screensplash.jpg"
@@ -59,8 +87,9 @@ export default function SplashScreen() {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          opacity: 0.55,
+          opacity: 0.5,
           pointerEvents: 'none',
+          zIndex: 0,
         }}
       />
       {/* Overlay gradient */}
@@ -70,270 +99,403 @@ export default function SplashScreen() {
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(5,12,31,0) 0%, rgba(5,12,31,0) 40%, rgba(5,12,31,0.6) 65%, #050c1f 82%, #050c1f 100%)',
+            'linear-gradient(180deg, rgba(4,8,15,0.3) 0%, rgba(4,8,15,0.1) 20%, rgba(4,8,15,0.55) 60%, rgba(4,8,15,0.98) 80%, #04080f 100%)',
           pointerEvents: 'none',
+          zIndex: 1,
         }}
       />
 
-      {/* Content layer */}
+      {/* Fire particles layer */}
+      <div
+        aria-hidden
+        style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}
+      >
+        {particles.map((p, i) => (
+          <span
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${p.left}%`,
+              bottom: `${p.bottom}%`,
+              width: p.size,
+              height: p.size,
+              borderRadius: '50%',
+              background: p.color,
+              opacity: p.opacity,
+              boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+              animation: `splashFloat ${p.duration}s linear ${p.delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Content */}
       <div
         style={{
           position: 'relative',
-          zIndex: 1,
+          zIndex: 3,
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          flex: 1,
           minHeight: '100dvh',
-          padding: '16px 20px 28px',
         }}
       >
-        {/* Topbar */}
+        {/* 1. Topbar */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: 11,
+            padding: '10px 16px',
+            fontSize: 9,
             letterSpacing: 2,
             textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.75)',
+            color: 'rgba(255,255,255,0.35)',
           }}
         >
           <span>DRC · Officiel</span>
           <span>Agréé MJS N°047/2016</span>
         </div>
 
-        {/* Flex spacer */}
+        {/* 2. Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* FIFA logo */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-          <img
-            src="/images/logo/logofifa.jpg"
-            alt="FIFA"
-            style={{
-              width: 80,
-              height: 80,
-              objectFit: 'cover',
-              objectPosition: 'center',
-              borderRadius: 8,
-              overflow: 'hidden',
-              display: 'block',
-            }}
-          />
-        </div>
-
-        {/* Separator line */}
+        {/* Centered stack */}
         <div
           style={{
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 12,
-            margin: '6px 0 18px',
-            color: 'rgba(255,255,255,0.5)',
-            fontSize: 11,
-            letterSpacing: 3,
-            textTransform: 'uppercase',
+            padding: '0 20px',
           }}
         >
-          <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
-          <span style={{ whiteSpace: 'nowrap' }}>
-            Partenaire officiel prediction market
-          </span>
-          <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
-        </div>
-
-        {/* Title */}
-        <h1
-          style={{
-            margin: 0,
-            textAlign: 'center',
-            fontFamily: BEBAS,
-            fontSize: 68,
-            lineHeight: 0.95,
-            letterSpacing: 2,
-            color: '#ffffff',
-          }}
-        >
-          CONGO GAMING
-        </h1>
-
-        {/* Italic subtitle */}
-        <div
-          style={{
-            textAlign: 'center',
-            fontFamily: BARLOW,
-            fontStyle: 'italic',
-            fontSize: 16,
-            letterSpacing: 1,
-            color: 'rgba(255,255,255,0.85)',
-            marginTop: 6,
-          }}
-        >
-          Prediction Market · DRC
-        </div>
-
-        {/* FIFA tag */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <span
+          {/* 3. Abu Dhabi badge */}
+          <div
             style={{
-              display: 'inline-block',
-              border: '1px solid rgba(255,255,255,0.6)',
-              borderRadius: 999,
-              padding: '5px 14px',
-              fontFamily: BARLOW,
-              fontSize: 12,
-              letterSpacing: 3,
-              textTransform: 'uppercase',
-              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              animation: 'splashFadeup 1s ease-out both',
+              marginBottom: 18,
             }}
           >
-            FIFA World Cup 2026™
-          </span>
-        </div>
-
-        {/* Countdown */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 8,
-            marginTop: 22,
-          }}
-        >
-          {[
-            { v: t.d, l: 'Jours' },
-            { v: t.h, l: 'Heures' },
-            { v: t.m, l: 'Min' },
-            { v: t.s, l: 'Sec' },
-          ].map((c) => (
-            <div
-              key={c.l}
+            <span style={dotPulse} />
+            <span
               style={{
-                border: '1px solid rgba(255,255,255,0.25)',
-                borderRadius: 10,
-                background: 'rgba(255,255,255,0.04)',
-                padding: '10px 4px',
+                fontSize: 10,
+                letterSpacing: 3,
+                color: '#e8b84b',
+                textTransform: 'uppercase',
+                fontFamily: BARLOW,
+                fontWeight: 600,
+              }}
+            >
+              IHC Abu Dhabi · Partenaire FIFA
+            </span>
+            <span style={dotPulse} />
+          </div>
+
+          {/* 4. Title */}
+          <h1
+            style={{
+              margin: 0,
+              fontFamily: BEBAS,
+              fontSize: 72,
+              lineHeight: 0.85,
+              color: '#ffffff',
+              textAlign: 'center',
+              textShadow: '0 0 60px rgba(255,255,255,0.15)',
+              animation: 'splashFadeup 0.8s ease-out both',
+            }}
+          >
+            CONGO GAMING
+          </h1>
+
+          {/* 5. Subtitle */}
+          <div
+            style={{
+              fontFamily: BARLOW,
+              fontWeight: 300,
+              fontStyle: 'italic',
+              fontSize: 12,
+              letterSpacing: 5,
+              color: 'rgba(255,255,255,0.45)',
+              textTransform: 'uppercase',
+              margin: '6px 0 14px',
+              textAlign: 'center',
+              animation: 'splashFadeup 0.9s ease-out both',
+            }}
+          >
+            Prediction Market · DRC
+          </div>
+
+          {/* 6. FIFA tag */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 2,
+              padding: '7px 18px',
+              marginBottom: 16,
+              fontSize: 11,
+              letterSpacing: 3,
+              color: '#ffffff',
+              fontWeight: 700,
+              fontFamily: BARLOW,
+              animation: 'splashFadeup 1s ease-out both',
+            }}
+          >
+            <span>★</span>
+            <span>FIFA WORLD CUP 2026™ — OFFICIEL</span>
+            <span>★</span>
+          </div>
+
+          {/* 7. Countdown */}
+          <div
+            style={{
+              display: 'flex',
+              animation: 'splashFadeup 1.1s ease-out both',
+              marginBottom: 22,
+            }}
+          >
+            {[
+              { v: t.d, l: 'Jours' },
+              { v: t.h, l: 'Heures' },
+              { v: t.m, l: 'Min' },
+              { v: t.s, l: 'Sec' },
+            ].map((c, i) => (
+              <div
+                key={c.l}
+                style={{
+                  minWidth: 54,
+                  padding: '10px 12px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '0.5px solid rgba(255,255,255,0.1)',
+                  borderLeftWidth: i === 0 ? 0.5 : 0,
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  key={c.v}
+                  style={{
+                    fontFamily: BEBAS,
+                    fontSize: 34,
+                    lineHeight: 1,
+                    color: '#ffffff',
+                    animation: 'splashDigitPop 0.45s ease-out',
+                  }}
+                >
+                  {c.v}
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontSize: 8,
+                    letterSpacing: 2,
+                    color: 'rgba(255,255,255,0.3)',
+                    textTransform: 'uppercase',
+                    fontFamily: BARLOW,
+                  }}
+                >
+                  {c.l}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 8. ADI PredictStreet fire block */}
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: 310,
+              marginBottom: 22,
+              animation: 'splashFadeup 1.2s ease-out both',
+            }}
+          >
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: -8,
+                borderRadius: 8,
+                background:
+                  'radial-gradient(ellipse at center, rgba(255,140,0,0.25) 0%, transparent 70%)',
+                animation: 'splashFirebreath 2.5s ease-in-out infinite',
+                pointerEvents: 'none',
+              }}
+            />
+            <div
+              style={{
+                position: 'relative',
+                border: '1px solid rgba(255,140,0,0.5)',
+                borderRadius: 6,
+                background: 'rgba(255,80,0,0.08)',
+                padding: '14px 24px',
                 textAlign: 'center',
               }}
             >
               <div
                 style={{
-                  fontFamily: BEBAS,
-                  fontSize: 28,
-                  lineHeight: 1,
-                  letterSpacing: 1,
-                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
                 }}
               >
-                {pad(c.v)}
+                <span style={fireDot('#ff6600', 0)} />
+                <span
+                  style={{
+                    fontFamily: BEBAS,
+                    fontSize: 26,
+                    letterSpacing: 4,
+                    backgroundImage:
+                      'linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00)',
+                    backgroundSize: '200% auto',
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    color: 'transparent',
+                    animation: 'splashShimmer 2s linear infinite',
+                  }}
+                >
+                  ADI PredictStreet
+                </span>
+                <span style={fireDot('#ff9900', 0.3)} />
+                <span style={fireDot('#ffcc00', 0.6)} />
               </div>
               <div
                 style={{
-                  marginTop: 4,
-                  fontFamily: BARLOW,
-                  fontSize: 10,
-                  letterSpacing: 2,
+                  marginTop: 6,
+                  fontSize: 9,
+                  letterSpacing: 2.5,
+                  color: 'rgba(255,180,60,0.45)',
                   textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.6)',
+                  fontFamily: BARLOW,
                 }}
               >
-                {c.l}
+                ⚡ Powered by FIFA Official Data ⚡
               </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* ADI pill */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
-          <span
+          {/* 9. CTA primary */}
+          <button
+            type="button"
+            onClick={() => nav('/register')}
             style={{
-              display: 'inline-block',
-              border: '1px solid rgba(255,255,255,0.35)',
-              borderRadius: 999,
-              padding: '6px 14px',
-              fontFamily: BARLOW,
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.85)',
+              width: '100%',
+              maxWidth: 310,
+              padding: 17,
+              border: 'none',
+              borderRadius: 3,
+              background: '#ffffff',
+              color: '#04080f',
+              fontFamily: BEBAS,
+              fontSize: 24,
+              letterSpacing: 5,
+              cursor: 'pointer',
+              boxShadow: '0 6px 30px rgba(255,255,255,0.2)',
+              marginBottom: 10,
+              animation: 'splashFadeup 1.3s ease-out both',
             }}
           >
-            ADI PredictStreet · Powered by FIFA Data
-          </span>
+            S'INSCRIRE MAINTENANT
+          </button>
+
+          {/* 10. CTA secondary */}
+          <button
+            type="button"
+            onClick={() => nav('/login')}
+            style={{
+              width: '100%',
+              maxWidth: 310,
+              padding: 14,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 3,
+              color: 'rgba(255,255,255,0.6)',
+              fontFamily: BEBAS,
+              fontSize: 18,
+              letterSpacing: 3,
+              cursor: 'pointer',
+              marginBottom: 16,
+              animation: 'splashFadeup 1.4s ease-out both',
+            }}
+          >
+            Déjà client — Se connecter
+          </button>
         </div>
 
-        {/* Buttons */}
-        <button
-          type="button"
-          onClick={() => nav('/register')}
-          style={{
-            marginTop: 22,
-            width: '100%',
-            border: 'none',
-            borderRadius: 12,
-            padding: '16px 0',
-            background: '#ffffff',
-            color: '#050c1f',
-            fontWeight: 700,
-            fontFamily: BEBAS,
-            fontSize: 22,
-            letterSpacing: 4,
-            cursor: 'pointer',
-            boxShadow: '0 4px 24px rgba(255,255,255,0.25)',
-          }}
-        >
-          S'INSCRIRE
-        </button>
-
-        <button
-          type="button"
-          onClick={() => nav('/login')}
-          style={{
-            marginTop: 10,
-            width: '100%',
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.35)',
-            borderRadius: 12,
-            padding: '14px 0',
-            color: '#ffffff',
-            fontFamily: BEBAS,
-            fontSize: 20,
-            letterSpacing: 4,
-            cursor: 'pointer',
-          }}
-        >
-          DÉJÀ CLIENT
-        </button>
-
-        {/* Footer */}
+        {/* 11. Footer */}
         <div
           style={{
-            marginTop: 22,
+            paddingBottom: 14,
+            paddingTop: 8,
             textAlign: 'center',
-            fontFamily: BARLOW,
-            color: 'rgba(255,255,255,0.55)',
-            fontSize: 12,
-            letterSpacing: 2,
-            textTransform: 'uppercase',
-          }}
-        >
-          Orange Money · Airtel Money · Africell Money
-        </div>
-        <div
-          style={{
-            marginTop: 4,
-            textAlign: 'center',
-            fontFamily: BARLOW,
-            color: 'rgba(255,255,255,0.35)',
-            fontSize: 10,
+            fontSize: 9,
             letterSpacing: 1.5,
+            color: 'rgba(255,255,255,0.18)',
+            textTransform: 'uppercase',
+            fontFamily: BARLOW,
           }}
         >
-          +18 ans · Agréé MJS N°047/2016 · Jouez responsable
+          Orange Money · Airtel · Africell&nbsp;&nbsp;|&nbsp;&nbsp;+18 ans · Jouez responsable
         </div>
       </div>
     </div>
   );
 }
+
+const dotPulse: React.CSSProperties = {
+  width: 6,
+  height: 6,
+  borderRadius: '50%',
+  background: '#e8b84b',
+  display: 'inline-block',
+  animation: 'splashPulse 2s ease-in-out infinite',
+};
+
+const fireDot = (color: string, delay: number): React.CSSProperties => ({
+  width: 5,
+  height: 5,
+  borderRadius: '50%',
+  background: color,
+  display: 'inline-block',
+  boxShadow: `0 0 6px ${color}`,
+  animation: `splashFireflicker 1.2s ease-in-out ${delay}s infinite`,
+});
+
+const KEYFRAMES = `
+@keyframes splashFadeup {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes splashPulse {
+  0%, 100% { transform: scale(1);   opacity: 1;   }
+  50%      { transform: scale(1.4); opacity: 0.5; }
+}
+@keyframes splashFirebreath {
+  0%, 100% { opacity: 0.4; transform: scale(1);    }
+  50%      { opacity: 1;   transform: scale(1.05); }
+}
+@keyframes splashShimmer {
+  0%   { background-position: 0% 0%;   }
+  100% { background-position: 200% 0%; }
+}
+@keyframes splashFireflicker {
+  0%, 100% { opacity: 1;   transform: scale(1)   translateY(0);    }
+  50%      { opacity: 0.6; transform: scale(1.3) translateY(-2px); }
+}
+@keyframes splashFloat {
+  0%   { transform: translateY(0)      scale(1);   opacity: 0.7; }
+  100% { transform: translateY(-120px) scale(0.3); opacity: 0;   }
+}
+@keyframes splashDigitPop {
+  0%   { transform: scale(1);   }
+  50%  { transform: scale(1.2); }
+  100% { transform: scale(1);   }
+}
+`;
