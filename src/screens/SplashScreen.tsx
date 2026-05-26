@@ -165,7 +165,7 @@ export default function SplashScreen() {
             borderRadius: 14,
             padding: '18px 0',
             background:
-              'linear-gradient(180deg, #ffe566 0%, #f5a800 25%, #b87800 50%, #f5a800 75%, #ffe566 100%)',
+              'linear-gradient(180deg, #fff1a8 0%, #ffcf3a 35%, #c97f00 50%, #ffcf3a 65%, #fff1a8 100%)',
             borderTop: '1px solid rgba(255,240,180,0.8)',
             color: '#0a0500',
             fontWeight: 900,
@@ -203,9 +203,9 @@ export default function SplashScreen() {
             borderRadius: 14,
             padding: '18px 0',
             background:
-              'linear-gradient(180deg, #a07820 0%, #6b4f0a 25%, #4a3506 50%, #6b4f0a 75%, #a07820 100%)',
-            border: '1.5px solid #c89020',
-            color: '#ffd060',
+              'linear-gradient(180deg, #d9a847 0%, #a87a1a 35%, #7a5410 50%, #a87a1a 65%, #d9a847 100%)',
+            border: '1.5px solid #d9a847',
+            color: '#ffe488',
             fontWeight: 700,
             fontSize: 22,
             letterSpacing: 3,
