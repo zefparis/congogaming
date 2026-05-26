@@ -59,7 +59,7 @@ export default function SplashScreen() {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          opacity: 0.45,
+          opacity: 0.55,
           pointerEvents: 'none',
         }}
       />
@@ -70,7 +70,7 @@ export default function SplashScreen() {
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(5,12,31,0) 0%, rgba(5,12,31,0.55) 55%, #050c1f 82%, #050c1f 100%)',
+            'linear-gradient(180deg, rgba(5,12,31,0) 0%, rgba(5,12,31,0) 40%, rgba(5,12,31,0.6) 65%, #050c1f 82%, #050c1f 100%)',
           pointerEvents: 'none',
         }}
       />
@@ -111,7 +111,15 @@ export default function SplashScreen() {
           <img
             src="/images/logo/logofifa.jpg"
             alt="FIFA"
-            style={{ height: 44, width: 'auto', display: 'block' }}
+            style={{
+              width: 80,
+              height: 80,
+              objectFit: 'cover',
+              objectPosition: 'center',
+              borderRadius: 8,
+              overflow: 'hidden',
+              display: 'block',
+            }}
           />
         </div>
 
@@ -268,10 +276,12 @@ export default function SplashScreen() {
             padding: '16px 0',
             background: '#ffffff',
             color: '#050c1f',
+            fontWeight: 700,
             fontFamily: BEBAS,
             fontSize: 22,
             letterSpacing: 4,
             cursor: 'pointer',
+            boxShadow: '0 4px 24px rgba(255,255,255,0.25)',
           }}
         >
           S'INSCRIRE
@@ -283,8 +293,8 @@ export default function SplashScreen() {
           style={{
             marginTop: 10,
             width: '100%',
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.6)',
+            background: 'rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.35)',
             borderRadius: 12,
             padding: '14px 0',
             color: '#ffffff',
