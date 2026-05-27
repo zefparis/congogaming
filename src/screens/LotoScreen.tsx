@@ -69,6 +69,7 @@ export default function LotoScreen() {
   const [showTickets, setShowTickets] = useState(false);
   const [showGains, setShowGains] = useState(false);
   const [countdown, setCountdown] = useState<string>(() => getCountdownToKinshasa20h());
+  const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0);
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getCountdownToKinshasa20h()), 1000);
@@ -84,6 +85,7 @@ export default function LotoScreen() {
       .catch(() => {});
     if (session) {
       api.lotoMesTickets(session.id).then((r) => setTickets(r.tickets)).catch(() => {});
+      refreshBalance(session.id).then(setBalance).catch(() => {});
     }
   }, []);
 
@@ -126,7 +128,8 @@ export default function LotoScreen() {
       setMsg('Ticket enregistré !');
       setPlayedNums(selected);
       setSelected([]);
-      await refreshBalance(session.id);
+      const newBal = await refreshBalance(session.id);
+      setBalance(newBal);
       // refresh tickets list
       api.lotoMesTickets(session.id).then((r) => setTickets(r.tickets)).catch(() => {});
     } catch (e: any) {
@@ -173,6 +176,18 @@ export default function LotoScreen() {
         </button>
       </header>
       <GainsModal open={showGains} onClose={() => setShowGains(false)} type="loto" />
+
+      <div
+        style={{
+          textAlign: 'center',
+          color: '#f0d060',
+          fontWeight: 700,
+          fontSize: 14,
+          marginTop: 8,
+        }}
+      >
+        💰 Solde : {balance.toLocaleString('fr-FR')} CDF
+      </div>
 
       {/* Dernier tirage */}
       <div className="mt-3 rounded-2xl bg-zinc-900/70 border border-zinc-800 p-4">
