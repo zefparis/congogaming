@@ -4,8 +4,8 @@ Mobile-first gaming web app for the DRC market. Vite + React + TS + Tailwind on 
 
 ## Stack
 
-- **Frontend**: Vite + React 18 + TypeScript + Tailwind + framer-motion + lucide-react + react-router
-- **Backend**: Fastify 5 (TypeScript via `tsx`)
+- **Frontend**: Vite + React 18 + TypeScript + Tailwind + framer-motion + lucide-react + react-router + GSAP
+- **Backend**: Fastify 5 (TypeScript via `tsx`) + WebSocket (`@fastify/websocket`) + node-cron
 - **DB / Auth storage**: Supabase (Postgres)
 - **Payments**: Unipesa C2B / B2C
 - **Deploy**: Vercel (frontend), any Node host (backend)
@@ -21,6 +21,23 @@ npm run dev:all       # starts Vite (5173) + Fastify (3001)
 
 Open http://localhost:5173 on a phone-sized window (≤ 430px wide).
 
+## Games & Features
+
+### Games
+- **Loto Congo**: 6/49 lottery with daily 20:00 Kinshasa draws. Jackpot grows until 5M CDF.
+- **Loto Flash**: 5/20 quick lottery every 30 minutes. Pot accumulates until threshold.
+- **Scratch**: Instant win scratch cards with reveal animations.
+- **Okapi Climb**: Vertical climbing game with live feed, auto-bet, and real-time leaderboard.
+- **PredictStreet**: Sports betting (FIFA World Cup 2026) via iframe integration. Requires KYC approval.
+
+### Key Features
+- **Wallet balance display**: Live balance shown in Flash and Loto screens, updates after each ticket.
+- **Deposit/Withdraw quick access**: Buttons in HomeScreen header for instant navigation.
+- **KYC integration**: Identity verification via PlayGuard for age verification and account gating.
+- **Admin dashboard**: Desktop-oriented admin panel with Overview, Players, Games, and Transactions tabs.
+- **Real-time features**: WebSocket feed for Okapi game live updates.
+- **Automated draws**: Cron jobs for Loto, Flash, and Scratch draws.
+
 ## Supabase
 
 1. Create a Supabase project.
@@ -30,8 +47,9 @@ Open http://localhost:5173 on a phone-sized window (≤ 430px wide).
 
 The schema creates:
 
-- `users(id, phone, pin_hash, balance_cdf, created_at)` (phone unique)
+- `users(id, phone, pin_hash, balance_cdf, kyc_status, blocked, created_at)` (phone unique)
 - `transactions(id, user_id, order_id, type, amount, currency, provider_id, status, transaction_id, created_at)`
+- `loto_tirages, loto_tickets, flash_tirages, flash_tickets, scratch_tickets, okapi_bets, okapi_sessions` (game-specific tables)
 - `adjust_balance(user_id, delta)` RPC for atomic balance changes
 
 PIN hashing uses SHA-256 of `congo_<pin>_gaming` on the client (4-digit PIN — keep brute-force concerns in mind; rate-limit at the API layer for production).
@@ -40,16 +58,17 @@ PIN hashing uses SHA-256 of `congo_<pin>_gaming` on the client (4-digit PIN — 
 
 - **Register**: phone (10 digits, RDC formats) + 4-digit PIN + 18+ checkbox → row in `users`.
 - **Login**: phone + PIN → SHA-256 compared to `pin_hash`.
-- Session stored as `localStorage["congo_session"] = { id, phone, balance_cdf }`.
+- Session stored as `localStorage["congo_session"] = { id, phone, balance_cdf, kyc_status, blocked }`.
+- **KYC gating**: Only `/jouer` (PredictStreet) requires `kyc_status === 'approved'` or `'verify_age'`. Other games are accessible immediately after registration.
+- **Account blocking**: Users with `blocked: true` or `kyc_status === 'denied'` are hard-blocked from all protected routes.
 
 Operator detection from phone prefix:
 
 | Prefix | Operator | provider_id |
 |--------|----------|-------------|
-| 09\[1-9\] | Vodacom (M-Pesa) | 9 |
-| 08x | Orange Money | 10 |
-| 097 / 098 | Airtel Money | 17 |
-| 090 | Africell Money | 19 |
+| 084-089 | Orange Money | 10 |
+| 097 / 099 | Airtel Money | 17 |
+| 077 / 078 | Africell Money | 19 |
 
 ## Backend API
 
@@ -63,6 +82,20 @@ Base URL: `http://localhost:3001`
 | POST | `/api/callback` | Unipesa callback body | verifies HMAC-SHA512 signature, credits balance on `status === 2` |
 | GET  | `/api/status/:order_id` | — | queries Unipesa, syncs DB |
 | GET  | `/api/transactions/:user_id` | — | last 10 transactions |
+| GET  | `/api/wallet/:user_id` | — | current balance |
+| GET  | `/api/loto/latest` | — | latest draw + pot |
+| POST | `/api/loto/ticket` | `{ user_id, numeros }` | submit Loto ticket |
+| GET  | `/api/loto/mes-tickets/:user_id` | — | user's Loto tickets |
+| GET  | `/api/flash/latest` | — | latest draw + pot |
+| POST | `/api/flash/ticket` | `{ user_id, numeros }` | submit Flash ticket |
+| GET  | `/api/flash/mes-tickets/:user_id` | — | user's Flash tickets |
+| POST | `/api/scratch/buy` | `{ user_id, quantity }` | buy scratch cards |
+| GET  | `/api/scratch/mes-tickets/:user_id` | — | user's scratch tickets |
+| POST | `/api/okapi/bet` | `{ user_id, amount, auto }` | place Okapi bet |
+| GET  | `/api/okapi/session/:id` | — | Okapi game session data |
+| POST | `/api/kyc/submit` | `{ user_id, document_front, document_back, selfie }` | submit KYC documents |
+| GET  | `/api/kyc/status/:user_id` | — | KYC status |
+| GET  | `/api/admin/*` | — | admin dashboard data (Overview, Players, Games, Transactions) |
 
 ### Unipesa signature
 
@@ -112,7 +145,8 @@ Required env vars (server-side only):
 ```
 PORT, HOST,
 UNIPESA_PUBLIC_ID, UNIPESA_MERCHANT_ID, UNIPESA_SECRET_KEY, UNIPESA_CALLBACK_URL,
-SUPABASE_URL, SUPABASE_SERVICE_KEY
+SUPABASE_URL, SUPABASE_SERVICE_KEY,
+PLAYGUARD_API_KEY, PLAYGUARD_VERIFICATION_ID
 ```
 
 Set `UNIPESA_CALLBACK_URL` to `https://<your-api>/api/callback`.
@@ -122,14 +156,15 @@ Set `UNIPESA_CALLBACK_URL` to `https://<your-api>/api/callback`.
 ```
 congo-gaming/
 ├── src/
-│   ├── components/  (NumPad, BottomNav, ProviderCard, TransactionItem)
-│   ├── screens/     (Splash, Login, Register, Home, Game, Deposit, Withdraw, Account)
+│   ├── components/  (BottomNav, GainsModal, InstallPrompt, NumPad, ProviderCard, TransactionItem)
+│   ├── screens/     (Splash, Login, Register, Home, Game, Deposit, Withdraw, Account, Loto, Flash, Scratch, Legal, Kyc, Admin, okapi/)
 │   ├── lib/         (supabase, auth, api)
-│   ├── App.tsx      (router + page transitions)
+│   ├── App.tsx      (router + page transitions + route guards)
 │   └── main.tsx
 ├── server/
-│   ├── index.ts     (Fastify bootstrap + CORS)
-│   ├── routes/      (deposit, withdraw, callback, status, transactions)
+│   ├── index.ts     (Fastify bootstrap + CORS + WebSocket)
+│   ├── cron.ts      (automated draws for Loto, Flash, Scratch)
+│   ├── routes/      (admin, callback, deposit, flash, kyc, loto, okapi, okapi-auto, scratch, status, transactions, wallet, withdraw)
 │   └── lib/         (unipesa signature + API, supabase admin)
 ├── supabase/schema.sql
 ├── .env.example
@@ -141,6 +176,8 @@ congo-gaming/
 
 - The 4-digit PIN auth is intentionally simple for low-literacy users. Add **rate limiting** + **lockout** on the login endpoint for production.
 - The phone-based "anon" Supabase RLS policies are permissive on purpose (so the unauthenticated app can register/login). You can move auth fully behind a server endpoint and lock RLS down to `service_role` only.
-- The game iframe URL is set via `VITE_GAME_IFRAME_URL` — change it to point at your game.
-- Bebas Neue + Inter are loaded from Google Fonts in `index.html`.
+- The PredictStreet iframe URL is set via `VITE_GAME_IFRAME_URL` — change it to point at your game.
+- Bebas Neue + Barlow Condensed (italic + weights) are loaded from Google Fonts in `index.html`.
 - The container is capped at `max-w-app` (430px) — use a mobile viewport.
+- PlayGuard integration handles age verification and account blocking. Configure `PLAYGUARD_API_KEY` and `PLAYGUARD_VERIFICATION_ID` in server env vars.
+- Cron jobs run automatically for game draws. Ensure server timezone is set correctly (Africa/Kinshasa recommended).
