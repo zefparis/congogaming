@@ -73,6 +73,7 @@ export default function FlashScreen() {
 
   const [remaining, setRemaining] = useState<number>(msToNextSlot());
   const lastZeroRef = useRef<number>(0);
+  const [balance, setBalance] = useState<number>(session?.balance_cdf ?? 0);
 
   const refresh = () => {
     api
@@ -92,6 +93,7 @@ export default function FlashScreen() {
 
   useEffect(() => {
     refresh();
+    if (session) refreshBalance(session.id).then(setBalance).catch(() => {});
     const id = setInterval(() => {
       const r = msToNextSlot();
       setRemaining(r);
@@ -144,7 +146,8 @@ export default function FlashScreen() {
       setMsg('Ticket Flash enregistré !');
       setPlayedNums(selected);
       setSelected([]);
-      await refreshBalance(session.id);
+      const newBal = await refreshBalance(session.id);
+      setBalance(newBal);
       api
         .flashMesTickets(session.id)
         .then((r) => setTickets(r.tickets))
@@ -195,6 +198,18 @@ export default function FlashScreen() {
         </button>
       </header>
       <GainsModal open={showGains} onClose={() => setShowGains(false)} type="flash" />
+
+      <div
+        style={{
+          textAlign: 'center',
+          color: '#f0d060',
+          fontWeight: 700,
+          fontSize: 14,
+          marginTop: 8,
+        }}
+      >
+        💰 Solde : {balance.toLocaleString('fr-FR')} CDF
+      </div>
 
       <div className="mt-2 flex justify-end">
         <span className="inline-flex items-center gap-1 bg-congogreen text-white text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full animate-pulse">
