@@ -280,62 +280,6 @@ export default function SplashScreen() {
             ))}
           </div>
 
-          {/* 8. ADI PredictStreet pill */}
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: 310,
-              marginBottom: 22,
-              animation: 'splashFadeup 1.2s ease-out both',
-            }}
-          >
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                inset: -8,
-                borderRadius: 8,
-                background:
-                  'radial-gradient(ellipse at center, rgba(255,140,0,0.12) 0%, transparent 70%)',
-                animation: 'splashFirebreath 2.5s ease-in-out infinite',
-                pointerEvents: 'none',
-              }}
-            />
-            <div
-              style={{
-                position: 'relative',
-                border: '1px solid rgba(255,255,255,0.25)',
-                borderRadius: 4,
-                background: 'rgba(255,255,255,0.06)',
-                padding: '12px 20px',
-                textAlign: 'center',
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: BEBAS,
-                  fontSize: 22,
-                  letterSpacing: 4,
-                  color: '#ffffff',
-                }}
-              >
-                ADI PREDICTSTREET
-              </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  color: 'rgba(255,255,255,0.4)',
-                  fontFamily: BARLOW,
-                }}
-              >
-                ⚡ Powered by FIFA Official Data ⚡
-              </div>
-            </div>
-          </div>
-
           {/* 9. CTA primary */}
           <button
             type="button"
