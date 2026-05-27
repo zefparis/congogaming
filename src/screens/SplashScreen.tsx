@@ -169,32 +169,6 @@ export default function SplashScreen() {
             padding: '0 20px',
           }}
         >
-          {/* 3. Abu Dhabi badge */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              animation: 'splashFadeup 1s ease-out both',
-              marginBottom: 18,
-            }}
-          >
-            <span style={dotPulse} />
-            <span
-              style={{
-                fontSize: 10,
-                letterSpacing: 3,
-                color: '#e8b84b',
-                textTransform: 'uppercase',
-                fontFamily: BARLOW,
-                fontWeight: 600,
-              }}
-            >
-              IHC Abu Dhabi · Partenaire FIFA
-            </span>
-            <span style={dotPulse} />
-          </div>
-
           {/* 4. Title */}
           <h1
             style={{
@@ -430,15 +404,6 @@ export default function SplashScreen() {
     </div>
   );
 }
-
-const dotPulse: React.CSSProperties = {
-  width: 6,
-  height: 6,
-  borderRadius: '50%',
-  background: '#e8b84b',
-  display: 'inline-block',
-  animation: 'splashPulse 2s ease-in-out infinite',
-};
 
 const KEYFRAMES = `
 @keyframes splashFadeup {
