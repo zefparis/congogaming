@@ -1,0 +1,317 @@
+# PROMPT WINDSURF — MODULE JEU RESPONSABLE CONGO GAMING
+
+## CONTEXTE
+Stack : NestJS backend (Railway), Next.js frontend (Vercel), PostgreSQL/Prisma, Supabase.
+Dashboard admin existant : congogaming.com/admin
+Table joueurs existante avec champs : phone, kyc_status, risk_level, balance, blocked.
+
+---
+
+## CE QU'ON CONSTRUIT
+
+Un module complet de jeu responsable en 2 parties :
+1. **Côté Admin** — notes internes + historique + envoi d'avertissement
+2. **Côté Joueur** — parcours progressif bienveillant avec auto-évaluation et auto-exclusion
+
+---
+
+## PARTIE 1 — BACKEND (NestJS + Prisma)
+
+### 1.1 Migrations Prisma — ajouter ces champs/tables
+
+```prisma
+// Sur le modèle Player existant, ajouter :
+model Player {
+  // ... champs existants ...
+  risk_note        String?          // Note interne admin
+  risk_note_date   DateTime?
+  risk_note_author String?
+  warning_sent_at  DateTime?        // Date dernier avertissement envoyé
+  self_excluded    Boolean          @default(false)
+  self_exclusion_until DateTime?    // null = définitif
+  rg_questionnaire_done Boolean     @default(false)
+  rg_questionnaire_date DateTime?
+  rg_answers       Json?            // Stocke les réponses au questionnaire
+  block_reason     String?          // Raison visible joueur
+  playerActions    PlayerAction[]
+}
+
+// Nouveau modèle historique actions
+model PlayerAction {
+  id         String   @id @default(cuid())
+  playerId   String
+  player     Player   @relation(fields: [playerId], references: [id])
+  type       String   // "WARNING_SENT" | "BLOCKED" | "UNBLOCKED" | "NOTE_ADDED" | "SELF_EXCLUDED" | "RG_QUESTIONNAIRE"
+  note       String?
+  author     String?  // "ADMIN" ou phone joueur
+  createdAt  DateTime @default(now())
+}
+```
+
+### 1.2 Nouveaux endpoints NestJS
+
+**PATCH /admin/players/:id/note**
+- Body : `{ note: string, author: string }`
+- Action : met à jour risk_note, risk_note_date, risk_note_author
+- Crée un PlayerAction type "NOTE_ADDED"
+
+**POST /admin/players/:id/warning**
+- Body : `{ message: string, author: string }`
+- Action : met à jour warning_sent_at, enregistre le message
+- Crée un PlayerAction type "WARNING_SENT"
+
+**PATCH /admin/players/:id/block**
+- Body : `{ reason: string, author: string }` — reason visible par le joueur
+- Action : blocked = true, block_reason = reason
+- Crée un PlayerAction type "BLOCKED"
+
+**PATCH /admin/players/:id/unblock**
+- Body : `{ author: string }`
+- Action : blocked = false, block_reason = null
+- Crée un PlayerAction type "UNBLOCKED"
+
+**GET /admin/players/:id/actions**
+- Retourne l'historique PlayerAction trié par date DESC
+
+**POST /players/:id/self-exclude**
+- Body : `{ duration: "7d" | "30d" | "permanent" }`
+- Auth : joueur authentifié uniquement
+- Action : self_excluded = true, self_exclusion_until = date calculée ou null si permanent
+- Crée un PlayerAction type "SELF_EXCLUDED"
+
+**POST /players/:id/rg-questionnaire**
+- Body : `{ answers: { q1: boolean, q2: boolean, q3: boolean } }`
+- Auth : joueur authentifié
+- Action : rg_questionnaire_done = true, rg_questionnaire_date = now(), rg_answers = answers
+- Si 2+ réponses à risque → risk_level = "HIGH", envoie notification admin
+- Crée un PlayerAction type "RG_QUESTIONNAIRE"
+
+**POST /players/:id/reactivate**
+- Auth : joueur authentifié
+- Condition : self_exclusion_until < now() ET rg_questionnaire_done récent (< 24h)
+- Action : self_excluded = false, blocked = false
+- Crée un PlayerAction type "UNBLOCKED"
+
+---
+
+## PARTIE 2 — ADMIN DASHBOARD (Next.js)
+
+### 2.1 Fiche joueur — ajouter dans le panneau latéral existant
+
+**Section "GESTION DU RISQUE"** (après les transactions) :
+
+```
+┌─────────────────────────────────────────┐
+│ NOTE INTERNE                            │
+│ [textarea — raison du blocage/risque]   │
+│ [Sauvegarder la note]                   │
+├─────────────────────────────────────────┤
+│ MESSAGE AU JOUEUR                       │
+│ [textarea — message visible par joueur] │
+│ [Envoyer avertissement]                 │
+├─────────────────────────────────────────┤
+│ RAISON DU BLOCAGE (visible joueur)      │
+│ [input text]                            │
+│ [Bloquer avec cette raison]             │
+└─────────────────────────────────────────┘
+```
+
+**Section "HISTORIQUE ACTIONS"** :
+- Liste chronologique des PlayerAction
+- Icône par type : 🔒 BLOCKED / 🔓 UNBLOCKED / ⚠️ WARNING / 📝 NOTE / 🚫 SELF_EXCLUDED / ✅ RG_QUESTIONNAIRE
+- Format : `[date] [type] — [note] — par [author]`
+
+---
+
+## PARTIE 3 — CÔTÉ JOUEUR (Next.js)
+
+### 3.1 Trigger automatique — afficher popup si :
+- Pertes cumulées sur 24h > 50 000 CDF, OU
+- Plus de 20 rounds en 1h, OU
+- P&L joueur < -100 000 CDF
+
+### 3.2 POPUP NIVEAU 1 — Mise en garde bienveillante
+
+```
+┌────────────────────────────────────────────┐
+│  🛡️  UN MOMENT POUR VOUS                   │
+│                                            │
+│  Vous jouez depuis un moment.              │
+│  Congo Gaming veille à ce que le jeu       │
+│  reste un plaisir pour vous.               │
+│                                            │
+│  [Continuer à jouer]  [Faire une pause]    │
+└────────────────────────────────────────────┘
+```
+
+- "Continuer" → ferme le popup, log l'action
+- "Faire une pause" → ouvre le questionnaire
+
+### 3.3 QUESTIONNAIRE JEU RESPONSABLE — 3 questions
+
+Design : card centrée, ton chaleureux, pas agressif.
+Titre : "Quelques questions pour jouer sereinement"
+
+**Question 1 :**
+"Je joue principalement pour le plaisir et le divertissement"
+→ [ Oui, tout à fait ] [ Pas vraiment ]
+
+**Question 2 :**
+"Mon budget jeu est prévu à l'avance et ne dépasse pas ce que je peux me permettre"
+→ [ Oui, toujours ] [ Pas toujours ]
+
+**Question 3 :**
+"Une personne proche ne s'est jamais inquiétée de mon rapport au jeu"
+→ [ C'est le cas ] [ Cela m'est arrivé ]
+
+**Logique de résultat :**
+- 0 réponse à risque → message positif + bouton "Continuer à jouer"
+- 1 réponse à risque → message bienveillant + "Continuer" + "Me fixer une limite"
+- 2-3 réponses à risque → message de soutien fort + bouton "M'auto-exclure temporairement" mis en avant + "Continuer quand même" en secondaire discret
+
+**Message 0 risque :**
+"Parfait ! Vous avez une approche saine du jeu. Profitez bien !"
+
+**Message 1 risque :**
+"Merci pour votre honnêteté. Pensez à vous fixer un budget quotidien. Congo Gaming est là pour le plaisir, pas pour le stress."
+
+**Message 2-3 risques :**
+"Nous vous remercions de votre confiance. Votre bien-être passe avant tout. Nous vous recommandons de faire une pause. Vous pouvez revenir quand vous le souhaitez."
+
+### 3.4 AUTO-EXCLUSION VOLONTAIRE
+
+Page : /mon-compte/jeu-responsable
+
+```
+┌──────────────────────────────────────────┐
+│  🛡️  JEU RESPONSABLE                    │
+│                                          │
+│  Vous pouvez vous auto-exclure à tout    │
+│  moment. Cette décision est protégée.    │
+│                                          │
+│  [ Pause 7 jours ]                       │
+│  [ Pause 30 jours ]                      │
+│  [ Exclusion définitive ]                │
+│                                          │
+│  ⚠️ L'exclusion définitive est           │
+│  irréversible.                           │
+└──────────────────────────────────────────┘
+```
+
+- Confirmation modale avant validation
+- Après exclusion : message "Votre demande a été prise en compte. Prenez soin de vous."
+- Redirection vers page d'accueil non-joueur
+
+### 3.5 RÉACTIVATION APRÈS AUTO-EXCLUSION
+
+Affiché uniquement si self_exclusion_until < now() (délai écoulé).
+Page de réactivation :
+
+```
+Votre période de pause est terminée.
+
+Avant de reprendre, nous vous posons 
+3 questions rapides.
+
+[Répondre au questionnaire]
+```
+
+- Questionnaire identique §3.3
+- Si 0-1 risque → réactivation autorisée
+- Si 2-3 risques → message de soutien, réactivation possible mais avec avertissement fort
+
+### 3.6 ÉCRAN DE COMPTE BLOQUÉ PAR ADMIN
+
+Si blocked = true et block_reason renseignée :
+
+```
+Votre compte est temporairement suspendu.
+
+[block_reason affiché ici]
+
+Pour toute question, contactez-nous :
+📞 +243 997 174 834
+✉️ congo.gaming.rdc@gmail.com
+```
+
+Si blocked = true et block_reason vide :
+```
+Votre compte est temporairement suspendu.
+Contactez le support pour plus d'informations.
+```
+
+---
+
+## PARTIE 4 — LIEN AVEC RISK_LEVEL EXISTANT
+
+Mettre à jour la logique risk_level automatique :
+- Si rg_answers contient 2+ risques → risk_level = "HIGH"
+- Si self_excluded → risk_level = "HIGH"
+- Si admin a posé une note → risk_level = "MEDIUM" minimum
+- Afficher dans la fiche admin : badge couleur + date dernière évaluation RG
+
+---
+
+## ORDRE D'IMPLÉMENTATION SUGGÉRÉ
+
+1. Migration Prisma (PlayerAction + nouveaux champs Player)
+2. Endpoints backend (note, warning, block avec raison, self-exclude, questionnaire, reactivate)
+3. Section admin dans fiche joueur (note + historique)
+4. Popup niveau 1 joueur (trigger automatique)
+5. Questionnaire 3 questions
+6. Page auto-exclusion
+7. Écran compte bloqué
+8. Page réactivation
+
+---
+
+## NOTES IMPORTANTES
+
+- Toutes les actions doivent être loguées dans PlayerAction (audit trail pour régulateur)
+- Le questionnaire doit être disponible à tout moment depuis "Mon compte"
+- Textes en français uniquement
+- Ton : bienveillant, protecteur, jamais culpabilisant
+- Couleurs : utiliser le jaune/or CGL pour les boutons positifs, rouge uniquement pour l'exclusion définitive
+## PARTIE 5 — TOGGLE GLOBAL JEU RESPONSABLE
+
+### Backend
+Ajouter une table Settings (si pas existante) :
+model Setting {
+  key   String @id
+  value String
+}
+
+Insérer : { key: "responsible_gaming_enabled", value: "true" }
+
+Endpoint PATCH /admin/settings/responsible-gaming
+- Body : { enabled: boolean }
+- Action : met à jour la valeur en base
+- Accès admin uniquement
+
+Endpoint GET /settings/responsible-gaming
+- Retourne { enabled: boolean }
+- Public (appelé au chargement côté joueur)
+
+### Frontend Admin
+Dans le header du dashboard admin, ajouter un toggle visible en permanence :
+
+┌─────────────────────────────────────┐
+│  🛡️ JEU RESPONSABLE   [ON ●──  ]   │
+└─────────────────────────────────────┘
+
+- Toggle ON (vert) = module actif
+- Toggle OFF (gris) = tous les popups, 
+  questionnaires et triggers désactivés
+- Confirmation modale avant désactivation :
+  "Vous allez désactiver le module jeu 
+  responsable. Confirmer ?"
+
+### Frontend Joueur
+Au chargement de chaque page joueur :
+- Fetch GET /settings/responsible-gaming
+- Si enabled = false → skip tous les 
+  triggers automatiques (popup, questionnaire)
+- Les auto-exclusions déjà actives 
+  restent valides même si toggle OFF
+- Les comptes bloqués par admin restent 
+  bloqués même si toggle OFF
